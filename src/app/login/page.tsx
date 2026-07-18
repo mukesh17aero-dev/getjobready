@@ -32,7 +32,7 @@ export default function LoginPage() {
       // instead — Supabase's phone auth API is a near drop-in replacement.
       // Requires an SMS provider (e.g. Twilio) configured in Supabase →
       // Authentication → Providers first.
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: { emailRedirectTo: `${window.location.origin}/auth/confirm` },
     });
 
     if (error) {
