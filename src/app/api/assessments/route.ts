@@ -7,10 +7,7 @@ import {
   isPassportEligible,
   type DimensionStatus,
 } from "@/lib/readiness-engine";
-
-// AI evaluation (step 3 of the Build Guide's 10-step flow) and the
-// recommendations it feeds (step 8) are deliberately not wired up yet —
-// see docs/PLAYBOOK.md Session 6.
+import { evaluateAssessment, PROMPT_VERSION } from "@/lib/ai-evaluator";
 
 const AssessmentInputSchema = z.object({
   student_id: z.string().uuid(),
@@ -104,6 +101,28 @@ export async function POST(request: NextRequest) {
     );
   }
   const assessmentRow = assessment as AssessmentResultRow;
+
+  // Step 3: AI evaluation (feedback only — never sets status). A failure
+  // here (null) must never block evidence creation or status recalculation.
+  const aiResult = await evaluateAssessment({
+    assessmentType: assessment_type,
+    submissionPayload: submission_payload,
+  });
+
+  if (aiResult) {
+    const { error: aiUpdateError } = await supabaseAdmin
+      .from("assessment_results")
+      .update({ ai_feedback: aiResult, ai_prompt_version: PROMPT_VERSION })
+      .eq("assessment_id", assessmentRow.assessment_id);
+
+    if (aiUpdateError) {
+      console.warn(`Failed to store AI feedback: ${aiUpdateError.message}`);
+    }
+  } else {
+    console.warn(
+      `AI evaluation unavailable for assessment ${assessmentRow.assessment_id}; continuing without feedback`
+    );
+  }
 
   // Step 4: INSERT evidence_records (auto-verified — it came from a real assessment)
   const { data: evidence, error: evidenceError } = await supabaseAdmin
@@ -293,6 +312,16 @@ export async function POST(request: NextRequest) {
       { error: "Failed to update profile", details: profileError.message },
       { status: 500 }
     );
+  }
+
+  // Step 8: INSERT recommendations, only when AI produced an improvement_action
+  if (status === "developing" && aiResult) {
+    await supabaseAdmin.from("recommendations").insert({
+      student_id,
+      dimension_id,
+      action_text: aiResult.improvement_action,
+      priority: 1,
+    });
   }
 
   // Step 9: INSERT readiness_events
