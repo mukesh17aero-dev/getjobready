@@ -8,7 +8,7 @@ Tracks all 18 sessions from `docs/PLAYBOOK.md`. Check off a box at the end of th
 - [x] Session 4 — Readiness Engine Part 2 (PRI Score + Passport Eligibility)
 - [x] Session 5 — Assessment Intake API (Rules Only, No AI Yet)
 - [x] Session 6 — AI Evaluation Layer
-- [ ] Session 7 — Auth (Student Login)
+- [x] Session 7 — Auth (Student Login)
 - [ ] Session 8 — Dashboard: Dimension Cards + Status
 - [ ] Session 9 — Dashboard: PRI Dial + Next Best Action
 - [ ] Session 10 — Evidence Drill-Down (the "why" page)
