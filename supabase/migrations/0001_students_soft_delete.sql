@@ -1,0 +1,24 @@
+-- Adds soft-delete support to students.
+--
+-- Root cause this addresses: students.student_id -> auth.users(id) has no
+-- ON DELETE clause (defaults to NO ACTION), and every table that
+-- references students (student_employability_profiles,
+-- student_dimension_statuses, assessment_results, evidence_records,
+-- readiness_events, passport_snapshots, recommendations) does the same.
+-- Deleting a student's auth.users row is correctly blocked once any
+-- evidence/audit-adjacent data exists for them.
+--
+-- We are deliberately NOT adding ON DELETE CASCADE here. Per CLAUDE.md's
+-- evidence-first / audit-everything principles, a student's assessment
+-- results, evidence records, and audit trail must never be silently
+-- destroyed by a single Dashboard delete click — that would break the
+-- platform's core "every readiness claim is auditable" guarantee, and
+-- audit_log rows in particular exist specifically to survive the
+-- entities they describe. Soft-delete preserves that guarantee.
+--
+-- deleted_at is nullable and unenforced by RLS/queries as of this
+-- migration — application code (a future admin "delete student" action)
+-- is expected to set it instead of issuing a hard DELETE. See
+-- docs/RUNBOOK.md for the recommended production deletion/anonymization
+-- flow once that admin action exists.
+alter table students add column deleted_at timestamptz;
