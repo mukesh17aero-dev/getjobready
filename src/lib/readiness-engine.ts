@@ -67,3 +67,27 @@ export function calculateDimensionStatus(input: {
 
   return { status: "developing", effectiveScore };
 }
+
+// Weighted average of dimension scores, mapped from 0-100 to 300-800.
+// A null effectiveScore (not_assessed/outdated) contributes 0 to the
+// numerator but its weight still counts in the denominator — an
+// unmeasured dimension drags the score down, which is intentional.
+export function calculatePRI(
+  dims: { weight: number; effectiveScore: number | null }[]
+): number {
+  const totalWeight = dims.reduce((sum, d) => sum + d.weight, 0);
+  const weightedSum = dims.reduce(
+    (sum, d) => sum + d.weight * (d.effectiveScore ?? 0),
+    0
+  );
+  const pct = weightedSum / totalWeight;
+  return Math.round(300 + (pct / 100) * 500);
+}
+
+// Passport eligibility: ALL active dimensions must be meets_standard or strong.
+export function isPassportEligible(statuses: DimensionStatus[]): boolean {
+  return (
+    statuses.length > 0 &&
+    statuses.every((s) => s === "meets_standard" || s === "strong")
+  );
+}

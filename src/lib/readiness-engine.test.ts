@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { calculateDimensionStatus, type DimensionRule } from "./readiness-engine";
+import {
+  calculateDimensionStatus,
+  calculatePRI,
+  isPassportEligible,
+  type DimensionRule,
+} from "./readiness-engine";
 
 const now = new Date("2026-07-18T00:00:00Z");
 
@@ -115,5 +120,56 @@ describe("calculateDimensionStatus", () => {
       now,
     });
     expect(result).toEqual({ status: "meets_standard", effectiveScore: 70 });
+  });
+});
+
+// Weights mirror the 5 seeded MVP dimensions (see supabase/seed.sql):
+// Communication 1.5, Digital Skills 1.0, Interview Readiness 1.5,
+// Workplace Behaviour 1.0, Professional Profile 0.5.
+const seedWeights = [1.5, 1.0, 1.5, 1.0, 0.5];
+
+describe("calculatePRI", () => {
+  it("returns exactly 300 when all dimensions are null", () => {
+    const dims = seedWeights.map((weight) => ({
+      weight,
+      effectiveScore: null,
+    }));
+    expect(calculatePRI(dims)).toBe(300);
+  });
+
+  it("returns exactly 800 when all dimensions are at effectiveScore 100", () => {
+    const dims = seedWeights.map((weight) => ({
+      weight,
+      effectiveScore: 100,
+    }));
+    expect(calculatePRI(dims)).toBe(800);
+  });
+
+  it("returns exactly 675 for weight 1.5 at score 100 and weight 0.5 at score 0", () => {
+    // Hand arithmetic: (1.5*100 + 0.5*0) / (1.5+0.5) = 150/2 = 75%
+    // PRI = 300 + 0.75*500 = 300 + 375 = 675
+    const dims = [
+      { weight: 1.5, effectiveScore: 100 },
+      { weight: 0.5, effectiveScore: 0 },
+    ];
+    expect(calculatePRI(dims)).toBe(675);
+  });
+});
+
+describe("isPassportEligible", () => {
+  it("returns false for an empty array", () => {
+    expect(isPassportEligible([])).toBe(false);
+  });
+
+  it("returns true when every status is meets_standard or strong", () => {
+    expect(
+      isPassportEligible(["meets_standard", "strong", "meets_standard"])
+    ).toBe(true);
+  });
+
+  it("returns false when one dimension is still developing", () => {
+    expect(
+      isPassportEligible(["meets_standard", "developing", "strong"])
+    ).toBe(false);
   });
 });
