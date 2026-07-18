@@ -3,7 +3,7 @@
 Tracks all 18 sessions from `docs/PLAYBOOK.md`. Check off a box at the end of the session it belongs to, and commit this file together with that session's code.
 
 - [x] Session 1 — Bootstrapping Claude Code + Progress Tracking
-- [ ] Session 2 — Database Schema + Seed Data
+- [x] Session 2 — Database Schema + Seed Data
 - [ ] Session 3 — Readiness Engine Part 1 (Status Logic + Tests)
 - [ ] Session 4 — Readiness Engine Part 2 (PRI Score + Passport Eligibility)
 - [ ] Session 5 — Assessment Intake API (Rules Only, No AI Yet)
