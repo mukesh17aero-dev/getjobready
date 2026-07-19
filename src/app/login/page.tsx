@@ -32,7 +32,7 @@ export default function LoginPage() {
       // instead — Supabase's phone auth API is a near drop-in replacement.
       // Requires an SMS provider (e.g. Twilio) configured in Supabase →
       // Authentication → Providers first.
-      options: { emailRedirectTo: `${window.location.origin}/auth/confirm` },
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     });
 
     if (error) {
@@ -48,8 +48,9 @@ export default function LoginPage() {
       <main className="flex min-h-screen flex-col items-center justify-center gap-2 p-8 text-center">
         <h1 className="text-2xl font-semibold">Check your email</h1>
         <p className="text-sm text-gray-600">
-          We sent a login link to <strong>{email}</strong>. Open it on this
-          device to sign in.
+          We sent a login link to <strong>{email}</strong>. Open it in this
+          same browser to sign in — links opened in a different browser or
+          app won&apos;t work.
         </p>
       </main>
     );
