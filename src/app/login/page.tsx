@@ -5,9 +5,9 @@ import { createClient } from "@/lib/supabase-browser";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [step, setStep] = useState<"email" | "code">("email");
-  const [status, setStatus] = useState<"idle" | "working" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "working" | "sent" | "error">(
+    "idle"
+  );
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export default function LoginPage() {
     }
   }, []);
 
-  async function handleSendCode(event: FormEvent<HTMLFormElement>) {
+  async function handleSendLink(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatus("working");
     setErrorMessage("");
@@ -40,73 +40,17 @@ export default function LoginPage() {
       setErrorMessage(error.message);
       return;
     }
-    setStatus("idle");
-    setStep("code");
+    setStatus("sent");
   }
 
-  async function handleVerifyCode(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setStatus("working");
-    setErrorMessage("");
-
-    const supabase = createClient();
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token: code,
-      type: "email",
-    });
-
-    if (error) {
-      setStatus("error");
-      setErrorMessage(error.message);
-      return;
-    }
-
-    // The browser client just set the session cookie. Create the
-    // student's profile row on first login, then hand off to the server
-    // with a hard navigation so /dashboard sees the fresh session.
-    await fetch("/api/auth/onboard", { method: "POST" });
-    window.location.href = "/dashboard";
-  }
-
-  if (step === "code") {
+  if (status === "sent") {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
-        <h1 className="text-2xl font-semibold">Enter your code</h1>
-        <p className="max-w-sm text-center text-sm text-gray-600">
-          We sent a code and a login link to <strong>{email}</strong>. Enter
-          the code below, or click the link in the same email.
+      <main className="flex min-h-screen flex-col items-center justify-center gap-2 p-8 text-center">
+        <h1 className="text-2xl font-semibold">Check your email</h1>
+        <p className="text-sm text-gray-600">
+          We sent a login link to <strong>{email}</strong>. Open it on this
+          device to sign in.
         </p>
-        <form
-          onSubmit={handleVerifyCode}
-          className="flex w-full max-w-sm flex-col gap-3"
-        >
-          <label htmlFor="code" className="text-sm font-medium">
-            Login code
-          </label>
-          <input
-            id="code"
-            type="text"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            required
-            value={code}
-            onChange={(event) => setCode(event.target.value)}
-            className="rounded border border-gray-300 px-3 py-2 tracking-widest"
-          />
-          <button
-            type="submit"
-            disabled={status === "working"}
-            className="rounded bg-purple-700 px-4 py-2 text-white disabled:opacity-50"
-          >
-            {status === "working" ? "Verifying..." : "Verify and log in"}
-          </button>
-          {status === "error" && (
-            <p role="alert" className="text-sm text-red-600">
-              {errorMessage}
-            </p>
-          )}
-        </form>
       </main>
     );
   }
@@ -115,7 +59,7 @@ export default function LoginPage() {
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
       <h1 className="text-2xl font-semibold">Log in to GetJobReady</h1>
       <form
-        onSubmit={handleSendCode}
+        onSubmit={handleSendLink}
         className="flex w-full max-w-sm flex-col gap-3"
       >
         <label htmlFor="email" className="text-sm font-medium">
@@ -134,7 +78,7 @@ export default function LoginPage() {
           disabled={status === "working"}
           className="rounded bg-purple-700 px-4 py-2 text-white disabled:opacity-50"
         >
-          {status === "working" ? "Sending..." : "Send login code"}
+          {status === "working" ? "Sending..." : "Send login link"}
         </button>
         {status === "error" && (
           <p role="alert" className="text-sm text-red-600">
