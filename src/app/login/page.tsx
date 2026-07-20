@@ -14,6 +14,10 @@ export default function LoginPage() {
     const params = new URLSearchParams(window.location.search);
     const linkError = params.get("error");
     if (linkError) {
+      // One-time sync from the URL (a browser-only API) into state on
+      // mount — must run in an effect to stay SSR-safe, since `window`
+      // doesn't exist during server rendering.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus("error");
       setErrorMessage(linkError);
     }

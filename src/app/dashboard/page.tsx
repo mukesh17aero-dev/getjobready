@@ -52,7 +52,10 @@ export default async function DashboardPage() {
   // Both queries go through the request-scoped, cookie-based client, so
   // RLS (not the service role) decides what comes back — a student can
   // only ever see their own dimension statuses.
-  const [{ data: dimensions }, { data: statuses }] = await Promise.all([
+  const [
+    { data: dimensions, error: dimensionsError },
+    { data: statuses, error: statusesError },
+  ] = await Promise.all([
     supabase
       .from("employability_dimensions")
       .select("dimension_id, name")
@@ -62,6 +65,17 @@ export default async function DashboardPage() {
       .select("dimension_id, status, score, evidence_count")
       .eq("student_id", user.id),
   ]);
+
+  // A query error silently renders as an empty dashboard (Postgres RLS
+  // denial and a genuinely empty table look identical from here) —
+  // logged so a future regression is diagnosable instead of appearing
+  // as "no data" with zero trace.
+  if (dimensionsError) {
+    console.error("Failed to fetch employability_dimensions:", dimensionsError.message);
+  }
+  if (statusesError) {
+    console.error("Failed to fetch student_dimension_statuses:", statusesError.message);
+  }
 
   const statusByDimension = new Map(
     ((statuses ?? []) as StatusRow[]).map((s) => [s.dimension_id, s])

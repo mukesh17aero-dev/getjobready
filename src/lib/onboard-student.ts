@@ -18,22 +18,42 @@ export async function ensureStudentOnboarded(
     return;
   }
 
-  await supabaseAdmin.from("students").insert({
-    student_id: studentId,
-    full_name: email ?? null,
-  });
+  const { error: studentInsertError } = await supabaseAdmin
+    .from("students")
+    .insert({ student_id: studentId, full_name: email ?? null });
+  if (studentInsertError) {
+    console.error(
+      `Failed to create students row for ${studentId}:`,
+      studentInsertError.message
+    );
+    return;
+  }
 
-  const { data: targetRole } = await supabaseAdmin
+  const { data: targetRole, error: targetRoleError } = await supabaseAdmin
     .from("target_roles")
     .select("role_id")
     .eq("active", true)
     .limit(1)
     .single();
 
-  if (targetRole) {
-    await supabaseAdmin.from("student_employability_profiles").insert({
+  if (targetRoleError || !targetRole) {
+    console.error(
+      "Failed to find an active target role for onboarding:",
+      targetRoleError?.message
+    );
+    return;
+  }
+
+  const { error: profileInsertError } = await supabaseAdmin
+    .from("student_employability_profiles")
+    .insert({
       student_id: studentId,
       target_role_id: (targetRole as { role_id: string }).role_id,
     });
+  if (profileInsertError) {
+    console.error(
+      `Failed to create student_employability_profiles row for ${studentId}:`,
+      profileInsertError.message
+    );
   }
 }
