@@ -2,7 +2,24 @@
 
 Technical, commit-level changelog. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). For product-facing summaries see `RELEASE_NOTES.md`; for full architectural context see `PROJECT_CONTEXT.md`.
 
-## [Unreleased] — Session 8 Stabilization (2026-07-20)
+## [Unreleased] — Session 9: PRI Dial + Next Best Action (2026-07-21)
+
+### Added
+- `src/components/dashboard/pri-dial.tsx`: semicircular PRI gauge (300–800), custom SVG (no new dependency), animates from 0 to the real score on mount via `requestAnimationFrame`, `prefers-reduced-motion`-aware (`motion-reduce:transition-none`), `role="img"` + `aria-label` with the score in plain text, "Not yet scored" state when `pri_score` is null.
+- `src/components/dashboard/next-best-action-card.tsx`: shows the student's top open (`completed = false`) recommendation with its `action_link`; positive empty state when none are open. `RecommendationData` (`src/lib/dashboard-data.ts`) carries optional `reasoning`/`confidence`/`estimatedImpact`/`estimatedCompletionMinutes` fields, rendered only when present, so a future AI-generated layer can populate them without a redesign.
+- `src/components/dashboard/dimension-cards.tsx`: Session 8's dimension-card markup, moved out of `page.tsx` unchanged (same classes, same badge mapping).
+- `src/components/dashboard/*-skeleton.tsx` (three files) + `dashboard-section-error.tsx`: per-section Suspense loading skeletons and a shared friendly-error presentation, visually distinct from a legitimate empty state.
+- `src/lib/dashboard-data.ts`: `getDimensionCards`, `getPriScore`, `getNextBestAction` — dashboard data-fetching/transformation extracted out of the page component. Each returns a `DataResult<T>` (`{ ok: true, data }` | `{ ok: false, error }`) instead of throwing, so a query failure can render a friendly, distinguishable error instead of only being `console.error`-logged.
+
+### Changed
+- `src/app/dashboard/page.tsx`: restructured to pure orchestration — one auth check, three independently-streamed `<Suspense>` sections (PRI dial, Next Best Action, dimension cards), each backed by a small async section function that calls a `dashboard-data.ts` helper and renders either the real component or `DashboardSectionError`. No visual or behavioral change to the existing dimension cards; purely additive for the dial and action card.
+
+### Notes
+- Evaluated adding a lightweight gauge/chart library for the PRI dial; rejected as an unnecessary dependency for a single semicircular arc (project has none installed, per `PROJECT_CONTEXT.md`'s locked stack) — implemented as custom SVG instead.
+- No database migration, no API route changes — this session is entirely additive reads against existing tables (`student_employability_profiles.pri_score`, `recommendations`) using the existing RLS-respecting server client.
+- The dial's mount animation and a pixel-level screenshot could not be captured in this session's dev preview browser — its tab runs backgrounded in this environment, which pauses `requestAnimationFrame` (confirmed via `document.hidden === true` and a direct rAF probe). Verified instead via the accessibility tree (correct ARIA labels and content for every state: scored, null, skeleton, empty, error) and zero console errors on load/resize. Manual live verification on `/dashboard` is still recommended.
+
+## [Session 8 Stabilization] — 2026-07-20
 
 ### Fixed
 - **Root cause of the Session 7 login failure**: replaced `verifyOtp(token_hash)` (required email template customization, unavailable on Supabase's free tier since a June 2026 policy change) with the original `exchangeCodeForSession` PKCE flow, which works with Supabase's default, unedited templates. `/auth/callback` is a server Route Handler again.

@@ -2,7 +2,7 @@
 
 **This is the authoritative knowledge base for GetJobReady.ai (`gjr-employability`).** Read this file completely, and `SESSION_PROGRESS.md`, before starting any new session. If a requested change conflicts with a decision documented here, explain the conflict and propose options before implementing — don't silently override it.
 
-Last updated: 2026-07-20 (post-Session-8 stabilization).
+Last updated: 2026-07-21 (Session 9).
 
 ---
 
@@ -52,9 +52,18 @@ src/
     auth/
       callback/route.ts         PKCE code exchange — completes magic-link login
       signout/route.ts          logout
-    dashboard/page.tsx          student dashboard (dimension cards, Session 8)
+    dashboard/page.tsx          student dashboard — orchestration only (auth check + Suspense wiring); Session 9 added the PRI dial and Next Best Action sections
     api/
       assessments/route.ts      POST intake — the 10-step assessment→evidence→status flow
+  components/
+    dashboard/                  dashboard-only presentational components (Session 9, first components/ folder in the project)
+      pri-dial.tsx               Client Component — semicircular PRI gauge, animates on mount, custom SVG (no charting dependency)
+      pri-dial-skeleton.tsx       loading fallback for the dial's Suspense boundary
+      next-best-action-card.tsx   top open recommendation + link; empty state; extensible (optional AI reasoning/confidence/impact/time fields, unpopulated today)
+      next-best-action-skeleton.tsx
+      dimension-cards.tsx         the Session 8 dimension-card list, moved verbatim out of page.tsx
+      dimension-cards-skeleton.tsx
+      dashboard-section-error.tsx shared friendly-error presentation for a failed section fetch
   lib/
     env.ts                      requireEnv() — shared env-var validation helper
     supabase-admin.ts           service-role client (bypasses RLS) — server-only, never import client-side
@@ -63,6 +72,7 @@ src/
     onboard-student.ts          ensureStudentOnboarded() — creates students + profile row on first login
     readiness-engine.ts         pure, deterministic status/PRI/eligibility logic — no DB, no AI (the audit-safe core)
     ai-evaluator.ts             Claude API wrapper — feedback/scoring only, never sets status
+    dashboard-data.ts           dashboard data-fetching/transformation (Session 9) — each function returns a DataResult<T> so a query failure renders a friendly error instead of an ambiguous empty state
   middleware.ts                 protects /dashboard/*, redirects unauthenticated requests to /login
 scripts/
   verify-db.ts                  prints every table + row count
@@ -132,10 +142,10 @@ See `docs/DATABASE_SCHEMA.md` for the full table-by-table reference. Summary of 
 - **Spacing:** Tailwind's default scale, mobile-first single-column layouts (`max-w-md`/`max-w-sm` containers).
 - **Accessibility:** form inputs have associated `<label>`s; error text uses `role="alert"`. Not formally audited beyond this.
 - **Responsive design:** mobile-first per `docs/PLAYBOOK.md` explicit requirement (target users are Tier-2/3 city, mobile-first).
-- **Component reuse:** minimal — no shared component library yet; each page is self-contained. Revisit once a second page needs the same card/badge pattern as the dashboard.
-- **Loading states:** button-level only (`disabled` + text swap, e.g. "Sending..." on the login button). No skeleton/spinner patterns yet.
+- **Component reuse:** minimal — no cross-page shared component library yet; each page is self-contained. `src/components/dashboard/` (Session 9) is the first exception, but it's page-scoped (dashboard-only presentational pieces, extracted because the PRI dial's SVG/animation logic would have bloated `page.tsx`, not because a second page needed the same pattern). Revisit true cross-page reuse once a second page needs the same card/badge pattern.
+- **Loading states:** button-level (`disabled` + text swap, e.g. "Sending..." on the login button) for form submissions. Since Session 9, `/dashboard` also uses per-section Suspense boundaries with skeleton fallbacks (`src/components/dashboard/*-skeleton.tsx`) — each of the PRI dial, Next Best Action card, and dimension cards streams in independently as its own query resolves, using React's built-in streaming rather than client-side fetching.
 - **Empty states:** the dashboard renders all 5 dimensions with default "Not Assessed" values for a student with no assessment history yet — this is intentional, correct behavior, not a bug (verified explicitly during the Session 8 stabilization investigation).
-- **Error states:** `/login` shows inline error text (`role="alert"`, red) fed by either a failed `signInWithOtp` call or an `?error=` query param from a failed `/auth/callback` redirect.
+- **Error states:** `/login` shows inline error text (`role="alert"`, red) fed by either a failed `signInWithOtp` call or an `?error=` query param from a failed `/auth/callback` redirect. Since Session 9, `/dashboard` sections use the same `role="alert"` pattern via `DashboardSectionError` when a query fails — a real error is now visually distinct from a legitimate empty state (no open recommendations, no evidence yet), closing the ambiguity that caused the Session 8 RLS incident to look like "the dashboard is broken" with no trace.
 
 ---
 
@@ -154,6 +164,7 @@ See `docs/DATABASE_SCHEMA.md` for the full table-by-table reference. Summary of 
 | 7 (Issue 2) | Bug: can't delete Supabase user | `scripts/delete-test-student.ts` | Migration 0001 (soft-delete foundation) | Root cause: `students.student_id → auth.users` has no `ON DELETE` clause; deliberately not fixed with CASCADE (would silently destroy audit history) |
 | 8 | Dashboard | Dimension cards, status badges, evidence count | — | Code shipped correctly on first pass; **broke invisibly afterward** via a database-layer RLS change (see below) — not a code regression |
 | 8 (stabilization) | Full auth root-cause fix + RLS incident + cleanup | Final `/auth/callback` (PKCE + default templates), migration 0003 (full RLS audit), env-var refactor, error-handling additions, this documentation set | Migrations 0002, 0003 | See full incident summary below |
+| 9 | Dashboard: PRI Dial + Next Best Action | PRI dial (custom SVG, animated), Next Best Action card (extensible for future AI fields), per-section Suspense loading skeletons, per-section friendly error states, `src/lib/dashboard-data.ts` extraction | — | First `src/components/` folder in the project (flagged, not silent — see Coding Conventions); evaluated a gauge/chart dependency and rejected it as unnecessary for one arc; dial's mount animation and a pixel screenshot could not be verified in the dev preview browser because its tab runs backgrounded (`requestAnimationFrame` never fires for hidden tabs) — DOM/ARIA structure was verified instead; founder should do one live check on `/dashboard` |
 
 ### The Session 7 authentication incident (worth understanding in full — it shaped several standing rules)
 
@@ -178,6 +189,8 @@ See `docs/DATABASE_SCHEMA.md` for the full table-by-table reference. Summary of 
   - No generated Supabase `Database` types — row shapes are hand-maintained interfaces per file, which can drift from the real schema if a migration changes a column without a corresponding code update.
   - `student_dimension_statuses.evidence_count` counts *all* evidence records for a dimension (not just those within the validity window) — a deliberate interpretation (see `src/app/api/assessments/route.ts` step 6c), not yet revisited against how the future evidence drill-down page (Session 10) will want to present it.
   - No RLS regression test exists — the Session 8 RLS incident was caught by manual dashboard inspection, not automated tooling. Consider a lightweight anon-key smoke check in a future hardening session.
+  - `DimensionCardsSkeleton` (Session 9) renders a fixed 5 placeholder cards, matching the current fixed 5-dimension MVP seed data — will need to become dynamic if dimensions ever become per-student variable (not planned for MVP).
+  - The PRI dial's mount animation was not visually confirmed in this environment's preview browser (backgrounded tab pauses `requestAnimationFrame`); confirmed correct by DOM/ARIA inspection and code review only. Founder should do one live visual check.
 - **Deployment status:** the founder pushes to GitHub manually; this project (Claude Code) never runs `git push` unless explicitly instructed to. Vercel deployment status/currency is not verified as part of this documentation pass — check `git log origin/main` before assuming production reflects the latest commit.
 
 ---
