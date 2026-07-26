@@ -2,7 +2,7 @@
 
 Technical, commit-level changelog. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). For product-facing summaries see `RELEASE_NOTES.md`; for full architectural context see `PROJECT_CONTEXT.md`.
 
-## [Unreleased] — Session 9: PRI Dial + Next Best Action (2026-07-21)
+## [Session 9] — 2026-07-21 (Deployed 2026-07-26)
 
 ### Added
 - `src/components/dashboard/pri-dial.tsx`: semicircular PRI gauge (300–800), custom SVG (no new dependency), animates from 0 to the real score on mount via `requestAnimationFrame`, `prefers-reduced-motion`-aware (`motion-reduce:transition-none`), `role="img"` + `aria-label` with the score in plain text, "Not yet scored" state when `pri_score` is null.
@@ -18,6 +18,7 @@ Technical, commit-level changelog. Format loosely follows [Keep a Changelog](htt
 - Evaluated adding a lightweight gauge/chart library for the PRI dial; rejected as an unnecessary dependency for a single semicircular arc (project has none installed, per `PROJECT_CONTEXT.md`'s locked stack) — implemented as custom SVG instead.
 - No database migration, no API route changes — this session is entirely additive reads against existing tables (`student_employability_profiles.pri_score`, `recommendations`) using the existing RLS-respecting server client.
 - The dial's mount animation and a pixel-level screenshot could not be captured in this session's dev preview browser — its tab runs backgrounded in this environment, which pauses `requestAnimationFrame` (confirmed via `document.hidden === true` and a direct rAF probe). Verified instead via the accessibility tree (correct ARIA labels and content for every state: scored, null, skeleton, empty, error) and zero console errors on load/resize. Manual live verification on `/dashboard` is still recommended.
+- **Release checkpoint (2026-07-26):** deployed to production. `npm run build`, `npm run test` (18/18), and `npm run lint` reverified clean against commit `5f104a8` at checkpoint time.
 
 ## [Session 8 Stabilization] — 2026-07-20
 

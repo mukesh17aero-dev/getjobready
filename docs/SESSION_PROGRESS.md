@@ -2,7 +2,7 @@
 
 Tracks completed work, pending features, blockers, and priorities. Read alongside `PROJECT_CONTEXT.md` (the architectural source of truth) before starting a new session. Update this file at the end of every session.
 
-Last updated: 2026-07-21 (Session 9).
+Last updated: 2026-07-26 (Session 9 release checkpoint — deployed to production).
 
 ---
 
@@ -20,7 +20,7 @@ Last updated: 2026-07-21 (Session 9).
 | 7 | Auth (Student Login) | ✅ Complete (see incident history in PROJECT_CONTEXT.md) |
 | 8 | Dashboard: Dimension Cards + Status | ✅ Complete |
 | 8-stabilization | Post-Session-8 hardening, RLS audit, documentation baseline | ✅ Complete |
-| 9 | Dashboard: PRI Dial + Next Best Action | ✅ Complete (this pass) |
+| 9 | Dashboard: PRI Dial + Next Best Action | ✅ Complete — deployed to production 2026-07-26 |
 
 ## Not Yet Started
 
@@ -76,8 +76,12 @@ None.
 - Session 10: Evidence drill-down page — the first place `readiness_events`/audit-style history becomes visible to a student.
 - Session 11 (Admin panel begins): first session requiring the `ADMIN_EMAILS` env var to actually gate a route — verify its exact name/format in `.env.local` before starting (a prior discrepancy was noted: `.env.local` has `ADMIN_EMAIL` singular, `CLAUDE.md` specifies `ADMIN_EMAILS` plural/comma-separated — resolve this explicitly at the start of Session 11, don't assume).
 
+## Release Checkpoints
+
+- **2026-07-26 — Session 9 deployed to production.** `npm run build` (zero type errors), `npm run test` (18/18 passing), `npm run lint` (clean) all reverified at checkpoint time against the deployed commit (`5f104a8`, "Add PRI dial and Next Best Action to student dashboard"). Working tree clean, no uncommitted changes.
+
 ## Next Priorities
 
-1. Founder verifies Session 9 on `/dashboard` (see Known Issues above) and pushes the commit if satisfied.
-2. Session 10 (Evidence Drill-Down) is next in sequence and has no known blockers.
-3. Resolve the `ADMIN_EMAIL` vs `ADMIN_EMAILS` env var naming discrepancy before Session 11 needs it.
+1. Session 10 (Evidence Drill-Down) is next in sequence and has no known blockers.
+2. Resolve the `ADMIN_EMAIL` vs `ADMIN_EMAILS` env var naming discrepancy before Session 11 needs it.
+3. Root `PROGRESS.md` checkbox for Session 9 is still unchecked (docs/SESSION_PROGRESS.md and CHANGELOG.md are the source of truth and are current as of this checkpoint) — reconcile next time that file is touched.
