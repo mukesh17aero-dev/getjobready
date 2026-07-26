@@ -1,7 +1,10 @@
+import Link from "next/link";
 import type { DimensionStatus } from "@/lib/readiness-engine";
 import type { DimensionCardData } from "@/lib/dashboard-data";
 
-const STATUS_LABELS: Record<DimensionStatus, string> = {
+// Exported so other dashboard surfaces (e.g. the evidence drill-down page)
+// reuse the exact same status vocabulary/colors instead of redefining them.
+export const STATUS_LABELS: Record<DimensionStatus, string> = {
   not_assessed: "Not Assessed",
   developing: "Developing",
   meets_standard: "Meets Standard",
@@ -10,7 +13,7 @@ const STATUS_LABELS: Record<DimensionStatus, string> = {
 };
 
 // Exact mapping specified in docs/PLAYBOOK.md Session 8.
-const STATUS_BADGE_CLASSES: Record<DimensionStatus, string> = {
+export const STATUS_BADGE_CLASSES: Record<DimensionStatus, string> = {
   not_assessed: "bg-gray-200 text-gray-700",
   developing: "bg-amber-100 text-amber-800",
   meets_standard: "bg-green-100 text-green-800",
@@ -26,9 +29,11 @@ export function DimensionCards({ cards }: DimensionCardsProps) {
   return (
     <section className="flex flex-col gap-3">
       {cards.map((card) => (
-        <div
+        <Link
           key={card.dimensionId}
-          className="rounded-lg border border-gray-200 p-4 shadow-sm"
+          href={`/dashboard/dimension/${card.dimensionId}`}
+          aria-label={`View evidence for ${card.name}, status ${STATUS_LABELS[card.status]}`}
+          className="rounded-lg border border-gray-200 p-4 shadow-sm transition-colors hover:border-purple-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-700"
         >
           <div className="flex items-center justify-between gap-2">
             <h2 className="font-medium text-gray-900">{card.name}</h2>
@@ -47,7 +52,7 @@ export function DimensionCards({ cards }: DimensionCardsProps) {
               {card.evidenceCount === 1 ? "evidence item" : "evidence items"}
             </span>
           </div>
-        </div>
+        </Link>
       ))}
     </section>
   );

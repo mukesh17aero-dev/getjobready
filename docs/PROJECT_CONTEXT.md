@@ -2,7 +2,7 @@
 
 **This is the authoritative knowledge base for GetJobReady.ai (`gjr-employability`).** Read this file completely, and `SESSION_PROGRESS.md`, before starting any new session. If a requested change conflicts with a decision documented here, explain the conflict and propose options before implementing — don't silently override it.
 
-Last updated: 2026-07-21 (Session 9).
+Last updated: 2026-07-26 (Session 10, not yet committed/deployed).
 
 ---
 
@@ -52,7 +52,9 @@ src/
     auth/
       callback/route.ts         PKCE code exchange — completes magic-link login
       signout/route.ts          logout
-    dashboard/page.tsx          student dashboard — orchestration only (auth check + Suspense wiring); Session 9 added the PRI dial and Next Best Action sections
+    dashboard/
+      page.tsx                  student dashboard — orchestration only (auth check + Suspense wiring); Session 9 added the PRI dial and Next Best Action sections
+      dimension/[id]/page.tsx   Session 10 — evidence drill-down ("why is my status what it is"): header (status/score/evidence count/last updated/rule in plain language) + sortable evidence timeline
     api/
       assessments/route.ts      POST intake — the 10-step assessment→evidence→status flow
   components/
@@ -61,9 +63,11 @@ src/
       pri-dial-skeleton.tsx       loading fallback for the dial's Suspense boundary
       next-best-action-card.tsx   top open recommendation + link; empty state; extensible (optional AI reasoning/confidence/impact/time fields, unpopulated today)
       next-best-action-skeleton.tsx
-      dimension-cards.tsx         the Session 8 dimension-card list, moved verbatim out of page.tsx
+      dimension-cards.tsx         the Session 8 dimension-card list, moved verbatim out of page.tsx; Session 10 wrapped each card in a Link to /dashboard/dimension/[id] and exported STATUS_LABELS/STATUS_BADGE_CLASSES for reuse
       dimension-cards-skeleton.tsx
       dashboard-section-error.tsx shared friendly-error presentation for a failed section fetch
+      evidence-timeline.tsx       Session 10, Client Component — the evidence page's one interactive island (sort-order dropdown only); receives the server-fetched evidence array as a prop, re-sorts client-side, no refetch
+      evidence-page-skeleton.tsx  Session 10 — loading fallback sized to the real header + timeline layout
   lib/
     env.ts                      requireEnv() — shared env-var validation helper
     supabase-admin.ts           service-role client (bypasses RLS) — server-only, never import client-side
@@ -72,8 +76,8 @@ src/
     onboard-student.ts          ensureStudentOnboarded() — creates students + profile row on first login
     readiness-engine.ts         pure, deterministic status/PRI/eligibility logic — no DB, no AI (the audit-safe core)
     ai-evaluator.ts             Claude API wrapper — feedback/scoring only, never sets status
-    dashboard-data.ts           dashboard data-fetching/transformation (Session 9) — each function returns a DataResult<T> so a query failure renders a friendly error instead of an ambiguous empty state
-  middleware.ts                 protects /dashboard/*, redirects unauthenticated requests to /login
+    dashboard-data.ts           dashboard data-fetching/transformation (Session 9) — each function returns a DataResult<T> so a query failure renders a friendly error instead of an ambiguous empty state; Session 10 added getDimensionDetail() (dimension + status + rule + evidence, batch-joined against assessment_results)
+  middleware.ts                 protects /dashboard/* (including /dashboard/dimension/[id], covered by the existing path-prefix matcher), redirects unauthenticated requests to /login
 scripts/
   verify-db.ts                  prints every table + row count
   seed-test-student.ts          creates/resets a fixed-UUID test student (11111111-1111-4111-8111-111111111111)
@@ -165,6 +169,8 @@ See `docs/DATABASE_SCHEMA.md` for the full table-by-table reference. Summary of 
 | 8 | Dashboard | Dimension cards, status badges, evidence count | — | Code shipped correctly on first pass; **broke invisibly afterward** via a database-layer RLS change (see below) — not a code regression |
 | 8 (stabilization) | Full auth root-cause fix + RLS incident + cleanup | Final `/auth/callback` (PKCE + default templates), migration 0003 (full RLS audit), env-var refactor, error-handling additions, this documentation set | Migrations 0002, 0003 | See full incident summary below |
 | 9 | Dashboard: PRI Dial + Next Best Action | PRI dial (custom SVG, animated), Next Best Action card (extensible for future AI fields), per-section Suspense loading skeletons, per-section friendly error states, `src/lib/dashboard-data.ts` extraction | — | First `src/components/` folder in the project (flagged, not silent — see Coding Conventions); evaluated a gauge/chart dependency and rejected it as unnecessary for one arc; dial's mount animation and a pixel screenshot could not be verified in the dev preview browser because its tab runs backgrounded (`requestAnimationFrame` never fires for hidden tabs) — DOM/ARIA structure was verified instead; founder should do one live check on `/dashboard` |
+| — | Production fixes (post-Session-9, pre-Session-10) | Root `/` now redirects by auth state instead of serving the `create-next-app` starter; fixed a browser-only crash where `requireEnv()`'s dynamic `process.env[name]` access defeated Next.js's static NEXT_PUBLIC_* inlining into the client bundle (`supabase-browser.ts` now reads the vars via literal `process.env.X`); fixed logout returning 405 (`NextResponse.redirect` defaulted to 307, which preserves POST on the follow-up request to a GET-only page — now 303) | — | All three reproduced locally before fixing, not fixed speculatively; see git log for full incident detail on each |
+| 10 | Evidence Drill-Down | `/dashboard/dimension/[id]` — status/score/evidence-count/last-updated header with the active rule in plain language, sortable evidence timeline (source, evidence type, score/max score, date, valid/expired + expiry date, AI feedback as Strengths/Gaps/Summary when available), `getDimensionDetail()` in `dashboard-data.ts`, dimension cards now link to it | — | Zero schema changes — every field is a join or a read-time derivation off existing tables; valid/expiry math deliberately duplicates `calculateDimensionStatus`'s one-line cutoff formula rather than refactoring the exhaustively-tested `readiness-engine.ts` to export it; verified by calling the real `getDimensionDetail()` against seeded data (3 cases) AND a full authenticated browser walkthrough (login → dashboard → card → evidence page → sort → back, zero console errors) via a temporary, uncommitted test-login route using `verifyOtp()` + an admin-generated OTP — a different, directly-callable Supabase Auth mechanism from the link-click/PKCE path, so it doesn't hit the Session 7 hash-fragment incompatibility; route deleted before commit |
 
 ### The Session 7 authentication incident (worth understanding in full — it shaped several standing rules)
 
