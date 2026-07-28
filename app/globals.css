@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@theme {
+  /* Entrance motion. Short, single-run, and always `both` so an element is
+     invisible before its delay elapses rather than flashing into place. */
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-in: fade-in 0.9s ease-out both;
+
+  /* Ambient motion for the decorative blobs. Slow enough to read as depth
+     rather than as something asking for attention. */
+  --animate-drift: drift 18s ease-in-out infinite;
+  --animate-drift-slow: drift 26s ease-in-out infinite reverse;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(1.25rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes drift {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+      transform: translate3d(2rem, -1.5rem, 0) scale(1.08);
+    }
+  }
+}
+
+/*
+ * Light only, deliberately. Every surface in this app is hand-written Tailwind,
+ * and an automatic dark mode that flips the body while the utility classes stay
+ * light produces unreadable pages. If dark mode is wanted, it gets added as a
+ * pass over the whole UI, not as a media query here.
+ */
+body {
+  background-color: var(--color-white);
+  color: var(--color-slate-900);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/*
+ * Motion is decoration here — nothing on this site depends on it to be
+ * understood. For anyone who has asked their operating system for less of it,
+ * the honest answer is to skip to the final state rather than to slow it down.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -2,6 +2,264 @@
 
 Technical, commit-level changelog. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). For product-facing summaries see `RELEASE_NOTES.md`; for full architectural context see `PROJECT_CONTEXT.md`.
 
+## [Unreleased] — 2026-07-27: Account history, admin cross-role viewing, preview mode
+
+### Changed — `user_account` is now a Type 2 slowly-changing dimension
+`supabase/migrations/0003_identity_user_account_scd2.sql` restructures the table:
+`account_id` (per version) replaces `id` as the key, `user_id` identifies the person,
+and `is_active` marks the current row. A change closes the old row and inserts a new
+one, so no state is ever destroyed.
+
+- **Exactly one active row per person**, enforced by a partial unique index. Email,
+  username and the bootstrap flag are likewise unique **only among active rows** —
+  without that, every historical row would collide and no change could be recorded.
+- **All writes go through `set_user_account_state()`**, a Postgres function doing the
+  close-and-open in one transaction. As two round trips from the application, a
+  failure in between would leave someone with no active row — and the next request
+  would recreate them as a student. An admin could be demoted by a dropped
+  connection. It is `SECURITY INVOKER` and execute is revoked from `anon` and
+  `authenticated`.
+- The function **returns the current row unchanged when nothing material differs**,
+  so re-asserting the same details at sign-in does not add a version.
+- **There is no `0002`.** It added `role_changed_at` / `role_changed_by`, which this
+  migration would immediately have removed — per-version provenance records every
+  change, not only the most recent. It was never applied to any database, so it was
+  deleted rather than left as a step that exists only to be undone. The numbering
+  gap is deliberate.
+- `last_sign_in_at` is overwritten in place and never versioned: a Type 1 attribute
+  inside a Type 2 dimension. Versioning it would add a row per sign-in.
+- **Foreign keys from other modules must reference `auth.users(id)` or `user_id`,
+  never `account_id`.** Recorded in `docs/data/OWNERSHIP.md`.
+
+### Changed — admins can view every area
+`canViewArea()` replaces the exact-role match. An admin may open `/dashboard` and
+`/portal`; students and employers still see only their own. This reverses the
+"admins get no master key" decision made earlier the same day, at the founder's
+request.
+
+Viewing is not acting: an admin in the student area still has an admin session, and
+each area's own rules still apply.
+
+### Added — preview mode
+An admin can switch into the student or employer view from a "View as" control in the
+header.
+
+- The chosen role lives in an `httpOnly` cookie and can only ever **narrow** what is
+  reachable — an admin may already open every area, so previewing removes the admin
+  console rather than granting anything. A forged cookie on a non-admin is ignored
+  outright and never even read.
+- While previewing, `/admin` is genuinely unreachable — otherwise it would not be a
+  preview. The exit control is on screen at all times.
+- **Every administrative function uses the real role, never the previewed one.** An
+  admin previewing as a student can still change roles and invite employers.
+- Signing out clears the preview, so the next person on that browser does not
+  inherit it.
+- An amber bar appears whenever an admin is looking at an area that is not their own
+  — whether they used the switcher or simply typed the address.
+
+### Added
+- **"Set by" column** on the user list, resolving `created_by` to a name against the
+  accounts already fetched, with the date the state took effect. This is the visible
+  answer to "who made this person an admin".
+- **19 more unit tests** (81 total), covering the view-area matrix, preview
+  authorisation, the forged-cookie case, preview not widening administrative
+  permissions, sign-out clearing preview, and role changes carrying every attribute
+  onto the new version.
+
+## [Unreleased] — 2026-07-27: Admin user management and employer provisioning
+
+### Added
+- **`/admin/users`** — everyone who has signed in, searchable by name, email or
+  username, with a per-row control to move them between student, admin and employer.
+- **`/admin/employers/new`** — creates an employer account and emails an invitation.
+  Employers cannot self-register; this is the only way one comes into existence.
+- **Admin section navigation**, visible on every `/admin` page.
+- **`canChangeRole()`** — a pure rule refusing three cases: the actor is not an
+  admin, the actor is the target, or the target is the setup account. The admin page
+  renders its controls from this same function rather than deciding for itself.
+- ~~**`supabase/migrations/0002_identity_role_provenance.sql`** — `role_changed_at` and
+  `role_changed_by` on `user_account`.~~ **Superseded before it was ever applied**, and
+  the file deleted — see the entry above. Per-version provenance replaced it.
+- **32 more unit tests** (62 total), including a mocked service suite covering the
+  authorisation paths: a student cannot promote themselves or anyone else, an admin
+  cannot change their own role, the setup account cannot be edited, an unknown role
+  is rejected, a no-op writes nothing, and `changedBy` always comes from the session
+  rather than the caller.
+
+### Changed
+- **The bootstrap admin no longer retires.** Founder's decision, reversing the
+  automatic cut-off shipped earlier the same day. `MAX_ADMINS_FOR_BOOTSTRAP_LOGIN`,
+  `isBootstrapLoginEnabled()` and `countAdmins()` were **removed**, not left dormant —
+  a dead safeguard reads as a live one. The only off-switch is now removing
+  `ADMIN_BOOTSTRAP_USERNAME` from the environment, and `/admin` says so.
+- Every `user_account` query now logs its underlying Postgres error server-side.
+  Returning `null` for both "no row" and "query failed" made a missing table look
+  identical to a missing account — the same shape as the Session 8 RLS incident.
+- `startGoogleSignIn` pre-flights the authorize URL. A disabled provider used to
+  dump Supabase's raw JSON on the user, because the client builds that URL locally
+  and never learns it will be refused. Fails open.
+- `completeCodeExchange` distinguishes a split identity — an email that already has
+  a non-Google account here — from a generic read failure.
+
+### Known gaps
+- **No rate limiting of our own** (`lib/security/` still reserved).
+- **No general audit log** — role provenance is on the row; `audit_event` arrives
+  with `pilot-metrics`.
+- **Employer invitations depend on Supabase's built-in email**, which is heavily
+  rate-limited on the free tier. Bulk invites will need real SMTP configured.
+
+## [Unreleased] — 2026-07-27: Homepage and authentication (`modules/identity`)
+
+The first module. Nothing else in the platform could gate access until it existed.
+
+**Migration `0001` has not been applied yet** — paste it into the Supabase SQL Editor
+before signing in, or every attempt fails on a missing table.
+
+### Added
+- **`modules/identity`** — the first built module, and the first row in
+  `docs/data/OWNERSHIP.md`. Public API: `getCurrentUser`, `signInWithPassword`,
+  `signUpStudent`, `startGoogleSignIn`, `completeCodeExchange`, `sendPasswordReset`,
+  `updatePassword`, `signOut`, `authorizeRole`, plus the pure routing rules
+  (`homeRouteForRole`, `canAccessRoute`, `postSignInRoute`, `safeNextPath`,
+  `isBootstrapLoginEnabled`).
+- **`supabase/migrations/0001_identity_user_account.sql`** — `user_account`, keyed on
+  `auth.users`. RLS on, `select` own row only, **no write policy**: every write goes
+  through the module with the service-role key, so a student cannot promote
+  themselves.
+- **Public homepage** at `/`, branded *Ascend — Talent Fulfillment Network*.
+- **Auth journey**: `/login` (email **or** username + password, and Google SSO),
+  `/signup` (students only), `/forgot-password`, `/reset-password`,
+  `/auth/callback` — the single return point for Google, email confirmation and
+  password-reset links.
+- **Three protected areas** with real layouts and honest empty states: `/dashboard`
+  (student), `/admin`, `/portal` (employer). Each route group's layout calls
+  `authorizeRole`, so a new page under it is protected by existing.
+- **The break-glass admin** — one username and password from
+  `ADMIN_BOOTSTRAP_USERNAME` / `ADMIN_BOOTSTRAP_EMAIL`, whose password sign-in
+  retires permanently once more than two admin accounts exist. Checked *before* the
+  password is verified, so a retired password cannot be confirmed as correct by
+  watching which error returns.
+- **30 unit tests** across the routing rules and the input schemas.
+
+### Changed
+- `middleware.ts` gained the signed-out redirect it was holding a place for
+  (`/login?next=…`). Role checks deliberately live in the route-group layouts, not
+  here: middleware would need the service-role client in the edge bundle.
+- `app/globals.css` — dropped the hardcoded Arial and the automatic dark mode, which
+  flipped `body` while every Tailwind utility stayed light.
+- `app/layout.tsx` — real title and description, replacing "Create Next App".
+- `vitest.config.ts` — `passWithNoTests` removed. "No tests found" is now a failure,
+  which is the point.
+
+### Decisions worth recording
+- **No role selector anywhere.** Sign-up creates students and takes no role
+  parameter; sign-in has no dropdown. Role is read from the database server-side on
+  every request. Admin and employer accounts are provisioned by an admin.
+- **Admins get no master key.** An admin opening `/dashboard` is redirected to
+  `/admin` rather than shown a student's view through an admin session.
+- **No account enumeration.** Every sign-in failure returns one message, and
+  `sendPasswordReset` reports success for unknown addresses. Otherwise both forms
+  become tools for checking who is registered here.
+
+### Known gaps
+- Admin and employer **provisioning UI is not built**, so no second admin can be
+  created yet and the bootstrap retirement rule cannot fire in practice.
+- **No sign-in audit trail.** Those events belong in `audit_event`, owned by
+  `pilot-metrics`, which does not exist.
+- **No rate limiting of our own.** `lib/security/` is still reserved; Supabase's own
+  auth limits apply in the meantime.
+
+## [Reset] — 2026-07-27: Strict modular monolith, implementation removed
+
+The codebase predated the finalised MVP. Rather than retrofit boundaries onto code
+that had none, the implementation was removed and the repository reduced to an
+enforced architectural skeleton. **Everything deleted here is intact on `main` and on
+`origin/main`** — `git checkout main -- <path>` restores any of it.
+
+### Removed
+- All feature code: student dashboard and evidence drill-down, admin console and its
+  Server Action, login and the two auth route handlers, the assessment intake API,
+  every domain file in `modules/`, all 11 components, both test files, and the three
+  schema-bound scripts. 28 commits' worth of implementation, all authored by
+  Mukesh Krishna.
+- `supabase/schema.sql`, the three migrations and `seed.sql` moved to
+  `supabase/archive/`. **They are still live in the Supabase project** — archiving a
+  file changes nothing in the database. See `supabase/archive/README.md`.
+
+### Kept
+- Platform plumbing that encodes no product decision: `lib/db/*` clients,
+  `lib/env.ts`, `lib/data-result.ts`, `app/layout.tsx`, `app/globals.css`.
+- `middleware.ts`, reduced to session refresh only. Its authorisation branch was
+  removed with `modules/identity` — a redirect to `/login` would now point at a route
+  that does not exist. The matcher lists the prefixes that will need a session.
+- The full folder structure, every reserved `README.md`, and all documentation.
+
+### Added
+- **Enforced boundaries** in `eslint.config.mjs`. `npm run lint` now fails on:
+  anything importing from `app/`; deep imports into another module
+  (`@/modules/x/internal`); `lib/` importing a module; a component importing
+  `lib/db/*`. Verified by linting deliberate violations — all four rules fire.
+- `docs/data/OWNERSHIP.md` — the table-ownership register. Every table gets exactly
+  one owning module; other modules call that module's functions rather than its
+  tables, and no query joins across a module boundary.
+- Per-module migration convention (`NNNN_<module>_<description>.sql`), documented in
+  `supabase/migrations/README.md`. RLS ships in the same migration as its table.
+- A dependency-free placeholder at `app/(public)/page.tsx` so `npm run dev` boots.
+- `passWithNoTests` in `vitest.config.ts` so the empty suite does not fail CI.
+  Remove it when the first module ships tests.
+
+### Verified
+`npm run typecheck`, `npm run lint` and `npm run build` all clean; the build serves
+`/` and `/_not-found`. `npm test` passes with no tests by design.
+
+### Open
+- The live database and `supabase/migrations/` now disagree by design. Before the
+  first migration, each legacy table must be explicitly reused, replaced or retired.
+- No module has an `index.ts` yet — the deep-import rule is enforced but has nothing
+  to guard until the first module ships one.
+
+---
+
+> **Everything below describes the pre-reset implementation.** Those file paths no
+> longer exist. Kept for the reasoning, not the paths — the RLS incidents, the auth
+> dead-ends and the *why* behind past choices are worth reading before repeating them.
+
+## [Session 12] — 2026-07-27: Repository Restructure — ASCEND-ENG-015 Modular Monolith
+
+No behavioural change. `npm run build` produces the identical 9-route table, all 18 tests pass, lint and `tsc --noEmit` are clean. **Entries in earlier sessions below still refer to the old paths — they are a historical record and were deliberately not rewritten. Use the mapping here to translate them.**
+
+### Changed
+- Dropped the `src/` wrapper; `app/`, `modules/`, `lib/`, `components/` and `middleware.ts` now sit at the repository root, per ASCEND-ENG-015 §12. `tsconfig.json` alias updated: `@/*` → `./*` (was `./src/*`).
+- `app/` routes grouped by audience with Next.js **route groups**: `(public)`, `(student)`, `(admin)`, `(employer)`. Parentheses are stripped from the URL, so **no route changed** — `app/(student)/dashboard/page.tsx` still serves `/dashboard`. Verified against the bundled Next 16 docs (`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/route-groups.md`) and by diffing the build's route table before and after.
+- New `modules/` domain layer. File moves:
+
+  | Was | Now |
+  |---|---|
+  | `src/lib/admin-auth.ts` | `modules/identity/admin-access.ts` |
+  | `src/lib/onboard-student.ts` | `modules/identity/onboarding.ts` |
+  | `src/lib/readiness-engine.ts` | `modules/readiness/readiness-engine.ts` |
+  | `src/lib/dashboard-data.ts` | split → `modules/readiness/readiness-data.ts` + `modules/evidence/evidence-data.ts` |
+  | `src/lib/admin-data.ts` | `modules/role-standards/dimensions.ts` |
+  | `src/lib/ai-evaluator.ts` | `modules/ai-gateway/evaluator.ts` |
+  | `src/lib/supabase-{admin,server,browser}.ts` | `lib/db/supabase-{admin,server,browser}.ts` |
+  | `src/lib/*.test.ts` | `tests/unit/*.test.ts` |
+  | `supabase/seed.sql` | `supabase/seed/seed.sql` |
+
+- `dashboard-data.ts` split along the §6 module boundary: Readiness owns status/PRI/next-action reads, Evidence owns the artefact drill-down. Function bodies are unchanged; only their file and the imports changed.
+- `DataResult<T>` extracted to `lib/data-result.ts` — three modules return it, so it belonged to none of them. Previously `modules/role-standards/dimensions.ts` imported it from `dashboard-data.ts`.
+
+### Added
+- `README.md` at the repository root: rewritten from the `create-next-app` default into a real project map.
+- `README.md` in each reserved (not-yet-built) folder, stating what that module owns and does not own per ASCEND-ENG-015 §6. Git cannot track an empty directory and this project's standing rule forbids placeholder *code*, so the reservation is documented in Markdown, which cannot break a build: `modules/{student-discovery,simulations,passport,employer-review,pilot-metrics}/`, `app/(student)/{discovery,pathway,simulations/[simulationId],evidence,passport}/`, `app/(employer)/review/[snapshotId]/`, `lib/{auth,validation,logging,security}/`, `tests/{integration,e2e,fixtures}/`, `supabase/policies/`, `docs/{adr,api,data,product-traceability}/`.
+- `.github/workflows/ci.yml` — the §13.1 pull-request pipeline: install from lockfile → typecheck → lint → unit tests → production build. The build step uses placeholder Supabase env values (several modules read env at import time; the build makes no network calls) — never real keys.
+- `npm run typecheck` (`tsc --noEmit`) in `package.json`.
+
+### Not done (deliberate)
+- The 336-line 10-step flow in `app/api/assessments/route.ts` was **not** lifted into a domain module, even though §11 says business rules belong in domain services rather than routes. It has no automated test, so moving it would be an unverifiable refactor. Flagged as the next structural step, to be done alongside an integration test.
+- `middleware.ts` was not renamed to `proxy.ts`. Next 16 emits a deprecation warning for the `middleware` convention on every build; this pre-dates the restructure and is tracked separately.
+
+---
+
 ## [Session 11] — 2026-07-26: Admin — Access Control + Dimensions Config
 
 ### Added
