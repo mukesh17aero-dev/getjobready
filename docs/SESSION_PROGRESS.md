@@ -1,3 +1,5 @@
+> **ARCHIVED — pre-reset session log.** See the note at the top of `CHANGELOG.md`.
+
 # SESSION_PROGRESS.md
 
 Tracks completed work, pending features, blockers, and priorities. Read alongside `PROJECT_CONTEXT.md` (the architectural source of truth) before starting a new session. Update this file at the end of every session.

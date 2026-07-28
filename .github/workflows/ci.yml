@@ -1,0 +1,44 @@
+# Pull-request pipeline per ASCEND-ENG-015 §13.1.
+# Runs the same four commands you can run locally:
+#   npm run typecheck && npm run lint && npm test && npm run build
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Install from the lockfile — never resolve fresh versions in CI.
+      - run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      # Placeholder values only. Several modules read their Supabase env vars
+      # at import time, so `next build` needs them present — but the build
+      # makes no network calls, so these never have to be real. Do NOT put real
+      # keys here; production values live in Vercel and GitHub secrets.
+      - name: Production build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
+          ADMIN_EMAILS: ci@example.com

@@ -1,3 +1,8 @@
+> **ARCHIVED — pre-reset build tracker.** Sessions 1–11 shipped the implementation
+> that was removed on 2026-07-27. Kept as the record of what was attempted and in
+> what order; `docs/PLAYBOOK.md` remains the source for session content.
+
+
 # GJR Employability Framework — Build Progress
 
 Tracks all 18 sessions from `docs/PLAYBOOK.md`. Check off a box at the end of the session it belongs to, and commit this file together with that session's code.

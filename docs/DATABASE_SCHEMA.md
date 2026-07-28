@@ -1,6 +1,13 @@
+> **DESCRIBES THE ARCHIVED SCHEMA — which is still LIVE in Supabase.**
+> The SQL moved to `supabase/archive/` on 2026-07-27, but archiving files changed
+> nothing in the database: every table below still exists. Treat this as the
+> accurate record of the live database, and as the checklist of tables that must be
+> explicitly reused, replaced or retired. Ownership going forward:
+> `docs/data/OWNERSHIP.md`.
+
 # DATABASE_SCHEMA.md
 
-Reference for all 12 tables, their RLS state, and the migration history. Source files: `supabase/schema.sql` (original), `supabase/seed.sql`, `supabase/migrations/*.sql` (sequential, apply in order via the Supabase SQL Editor — no CLI access exists for this project).
+Reference for all 12 tables, their RLS state, and the migration history. Source files: `supabase/schema.sql` (original), `supabase/seed/seed.sql`, `supabase/migrations/*.sql` (sequential, apply in order via the Supabase SQL Editor — no CLI access exists for this project).
 
 Last verified against the live database: 2026-07-20 (Session 8 stabilization).
 
@@ -23,7 +30,7 @@ Last verified against the live database: 2026-07-20 (Session 8 stabilization).
 | `audit_log` | Before/after state on every status change | ✅ | **none** — service-role-only by design |
 | `recommendations` | Next-best-action suggestions, generated from AI `improvement_action` when a dimension is `developing` | ✅ | `for select using (auth.uid() = student_id)` |
 
-**No table in this schema has an insert/update RLS policy for students.** Every write goes through `supabaseAdmin` (the service role client) from trusted server-side code — `src/app/api/assessments/route.ts` and `src/lib/onboard-student.ts` are the only two write paths in the current codebase.
+**No table in this schema has an insert/update RLS policy for students.** Every write goes through `supabaseAdmin` (the service role client) from trusted server-side code — `app/api/assessments/route.ts` and `modules/identity/onboarding.ts` are the only two write paths in the current codebase.
 
 ## Foreign Keys and Deletion Behavior
 

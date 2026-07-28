@@ -1,3 +1,5 @@
+> **ARCHIVED — describes features removed in the 2026-07-27 reset.**
+
 # RELEASE_NOTES.md
 
 Product-facing summary of what's been built so far. For the technical commit-level detail, see `CHANGELOG.md`.

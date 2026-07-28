@@ -1,3 +1,8 @@
+> **PARTLY ARCHIVED.** The *principles* below still hold (evidence-first, AI vs
+> rules, the service boundaries). Every **file path** is stale — the implementation
+> was removed on 2026-07-27. For the current structure and the rules that govern it,
+> read `CLAUDE.md` and `docs/data/OWNERSHIP.md`.
+
 # ARCHITECTURE.md
 
 Technical architecture reference. For product/business context see `PROJECT_CONTEXT.md`; for the database specifically see `DATABASE_SCHEMA.md`.
@@ -9,11 +14,11 @@ Technical architecture reference. For product/business context see `PROJECT_CONT
 One Next.js 16 App Router application, one Vercel deployment, one Supabase project. The source architecture doc (ASCEND-ENG-004) describes 9 logical services; each is implemented as a folder of TypeScript functions rather than a separate deployable service:
 
 ```
-Employability Profile Service  →  src/lib/onboard-student.ts + students / student_employability_profiles tables
-Assessment Service              →  src/app/api/assessments/route.ts + assessment_results table
+Employability Profile Service  →  modules/identity/onboarding.ts + students / student_employability_profiles tables
+Assessment Service              →  app/api/assessments/route.ts + assessment_results table
 Evidence Service                →  evidence_records table (written inline in the assessment route)
-Readiness Calculation Engine    →  src/lib/readiness-engine.ts (pure, deterministic, zero DB/AI dependencies)
-AI Evaluation Layer             →  src/lib/ai-evaluator.ts (Claude API, feedback only)
+Readiness Calculation Engine    →  modules/readiness/readiness-engine.ts (pure, deterministic, zero DB/AI dependencies)
+AI Evaluation Layer             →  modules/ai-gateway/evaluator.ts (Claude API, feedback only)
 Decision Trigger Service        →  readiness_events table (event log, no message queue)
 Passport Sync Service           →  not yet built (Session 14+)
 Audit & Consent Service         →  audit_log table + Supabase RLS
@@ -35,7 +40,7 @@ Reporting Service                →  not yet built (Session 11+ admin panel)
 │  POST /api/assessments   ← GJR modules submit results here  │
 │      │                                                       │
 │  ────┴─────────────────────────────────────────             │
-│              CORE LIBRARIES (src/lib)                        │
+│              CORE LIBRARIES (lib + modules)                        │
 │  readiness-engine.ts   ← RULES ONLY, no AI                   │
 │  ai-evaluator.ts       ← Claude API, feedback only           │
 │  onboard-student.ts, supabase-{admin,server,browser}.ts      │
@@ -50,7 +55,7 @@ Reporting Service                →  not yet built (Session 11+ admin panel)
 
 ## The AI vs. Rules Boundary (non-negotiable)
 
-AI (Claude) grades artifacts and generates feedback. It **never** sets a readiness status directly. `src/lib/readiness-engine.ts` is the single source of truth for status transitions, and it is deliberately pure — no database calls, no AI calls, no side effects, fully unit-tested (18 tests covering every branch). `src/app/api/assessments/route.ts` step 3 calls the AI evaluator for qualitative feedback and (for interview/simulation types) a raw score; that raw score then flows into the readiness engine like any other input — the engine, not the AI, decides the resulting status.
+AI (Claude) grades artifacts and generates feedback. It **never** sets a readiness status directly. `modules/readiness/readiness-engine.ts` is the single source of truth for status transitions, and it is deliberately pure — no database calls, no AI calls, no side effects, fully unit-tested (18 tests covering every branch). `app/api/assessments/route.ts` step 3 calls the AI evaluator for qualitative feedback and (for interview/simulation types) a raw score; that raw score then flows into the readiness engine like any other input — the engine, not the AI, decides the resulting status.
 
 ## The Assessment Intake Flow (10 steps)
 
@@ -83,8 +88,8 @@ user clicks the link (same browser/device — a PKCE requirement)
   → Supabase's hosted /auth/v1/verify redirects to /auth/callback?code=...
 
 /auth/callback (server Route Handler)
-  → exchangeCodeForSession(code)     [uses src/lib/supabase-server.ts]
-  → ensureStudentOnboarded()         [src/lib/onboard-student.ts, service role]
+  → exchangeCodeForSession(code)     [uses lib/db/supabase-server.ts]
+  → ensureStudentOnboarded()         [modules/identity/onboarding.ts, service role]
   → redirect to /dashboard
 
 middleware.ts (runs on every /dashboard/* request)
@@ -104,4 +109,4 @@ Three-tier model, audited and repaired as of `supabase/migrations/0003_complete_
 
 ## Testing Architecture
 
-Vitest, `src/lib/readiness-engine.test.ts` (15 tests) and `src/lib/ai-evaluator.test.ts` (3 tests, mocking `@anthropic-ai/sdk`). The readiness engine is the audit-safe core and is tested exhaustively per `CLAUDE.md`'s explicit requirement; UI is not unit-tested (per `CLAUDE.md`, UI tests are optional) — verified instead via live end-to-end checks against the running dev server and, where a real browser session isn't reproducible (PKCE flows), via direct Supabase API calls that exercise the identical code path server-side (see `PROJECT_CONTEXT.md` Session History for examples of this technique in practice).
+Vitest, `tests/unit/readiness-engine.test.ts` (15 tests) and `tests/unit/ai-evaluator.test.ts` (3 tests, mocking `@anthropic-ai/sdk`). The readiness engine is the audit-safe core and is tested exhaustively per `CLAUDE.md`'s explicit requirement; UI is not unit-tested (per `CLAUDE.md`, UI tests are optional) — verified instead via live end-to-end checks against the running dev server and, where a real browser session isn't reproducible (PKCE flows), via direct Supabase API calls that exercise the identical code path server-side (see `PROJECT_CONTEXT.md` Session History for examples of this technique in practice).
