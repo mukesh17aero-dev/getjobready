@@ -78,7 +78,15 @@ export function AuthForm({ mode }: { mode: keyof typeof COPY }) {
       </h1>
       <p className="mt-2 text-sm text-slate-500">{copy.sub}</p>
 
-      <form onSubmit={submit} className="mt-8 flex flex-col gap-4" noValidate>
+      {/* method="post" is a pre-hydration safety net: if the form is somehow
+          submitted before React attaches onSubmit, the browser must not put
+          the password into the URL via a default GET submit. */}
+      <form
+        method="post"
+        onSubmit={submit}
+        className="mt-8 flex flex-col gap-4"
+        noValidate
+      >
         <label className="block">
           <span className="mb-1.5 block text-sm font-medium text-slate-700">
             Email
