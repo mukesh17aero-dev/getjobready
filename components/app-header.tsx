@@ -22,9 +22,17 @@ export function AppHeader() {
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-6 px-4 py-3">
         <Link
           href="/"
-          className="shrink-0 text-lg font-semibold tracking-tight text-slate-900"
+          className="flex shrink-0 items-center gap-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-violet"
         >
-          Ascend
+          <span
+            aria-hidden
+            className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand-violet to-sky-400 text-sm text-white"
+          >
+            ▲
+          </span>
+          <span className="text-lg font-extrabold tracking-[0.12em] text-brand-ink">
+            ASCEND
+          </span>
         </Link>
         <nav aria-label="Primary" className="-mx-2 flex overflow-x-auto">
           {DESTINATIONS.map(({ label, href }) => {
@@ -37,7 +45,7 @@ export function AppHeader() {
                 aria-current={active ? "page" : undefined}
                 className={`whitespace-nowrap rounded-full px-3 py-1.5 text-sm transition-colors ${
                   active
-                    ? "font-semibold text-violet-700"
+                    ? "font-semibold text-brand-violet-deep"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >

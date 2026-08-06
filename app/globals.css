@@ -6,6 +6,17 @@
 }
 
 @theme {
+  /* Brand palette from the shared home-page design: violet = guidance,
+     teal = progress, ink = trust anchor. */
+  --color-brand-violet: #6d5ce7;
+  --color-brand-violet-deep: #5646d6;
+  --color-brand-violet-soft: #8f7bf0;
+  --color-brand-teal: #19b8b0;
+  --color-brand-teal-deep: #0e9a95;
+  --color-brand-teal-soft: #4fd4c9;
+  --color-brand-ink: #1c2333;
+  --color-brand-mist: #f6f7fb;
+
   /* Entrance motion. Short, single-run, and always `both` so an element is
      invisible before its delay elapses rather than flashing into place. */
   --animate-fade-up: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
