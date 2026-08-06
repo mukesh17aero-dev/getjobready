@@ -1,14 +1,13 @@
-# lib/ — shared platform helpers
+# lib — frontend plumbing
 
-Cross-cutting technical helpers, per ASCEND-ENG-015 §12. Domain rules do not
-live here — they live in `modules/`.
+What belongs here (and nothing else):
 
-| Folder / file | Purpose |
-|---|---|
-| `db/` | Supabase clients (browser, request-scoped server, service role). |
-| `auth/` | Session helpers. Reserved. |
-| `validation/` | Shared zod schemas. Reserved. |
-| `logging/` | Structured logging. Reserved. |
-| `security/` | Rate limiting, prompt-injection guards, file checks. Reserved. |
-| `env.ts` | `requireEnv()` — fails loudly on a missing server env var. |
-| `data-result.ts` | `DataResult<T>`, the read-path result type shared by several modules. |
+- `api-client.ts` — the one fetch wrapper for the backend API: attaches the
+  user's Supabase JWT, maps 401 to a login redirect, types every response.
+- `supabase-browser.ts` — browser Supabase client for authentication only.
+  Access `NEXT_PUBLIC_*` env vars statically (`process.env.NEXT_PUBLIC_X`),
+  never dynamically.
+- Shared formatting helpers with no domain knowledge.
+
+**Never here:** the Supabase service-role key, direct database queries, scoring
+or any business logic — all of that lives in the backend repo (`ascend-backend`).

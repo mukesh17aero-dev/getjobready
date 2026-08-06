@@ -1,5 +1,5 @@
 {
-  "name": "gjr-employability",
+  "name": "ascend-frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,10 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.112.3",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.7",
     "next": "16.2.12",
@@ -27,7 +26,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
     "tailwindcss": "^4",
-    "tsx": "^4.23.1",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.10"
