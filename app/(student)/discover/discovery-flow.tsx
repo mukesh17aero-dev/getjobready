@@ -97,6 +97,10 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
   const content = initial?.content ?? null;
   const [run, setRun] = useState<AdaptiveState | null>(null);
   const [stage, setStage] = useState<Stage>("intro");
+  // Whether this results view came from finishing the survey in this
+  // sitting. The "Building your matches" ceremony belongs to that moment
+  // only — a returning visit shows the saved result straight away.
+  const [fresh, setFresh] = useState(false);
   // Arriving with a finished run — from "Continue path", or just coming back —
   // must show the result, never restart the survey.
   useEffect(() => {
@@ -216,6 +220,7 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
     // old why (or none) while the new one was still being written. Starting
     // a run always empties the shelf.
     setBriefs(null);
+    setFresh(false);
     setRun(state);
     setStage(state.done ? "results" : state.question?.kind === "explanation" ? "explanation" : "questions");
     track({ family: "engagement", event: "discovery_started", module: "discovery" });
@@ -251,8 +256,10 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
       return;
     }
     setRun(state);
-    if (state.done) setStage("results");
-    else if (state.question?.kind === "explanation") setStage("explanation");
+    if (state.done) {
+      setFresh(true);
+      setStage("results");
+    } else if (state.question?.kind === "explanation") setStage("explanation");
   }
 
   async function finish(skip: boolean) {
@@ -276,6 +283,7 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
       return;
     }
     setRun(state);
+    setFresh(true);
     setStage("results");
   }
 
@@ -504,10 +512,12 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
   }
 
   // ---------- results ----------
-  // The whole result arrives at once. The roles are ready before the written
-  // read-out is, but revealing them in two beats looked broken — so the wait
-  // is owned by a screen that narrates what is happening instead.
-  if (briefsLoading) {
+  // Straight after the survey the whole result arrives at once: the roles
+  // are ready before the written read-out is, and revealing them in two
+  // beats looked broken, so a narrated build screen owns that wait. On a
+  // returning visit the read-out is already written and fetches in under a
+  // second — the saved result shows immediately instead.
+  if (briefsLoading && fresh) {
     return <BuildingMatches />;
   }
 
@@ -633,6 +643,12 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
                   </div>
                 </details>
               )}
+              {i === 0 && briefsLoading && (
+                <p role="status" className="mt-3 text-[0.8rem] text-slate-400">
+                  Fetching your read-out…
+                </p>
+              )}
+
               <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-slate-100 pt-3">
                 <span
                   className={`rounded-full px-2.5 py-1 text-[0.7rem] font-bold uppercase tracking-wide ${
