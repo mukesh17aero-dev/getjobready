@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppHeader } from "@/components/app-header";
+import { FootprintTracker } from "@/components/footprint-tracker";
+import { THEME_BOOTSTRAP } from "@/lib/theme";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -32,8 +34,12 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
+      </head>
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900">
         <AppHeader />
+        <FootprintTracker />
         {children}
       </body>
     </html>

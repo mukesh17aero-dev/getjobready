@@ -16,7 +16,8 @@ export function EntryCard({
   return (
     <Link
       href={href}
-      className="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600"
+      data-track={`interest|hub|card_open|${href}`}
+      className="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-surface p-5 transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600"
     >
       <span
         aria-hidden

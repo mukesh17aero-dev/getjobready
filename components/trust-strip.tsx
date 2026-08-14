@@ -10,7 +10,7 @@ const CLAIMS = [
 
 export function TrustStrip() {
   return (
-    <ul className="grid grid-cols-2 gap-y-3 rounded-2xl border border-slate-200 bg-white px-3 py-4 sm:grid-cols-4 sm:gap-y-0">
+    <ul className="grid grid-cols-2 gap-y-2 rounded-2xl border border-slate-200 bg-surface px-3 py-3 sm:grid-cols-4 sm:gap-y-0">
       {CLAIMS.map(({ icon, title, caption }, i) => (
         <li
           key={title}

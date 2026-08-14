@@ -24,6 +24,13 @@ const COPY = {
 
 // Shared by /login and /signup. Auth is the one Supabase interaction that
 // lives in the frontend; everything else goes through the backend API.
+// Where to land after a successful sign-in: an in-app ?next=/path if present
+// (same-origin paths only), the homepage otherwise.
+function nextPath(): string {
+  const next = new URLSearchParams(window.location.search).get("next");
+  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+}
+
 export function AuthForm({ mode }: { mode: keyof typeof COPY }) {
   const router = useRouter();
   const copy = COPY[mode];
@@ -41,7 +48,9 @@ export function AuthForm({ mode }: { mode: keyof typeof COPY }) {
     // site with a session, which the browser client picks up automatically.
     const { error: oauthError } = await supabaseBrowser().auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath())}`,
+      },
     });
     if (oauthError) {
       setError(oauthError.message);
@@ -60,12 +69,15 @@ export function AuthForm({ mode }: { mode: keyof typeof COPY }) {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: window.location.origin },
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/profile?welcome=1")}`,
+        },
       });
       if (signUpError) {
         setError(signUpError.message);
       } else if (data.session) {
-        router.push("/");
+        // First thing a new account needs is enough profile to be guided.
+        router.push("/profile?welcome=1");
         router.refresh();
       } else {
         setNotice(
@@ -80,7 +92,7 @@ export function AuthForm({ mode }: { mode: keyof typeof COPY }) {
       if (signInError) {
         setError(signInError.message);
       } else {
-        router.push("/");
+        router.push(nextPath());
         router.refresh();
       }
     }
@@ -98,7 +110,7 @@ export function AuthForm({ mode }: { mode: keyof typeof COPY }) {
         type="button"
         onClick={() => void googleSignIn()}
         disabled={busy}
-        className="mt-8 flex w-full items-center justify-center gap-2.5 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-8 flex w-full items-center justify-center gap-2.5 rounded-xl border border-slate-300 bg-surface px-5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <svg aria-hidden width="18" height="18" viewBox="0 0 48 48">
           <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
@@ -135,7 +147,7 @@ export function AuthForm({ mode }: { mode: keyof typeof COPY }) {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-[0.95rem] outline-none transition-colors focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/25"
+            className="w-full rounded-xl border border-slate-300 bg-surface px-3.5 py-2.5 text-[0.95rem] outline-none transition-colors focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/25"
           />
         </label>
         <label className="block">
@@ -150,7 +162,7 @@ export function AuthForm({ mode }: { mode: keyof typeof COPY }) {
             minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-[0.95rem] outline-none transition-colors focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/25"
+            className="w-full rounded-xl border border-slate-300 bg-surface px-3.5 py-2.5 text-[0.95rem] outline-none transition-colors focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/25"
           />
         </label>
 

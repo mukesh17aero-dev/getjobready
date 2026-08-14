@@ -2,11 +2,11 @@ import Link from "next/link";
 
 const VARIANTS = {
   violet: {
-    card: "from-brand-violet-soft via-brand-violet to-brand-violet-deep shadow-brand-violet/25",
+    card: "from-brand-violet-soft via-brand-violet to-brand-violet-deep",
     arrow: "text-brand-violet-deep",
   },
   teal: {
-    card: "from-brand-teal-soft via-brand-teal to-brand-teal-deep shadow-brand-teal/25",
+    card: "from-brand-teal-soft via-brand-teal to-brand-teal-deep",
     arrow: "text-brand-teal-deep",
   },
 } as const;
@@ -32,21 +32,22 @@ export function DoorCard({
   return (
     <Link
       href={href}
-      className={`group relative flex min-h-60 flex-col gap-3 rounded-3xl bg-gradient-to-br p-6 text-white shadow-xl transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-violet ${styles.card}`}
+      data-track={`interest|home|door_open|${href}`}
+      className={`group relative flex min-h-40 flex-col gap-1.5 rounded-3xl bg-gradient-to-br p-4 text-white shadow-md transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-violet ${styles.card}`}
     >
       <span
         aria-hidden
-        className="grid h-13 w-13 place-items-center rounded-2xl bg-white/20 text-2xl"
+        className="grid h-11 w-11 place-items-center rounded-2xl bg-surface/20 text-xl"
       >
         {icon}
       </span>
       <span
         aria-hidden
-        className={`absolute right-5 top-5 grid h-10 w-10 place-items-center rounded-full bg-white text-lg font-bold transition-transform group-hover:translate-x-1 ${styles.arrow}`}
+        className={`absolute right-5 top-5 grid h-10 w-10 place-items-center rounded-full bg-surface text-lg font-bold transition-transform group-hover:translate-x-1 ${styles.arrow}`}
       >
         →
       </span>
-      <span className="text-2xl font-semibold leading-tight [text-wrap:balance]">
+      <span className="text-xl font-semibold leading-tight [text-wrap:balance]">
         {title}
       </span>
       <span className="max-w-[32ch] text-[0.925rem] leading-relaxed text-white/85">

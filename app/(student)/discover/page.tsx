@@ -1,13 +1,16 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { redirect } from "next/navigation";
+import { getServerSession } from "@/lib/supabase-server";
+import { getDiscovery } from "@/lib/api";
+import { DiscoveryFlow } from "./discovery-flow";
 
 export const metadata = { title: "Discover" };
+export const dynamic = "force-dynamic";
 
-export default function DiscoverPage() {
-  return (
-    <ComingSoon
-      stage="Stage 2 · Discovery"
-      title="Discover career options"
-      delivers="Explore five Career Worlds, compare real roles and get three explainable role matches with a career map — exploration, not a test."
-    />
-  );
+// Server Component read: content + the user's attempt arrive server-rendered;
+// the client component runs the 3–5 minute exploration.
+export default async function DiscoverPage() {
+  const session = await getServerSession();
+  if (!session) redirect("/login?next=/discover");
+  const state = await getDiscovery(session.access_token);
+  return <DiscoveryFlow initial={state} />;
 }

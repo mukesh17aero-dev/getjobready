@@ -16,11 +16,18 @@
   --color-brand-teal-soft: #4fd4c9;
   --color-brand-ink: #1c2333;
   --color-brand-mist: #f6f7fb;
+  /* the card/panel surface: white in light, near-black in dark. Kept apart
+     from `white` so text-white on coloured buttons stays white in both. */
+  --color-surface: #ffffff;
+  /* deliberately dark in BOTH themes: panels that are meant to read as a
+     dark slab, with white text on them */
+  --color-brand-panel: #17202f;
 
   /* Entrance motion. Short, single-run, and always `both` so an element is
      invisible before its delay elapses rather than flashing into place. */
   --animate-fade-up: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-fade-in: fade-in 0.9s ease-out both;
+  --animate-slide-in: slide-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
 
   /* Ambient motion for the decorative blobs. Slow enough to read as depth
      rather than as something asking for attention. */
@@ -35,6 +42,17 @@
     to {
       opacity: 1;
       transform: none;
+    }
+  }
+
+  @keyframes slide-in {
+    from {
+      transform: translateX(1.5rem);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
     }
   }
 
@@ -59,13 +77,130 @@
 }
 
 /*
- * Light only, deliberately. Every surface in this app is hand-written Tailwind,
- * and an automatic dark mode that flips the body while the utility classes stay
- * light produces unreadable pages. If dark mode is wanted, it gets added as a
- * pass over the whole UI, not as a media query here.
+ * Both themes, driven by tokens.
+ *
+ * Every surface in this app is hand-written Tailwind, so dark mode works by
+ * REDEFINING the slate scale and the brand neutrals rather than by adding a
+ * `dark:` variant to hundreds of class names. A component that says
+ * `bg-white text-slate-900 border-slate-200` is therefore correct in both
+ * themes, and new components inherit the behaviour for free.
+ *
+ * The viewer's OS preference is the default; the in-app toggle stamps
+ * data-theme on <html> and wins over it in both directions.
  */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  :root[data-theme="dark"],
+  :root:not([data-theme="light"]) {
+    /* placeholder so the cascade below stays readable */
+  }
+}
+
+/* --- dark palette: OS preference --- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --color-surface: #141922;
+    --color-slate-50: #10151d;
+    --color-slate-100: #1a212c;
+    --color-slate-200: #262d3b;
+    --color-slate-300: #38414f;
+    --color-slate-400: #7d8698;
+    --color-slate-500: #98a1b2;
+    --color-slate-600: #b6bece;
+    --color-slate-700: #d2d8e3;
+    --color-slate-800: #e4e8f0;
+    --color-slate-900: #f1f4f9;
+
+    --color-brand-ink: #e9ecf3;
+    --color-brand-mist: #0b0e14;
+    --color-brand-panel: #1b2230;
+    /* Dark mode is quieter on purpose: the same hues, desaturated and
+       darkened, so panels read as surfaces rather than neon. */
+    --color-brand-violet: #5a4cc4;
+    --color-brand-violet-deep: #473b9f;
+    --color-brand-violet-soft: #6d5fd0;
+    --color-brand-teal: #148f89;
+    --color-brand-teal-deep: #0e716d;
+    --color-brand-teal-soft: #1aa39c;
+
+
+    --color-violet-50: #221f3d;
+    --color-violet-100: #2b2650;
+    --color-violet-700: #b3a6ff;
+    --color-violet-900: #dcd6ff;
+    --color-teal-50: #10302f;
+    --color-teal-700: #6fded6;
+    --color-amber-50: #2e2513;
+    --color-amber-100: #3b2f15;
+    --color-amber-400: #d2a63c;
+    --color-amber-700: #e9c46a;
+    --color-amber-800: #f0d089;
+    --color-amber-900: #f6e3b4;
+    --color-emerald-500: #34d399;
+    --color-indigo-400: #8b93f8;
+    --color-indigo-500: #7b84f5;
+    --color-rose-50: #3a1d22;
+    --color-rose-600: #fb7185;
+    --color-rose-700: #fda4af;
+  }
+}
+
+/* --- dark palette: explicit choice, wins over the media query --- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-surface: #141922;
+  --color-slate-50: #10151d;
+  --color-slate-100: #1a212c;
+  --color-slate-200: #262d3b;
+  --color-slate-300: #38414f;
+  --color-slate-400: #7d8698;
+  --color-slate-500: #98a1b2;
+  --color-slate-600: #b6bece;
+  --color-slate-700: #d2d8e3;
+  --color-slate-800: #e4e8f0;
+  --color-slate-900: #f1f4f9;
+
+  --color-brand-ink: #e9ecf3;
+  --color-brand-mist: #0b0e14;
+  --color-brand-panel: #1b2230;
+  /* Dark mode is quieter on purpose: the same hues, desaturated and
+     darkened, so panels read as surfaces rather than neon. */
+  --color-brand-violet: #5a4cc4;
+  --color-brand-violet-deep: #473b9f;
+  --color-brand-violet-soft: #6d5fd0;
+  --color-brand-teal: #148f89;
+  --color-brand-teal-deep: #0e716d;
+  --color-brand-teal-soft: #1aa39c;
+
+
+  --color-violet-50: #221f3d;
+  --color-violet-100: #2b2650;
+  --color-violet-700: #b3a6ff;
+  --color-violet-900: #dcd6ff;
+  --color-teal-50: #10302f;
+  --color-teal-700: #6fded6;
+  --color-amber-50: #2e2513;
+  --color-amber-100: #3b2f15;
+  --color-amber-400: #d2a63c;
+  --color-amber-700: #e9c46a;
+  --color-amber-800: #f0d089;
+  --color-amber-900: #f6e3b4;
+  --color-emerald-500: #34d399;
+  --color-indigo-400: #8b93f8;
+  --color-indigo-500: #7b84f5;
+  --color-rose-50: #3a1d22;
+  --color-rose-600: #fb7185;
+  --color-rose-700: #fda4af;
+}
+
 body {
-  background-color: var(--color-white);
+  background-color: var(--color-surface);
   color: var(--color-slate-900);
   font-family: var(--font-sans), system-ui, sans-serif;
 }

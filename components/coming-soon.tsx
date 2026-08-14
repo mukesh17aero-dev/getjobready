@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BackLink } from "@/components/back-link";
 
 // Placeholder body for a destination whose module is not built yet. Content
 // only — the real page replaces this component entirely.
@@ -6,14 +6,20 @@ export function ComingSoon({
   stage,
   title,
   delivers,
+  backHref,
+  backLabel,
 }: {
   stage: string;
   title: string;
   delivers: string;
+  backHref?: string;
+  backLabel?: string;
 }) {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-16">
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-violet-700">
+    <main className="mx-auto max-w-2xl px-4 py-10">
+      <BackLink fallbackHref={backHref} fallbackLabel={backLabel} />
+
+      <p className="mt-7 text-xs font-semibold uppercase tracking-[0.14em] text-brand-violet-deep">
         {stage}
       </p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
@@ -21,15 +27,8 @@ export function ComingSoon({
       </h1>
       <p className="mt-4 text-slate-600">{delivers}</p>
       <p className="mt-4 text-sm text-slate-500">
-        This module is not built yet — the page exists so the journey&apos;s
-        navigation is real from day one.
+        This part isn&apos;t built yet.
       </p>
-      <Link
-        href="/"
-        className="mt-8 inline-block rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-violet-700"
-      >
-        ← Back to home
-      </Link>
     </main>
   );
 }

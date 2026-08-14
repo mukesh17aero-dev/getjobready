@@ -4,26 +4,33 @@ import Link from "next/link";
 // live destination — a tile for an unbuilt feature is omitted, not greyed out.
 export function CapabilityTile({
   icon,
-  iconBg,
+  tint,
   title,
   caption,
   href,
 }: {
   icon: string;
-  iconBg: string;
+  // A palette token, so the wash follows the theme instead of a fixed hex.
+  tint: "violet" | "teal" | "amber" | "indigo";
   title: string;
   caption: string;
   href: string;
 }) {
+  const wash = {
+    violet: "bg-violet-50",
+    teal: "bg-teal-50",
+    amber: "bg-amber-50",
+    indigo: "bg-indigo-50",
+  }[tint];
   return (
     <Link
       href={href}
-      className="rounded-2xl border border-slate-200 bg-white p-4 text-center transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-violet"
+      data-track={`interest|home|tile_open|${href}`}
+      className="rounded-2xl border border-slate-200 bg-surface p-3 text-center transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-violet"
     >
       <span
         aria-hidden
-        className="mx-auto mb-2.5 grid h-11 w-11 place-items-center rounded-full text-xl"
-        style={{ backgroundColor: iconBg }}
+        className={`mx-auto mb-2 grid h-9 w-9 place-items-center rounded-full text-lg ${wash}`}
       >
         {icon}
       </span>
