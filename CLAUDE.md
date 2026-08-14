@@ -25,6 +25,34 @@ tab bar), mobile-responsive from 360 px, autosave on meaningful interactions,
 usable on 3G/4G. Never ship fabricated social proof (invented user counts,
 ratings, "trusted by" claims) — trust metrics come from real data or don't ship.
 
+## What this product is — the design test
+
+Ascend is a **career companion**, not a hiring platform and not a learning
+platform. The difference shows in what a screen opens with: a platform opens
+with what it can do for you, a companion opens with where *you* are and what is
+worth doing next.
+
+Every screen, every section and every piece of copy must answer three questions,
+in this order:
+
+1. **Why should I care?** — the stake, stated before the ask.
+2. **Why is this relevant to me?** — drawn from this person's own record. If
+   there is nothing to draw on, say that plainly; never invent a reason.
+3. **What is my call to action?** — exactly one primary action. Two primary
+   actions is the same as none.
+
+`lib/next-step.ts` holds this as a type (`NextStep`), and `NextStepCard`
+renders it. A section that asks for something and cannot fill all three fields
+has not earned the ask — cut it or find the missing answer.
+
+Two further tests, applied to every design decision:
+
+- **How fast does this convince someone that staying will improve their
+  future?** Confidence comes from being specific about what they told us and
+  what they chose — never from praise, urgency or invented numbers.
+- **Is teal doing its job?** Teal means *you earned this*. Violet means
+  *Ascend is guiding you here*. Never mix them.
+
 ## Layer rules
 
 ```

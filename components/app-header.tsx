@@ -43,10 +43,9 @@ function toAccount(user: { email?: string; user_metadata?: Record<string, unknow
   };
 }
 
-function AuthControls() {
-  // undefined = still checking, null = signed out
+// undefined = still checking, null = signed out.
+function useAccount(): Account | null | undefined {
   const [account, setAccount] = useState<Account | null | undefined>(undefined);
-
   useEffect(() => {
     const supabase = supabaseBrowser();
     supabase.auth
@@ -57,7 +56,10 @@ function AuthControls() {
     );
     return () => sub.subscription.unsubscribe();
   }, []);
+  return account;
+}
 
+function AuthControls({ account }: { account: Account | null | undefined }) {
   if (account === undefined) return <span className="h-8 w-8" aria-hidden />;
 
   if (account === null) {
@@ -194,12 +196,20 @@ function AccountMenu({ account }: { account: Account }) {
 
 export function AppHeader() {
   const pathname = usePathname();
+  const account = useAccount();
+  // Every destination behind the logo is a login wall. Showing five of them to
+  // a visitor who has not signed up is five dead ends on the page that has to
+  // do the most work.
+  const signedIn = Boolean(account);
 
   return (
     <header className="sticky top-0 z-10 border-b border-slate-200 bg-surface/90 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+        {/* The wordmark goes to the front door, not to the signed-in home.
+            "/" is the person's own journey once they are in; the brand mark
+            should still reach the page that says what this is. */}
         <Link
-          href="/"
+          href="/welcome"
           className="flex shrink-0 items-center gap-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-violet"
         >
           <BrandLogo size={30} />
@@ -207,7 +217,10 @@ export function AppHeader() {
             ASCEND
           </span>
         </Link>
-        <nav aria-label="Primary" className="-mx-2 flex min-w-0 overflow-x-auto">
+        <nav
+          aria-label="Primary"
+          className={`-mx-2 min-w-0 overflow-x-auto ${signedIn ? "flex" : "hidden"}`}
+        >
           {DESTINATIONS.map(({ label, href, match }) => {
             const active = isActive(pathname, match);
             return (
@@ -226,7 +239,7 @@ export function AppHeader() {
             );
           })}
         </nav>
-        <AuthControls />
+        <AuthControls account={account} />
       </div>
     </header>
   );

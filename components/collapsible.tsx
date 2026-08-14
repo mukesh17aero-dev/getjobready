@@ -1,5 +1,7 @@
 "use client";
 
+import { ChevronRight } from "@/components/icons";
+
 // A collapsible section built on <details>, so open/closed state lives in the
 // DOM rather than React: it survives re-renders while typing, and keyboard and
 // screen-reader behaviour comes for free.
@@ -25,11 +27,8 @@ export function Collapsible({
       className="group overflow-hidden rounded-xl border border-slate-200 bg-surface"
     >
       <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 transition-colors hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
-        <span
-          aria-hidden
-          className="shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-90 motion-reduce:transition-none"
-        >
-          ▸
+        <span className="shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-90 motion-reduce:transition-none">
+          <ChevronRight size={16} />
         </span>
         <span className="min-w-0 flex-1">{summary}</span>
         {aside && (

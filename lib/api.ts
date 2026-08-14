@@ -34,6 +34,11 @@ export type JourneyRouteInfo = {
   title: string;
   need: string;
   output: string;
+  // One concrete, checkable thing about how this works — enough to make
+  // someone curious about the how, never a claim about other users.
+  teaser?: string;
+  // What actually happens, in three short lines.
+  steps?: string[];
   time: string;
   price: string;
   landing: string;
@@ -47,9 +52,37 @@ export type JourneySelection = {
   resolved: ResolvedRoute;
 };
 
+// What this person has actually done, decided by the journey module so the
+// screens never have to work it out from three separate fetches.
+export type JourneyProgress = {
+  told: number;
+  // How complete each stage is, not merely whether it is finished. Optional
+  // for the same reason `progress` itself is: an API one deploy behind.
+  profile?: { filled: number; total: number };
+  discovery?: { answered: number; done: boolean };
+  // The role they are aiming at, with what it pays and where it leads.
+  role?: {
+    id: string;
+    title: string;
+    pitch: string;
+    payMonthly: { min: number; max: number } | null;
+    next: { title: string; when: string } | null;
+    // The engine's own reason for putting them in this role, kept from the day
+    // they finished the survey.
+    why?: string | null;
+  } | null;
+  name: string | null;
+  track: string | null;
+  discoveryDone: boolean;
+  selectedRole: string | null;
+};
+
 export type JourneyState = {
   routes: JourneyRouteInfo[];
   current: JourneySelection | null;
+  // Optional on purpose: an API one deploy behind does not send this, and a
+  // screen must degrade rather than break. Read it through progressOf().
+  progress?: JourneyProgress;
 };
 
 export async function getJourneyState(
@@ -236,6 +269,13 @@ export type AdaptiveState = {
   behaviourApplied?: number;
   fromYourProfile?: string[];
   openAnswer: string | null;
+  // How close the run is to knowing, 0–100. The progress bar is this, not a
+  // count of questions: the survey ends by becoming sure, not by reaching ten.
+  confidence: number;
+  // One plain line about what the last answer did to the picture.
+  noted: string | null;
+  // Answers given faster than the question could be read.
+  rushed: number;
   question: AskedQuestion | null;
   done: boolean;
   matches: DiscoveryMatch[];
@@ -250,6 +290,8 @@ export const answerAdaptive = (
   body: {
     questionId: string;
     optionId: string;
+    // How long the question was on screen before they answered.
+    ms?: number;
     signals?: Partial<AttemptSignals>;
   },
 ) =>
@@ -266,6 +308,35 @@ export const answerAdaptiveOpen = (
     method: "POST",
     body,
   });
+
+// ---- The personal read-out of a finished run ----
+//
+// Fetched after the matches are already on screen: the scores are arithmetic
+// and instant, this is written and takes a moment. The server writes it once
+// per recommendation and keeps it, so a second visit is a database read.
+
+export type BriefPoint = { point: string; basedOn: string[] };
+export type BriefStep = { title: string; how: string; basedOn: string[] };
+
+export type RoleBrief = {
+  roleId: string;
+  // Why this work suits them, grounded in what they chose.
+  fit: BriefPoint[];
+  // How to become good at it quickly.
+  excel: BriefStep[];
+  // What will be hard, and what to do about it.
+  watch: BriefStep[];
+};
+
+export type BriefResponse = {
+  // "none" = no finished run. "unavailable" = nothing written, and the screen
+  // simply shows the engine's own lines instead.
+  status: "ready" | "unavailable" | "none";
+  briefs: RoleBrief[];
+};
+
+export const getRoleBriefs = (token: string) =>
+  discoveryCall<BriefResponse>(token, "/v1/discovery/brief");
 
 export const restartAdaptive = (token: string) =>
   discoveryCall<AdaptiveState>(token, "/v1/discovery/adaptive/restart", {

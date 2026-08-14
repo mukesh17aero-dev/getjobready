@@ -6,10 +6,12 @@ import {
   answerAdaptive,
   answerAdaptiveOpen,
   getAdaptive,
+  getRoleBriefs,
   restartAdaptive,
   selectDiscoveryRole,
   type AdaptiveState,
   type DiscoveryState,
+  type RoleBrief as RoleBriefData,
 } from "@/lib/api";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { track } from "@/lib/footprints";
@@ -17,6 +19,10 @@ import { RememberHub } from "@/components/remember-hub";
 import { BackLink } from "@/components/back-link";
 import { RolePreview } from "@/components/role-preview";
 import { RoleCompare } from "@/components/role-compare";
+import { RoleBrief } from "@/components/role-brief";
+import { MatchForming } from "@/components/match-forming";
+import { BuildingMatches } from "@/components/building-matches";
+import { Check, ChevronRight, Circle, Spark } from "@/components/icons";
 
 // The 3–5 minute Discovery flow (MVP deliverable 4). The server chooses each
 // question from the published bank based on what has been answered so far, so
@@ -63,10 +69,14 @@ function markShown(tally: SignalTally, questionId: string): void {
   tally.shownAt = Date.now();
 }
 
-function markAnswered(tally: SignalTally, wasAnsweredBefore: boolean): void {
-  if (tally.shownAt > 0) tally.perQuestionMs.push(Date.now() - tally.shownAt);
+// Returns how long the question was on screen, which the server uses to decide
+// whether the answer could have been read at all.
+function markAnswered(tally: SignalTally, wasAnsweredBefore: boolean): number {
+  const elapsed = tally.shownAt > 0 ? Date.now() - tally.shownAt : 0;
+  if (tally.shownAt > 0) tally.perQuestionMs.push(elapsed);
   if (wasAnsweredBefore) tally.changedAnswers += 1;
   tally.shownAt = Date.now();
+  return elapsed;
 }
 
 function summarise(tally: SignalTally) {
@@ -124,6 +134,49 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
     if (q) markShown(tally.current, q.id);
   }, [run?.question]);
 
+  // The personal read-out, fetched once the result is on screen. The scores
+  // are arithmetic and appear instantly; this is written, so it arrives a
+  // moment later rather than holding the whole page back. The server writes it
+  // once per recommendation, so every later visit is a database read.
+  const [briefs, setBriefs] = useState<RoleBriefData[] | null>(null);
+  // A ref, not state: asking twice would be a wasted round trip, and guarding
+  // with state would mean setting state from an effect body.
+  const briefsAsked = useRef(false);
+  const hasResults = stage === "results" && (run?.matches.length ?? 0) > 0;
+  const briefsLoading = hasResults && briefs === null;
+  useEffect(() => {
+    if (!hasResults || briefsAsked.current) return;
+    briefsAsked.current = true;
+    let cancelled = false;
+    void (async () => {
+      // The read-out is written by a model on the first visit, and a single
+      // slow or failed write used to land here as "no read-out at all" — the
+      // page then showed matches with their why missing until the next
+      // visit. So ask up to three times before accepting that. Once written
+      // it is kept server-side, so a retry after a success is a cheap read.
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const t = await token();
+        const response = t ? await getRoleBriefs(t) : null;
+        if (cancelled) return;
+        if (response?.status === "ready") {
+          setBriefs(response.briefs);
+          return;
+        }
+        // "none" means no finished run — nothing a retry could change.
+        if (response?.status === "none") break;
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+        if (cancelled) return;
+      }
+      // An empty list is a real answer: the screen shows the engine's own
+      // lines and says nothing about what is missing.
+      setBriefs([]);
+    })();
+    return () => {
+      cancelled = true;
+      briefsAsked.current = false;
+    };
+  }, [hasResults]);
+
   if (!content) {
     return (
       <main className="mx-auto max-w-5xl px-4 py-16 text-center">
@@ -158,6 +211,11 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
       setError("Could not start — try again.");
       return;
     }
+    // A read-out kept from a previous run would hold the results gate open:
+    // the next completion would skip "Building your matches" and show the
+    // old why (or none) while the new one was still being written. Starting
+    // a run always empties the shelf.
+    setBriefs(null);
     setRun(state);
     setStage(state.done ? "results" : state.question?.kind === "explanation" ? "explanation" : "questions");
     track({ family: "engagement", event: "discovery_started", module: "discovery" });
@@ -168,7 +226,7 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
   async function answerCurrent(optionId: string) {
     const question = run?.question;
     if (!question || question.kind === "explanation") return;
-    markAnswered(tally.current, false);
+    const ms = markAnswered(tally.current, false);
     track({
       family: question.kind === "choice" ? "interest" : "scenario",
       event: question.kind === "choice" ? "choice_answered" : "scenario_answered",
@@ -184,6 +242,7 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
     const state = await answerAdaptive(t, {
       questionId: question.id,
       optionId,
+      ms,
       signals: summarise(tally.current),
     });
     setBusy(false);
@@ -297,71 +356,97 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
   if (stage === "questions") {
     const question = run?.question;
     if (!question || question.kind === "explanation") return null;
-    // There is no fixed total, so progress is shown as questions answered
-    // against the point where the run can end at the earliest.
     const answered = run?.askedCount ?? 0;
-    const progress = Math.min(100, Math.round((answered / 10) * 100));
+    // Progress is how sure the run is, not how many questions have gone by.
+    // The survey ends by knowing, so the bar has to measure knowing — and a
+    // bar that stalls is telling the truth about a question that told us
+    // little, which is more useful than one that always creeps forward.
+    const sure = run?.confidence ?? 0;
+    const prompt =
+      question.kind === "choice" ? question.prompt : question.situation;
+
     return (
-      <main className="mx-auto max-w-5xl px-4 pb-10">
+      <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-3xl flex-col px-4 pb-8">
         <div className="pt-4">
           <BackLink />
         </div>
-        <div className="mt-5 flex items-center gap-3">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
+
+        {/* How close Ascend is to knowing — the only number on the screen. */}
+        <div className="mt-5">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-slate-400">
+              Moment {answered + 1}
+            </span>
+            <span className="text-[0.72rem] tabular-nums text-slate-400">
+              {sure > 0 ? `${sure}% of the way to your match` : "Getting to know you"}
+            </span>
+          </div>
+          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
             <div
-              className="h-full rounded-full bg-brand-teal transition-all"
-              style={{ width: `${progress}%` }}
+              className="h-full rounded-full bg-brand-teal transition-[width] duration-500 ease-out motion-reduce:transition-none"
+              style={{ width: `${Math.max(4, sure)}%` }}
             />
           </div>
-          <span className="text-xs tabular-nums text-slate-400">
-            {answered + 1}
-          </span>
         </div>
 
-        {question.kind === "choice" ? (
-          <section className="mt-7">
-            <h1 className="text-xl font-semibold tracking-tight text-slate-900 [text-wrap:balance]">
-              {question.prompt}
-            </h1>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {question.options.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void answerCurrent(option.id)}
-                  className="rounded-2xl border border-slate-200 bg-surface px-5 py-5 text-left text-[0.95rem] text-slate-800 transition-all hover:border-brand-violet hover:shadow-md disabled:opacity-60"
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </section>
-        ) : (
-          <section className="mt-7">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-teal-deep">
-              Try the work
+        <section className="mt-8" key={question.id}>
+          {question.kind === "scenario" && (
+            <p className="text-[0.72rem] font-bold uppercase tracking-[0.14em] text-brand-teal-deep">
+              A moment on the job
             </p>
-            <h1 className="mt-1.5 text-lg font-semibold leading-snug tracking-tight text-slate-900">
-              {question.situation}
-            </h1>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {question.options.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void answerCurrent(option.id)}
-                  className="rounded-2xl border border-slate-200 bg-surface px-5 py-5 text-left text-[0.95rem] text-slate-800 transition-all hover:border-brand-teal hover:shadow-md disabled:opacity-60"
-                >
+          )}
+          <h1 className="mt-1.5 animate-fade-up text-[1.35rem] font-semibold leading-snug tracking-tight text-slate-900 sm:text-[1.6rem] [text-wrap:balance]">
+            {prompt}
+          </h1>
+
+          {/* One option per row. Two long labels side by side turn a choice
+              into a reading comprehension test; stacked, each one is read on
+              its own and the eye travels down the same line every time. */}
+          <div className="mt-5 grid gap-2.5">
+            {question.options.map((option, i) => (
+              <button
+                key={option.id}
+                type="button"
+                disabled={busy}
+                onClick={() => void answerCurrent(option.id)}
+                style={{ animationDelay: `${60 + i * 70}ms` }}
+                className="group flex min-h-14 animate-fade-up cursor-pointer items-center gap-4 rounded-2xl border border-slate-200 bg-surface px-4 py-4 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-brand-violet hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-violet disabled:cursor-default disabled:opacity-60 motion-reduce:hover:translate-y-0 sm:px-5 sm:py-[1.15rem]"
+              >
+                <span className="min-w-0 flex-1 text-[0.98rem] leading-relaxed text-slate-800">
                   {option.label}
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
-        <p className="mt-6 text-center text-xs text-slate-400">
-          Saved automatically.
+                </span>
+                {/* Empty ring, filled on hover and focus. It says "this is a
+                    choice" without numbering the choices, and it is the same
+                    shape a person met on the landing page. */}
+                <span className="shrink-0 text-slate-300 transition-colors group-hover:text-brand-violet">
+                  <Circle size={22} />
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* What the last answer did to the picture. It is the only thing
+            Ascend says back mid-survey, and it is what turns a form into a
+            conversation — you answer, and something is visibly listening. */}
+        <div className="mt-5 min-h-9">
+          {run?.noted && (
+            <p
+              role="status"
+              className="flex animate-fade-in gap-2 text-[0.85rem] text-slate-500"
+            >
+              <span className="mt-0.5 shrink-0 text-brand-teal">
+                <Spark size={15} />
+              </span>
+              <span>{run.noted}</span>
+            </p>
+          )}
+        </div>
+
+        <MatchForming confidence={sure} answered={answered} />
+
+        <p className="mt-auto pt-6 text-center text-xs text-slate-400">
+          No wrong answers · saved as you go
         </p>
         {error && <p className="mt-3 text-center text-sm text-rose-600">{error}</p>}
       </main>
@@ -419,6 +504,13 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
   }
 
   // ---------- results ----------
+  // The whole result arrives at once. The roles are ready before the written
+  // read-out is, but revealing them in two beats looked broken — so the wait
+  // is owned by a screen that narrates what is happening instead.
+  if (briefsLoading) {
+    return <BuildingMatches />;
+  }
+
   const matches = run?.matches ?? [];
   const worldTitle = (id: string) =>
     content.worlds.find((w) => w.id === id)?.title ?? id;
@@ -447,93 +539,139 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
         </p>
       </section>
 
-      <div className="mt-2 grid gap-2">
-        {matches.map((match, i) => (
-          <section
-            key={match.roleId}
-            role="button"
-            tabIndex={0}
-            aria-label={`Full picture: ${match.title}`}
-            onClick={() => setPreviewRole(match.roleId)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
+      {/* Said plainly rather than hidden: some answers came back faster than
+          the question could be read, so they were left out. Better to name it
+          and offer the fix than to present a thin result as a firm one. */}
+      {(run?.rushed ?? 0) > 0 && (
+        <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-[0.82rem] leading-snug text-amber-900">
+          <strong className="font-semibold">This is a first read.</strong>{" "}
+          {run!.rushed === 1 ? "One answer came" : `${run!.rushed} answers came`}{" "}
+          back faster than the question could be read, so{" "}
+          {run!.rushed === 1 ? "it was" : "they were"} left out. Take it again
+          slowly and these matches will sharpen.
+        </p>
+      )}
+
+      <div className="mt-2 grid gap-2.5">
+        {matches.map((match, i) => {
+          const brief = briefs?.find((b) => b.roleId === match.roleId) ?? null;
+          return (
+            <section
+              key={match.roleId}
+              // Clicking the card opens the full picture. Anything genuinely
+              // interactive inside it — the compare box, the read-out toggle,
+              // the two buttons — does its own job instead. No role="button"
+              // here: a button containing buttons is announced wrongly, and
+              // "See the reality" below is the keyboard path.
+              onClick={(event) => {
+                const el = event.target as HTMLElement;
+                if (el.closest("button, a, input, label, summary")) return;
                 setPreviewRole(match.roleId);
-              }
-            }}
-            className={`cursor-pointer rounded-2xl border bg-surface p-3 transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-violet ${
-              selected === match.roleId
-                ? "border-brand-teal ring-2 ring-brand-teal/25"
-                : "border-slate-200 hover:border-slate-300"
-            }`}
-          >
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h2 className="text-[1.05rem] font-semibold text-slate-900">
-                {i + 1}. {match.title}
-              </h2>
-              <span className="text-xs text-slate-400">{worldTitle(match.world)}</span>
-              <label
-                onClick={(e) => e.stopPropagation()}
-                className="ml-auto flex cursor-pointer items-center gap-1.5 text-[0.75rem] text-slate-500 hover:text-slate-700"
-              >
-                <input
-                  type="checkbox"
-                  checked={compareIds.includes(match.roleId)}
-                  onChange={(e) =>
-                    setCompareIds((ids) =>
-                      e.target.checked
-                        ? [...ids, match.roleId]
-                        : ids.filter((id) => id !== match.roleId),
-                    )
-                  }
-                  className="h-3.5 w-3.5 accent-[#6d5ce7]"
-                />
-                Compare
-              </label>
-            </div>
-            <p className="mt-0.5 text-[0.82rem] text-slate-600">{match.summary}</p>
-            <ul className="mt-1 grid gap-1">
-              {match.why.slice(0, 1).map((reason) => (
-                <li key={reason} className="text-[0.8rem] leading-snug text-slate-500">
-                  · {reason}
-                </li>
-              ))}
-            </ul>
-            {match.uncertainty && (
-              <p className="mt-1.5 rounded-lg bg-amber-50 px-2.5 py-1 text-[0.72rem] text-amber-800">
-                {match.uncertainty}
-              </p>
-            )}
-            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-              <span
-                className={`rounded-full px-2.5 py-1 text-[0.7rem] font-bold uppercase tracking-wide ${
-                  match.band === "strong"
-                    ? "bg-teal-50 text-teal-700"
-                    : match.band === "adjacent"
-                      ? "bg-violet-50 text-violet-700"
-                      : "bg-amber-50 text-amber-700"
-                }`}
-              >
-                {match.band} fit · {match.score}%
-              </span>
-              <button
-                type="button"
-                disabled={busy || selected === match.roleId}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  void choose(match.roleId);
-                }}
-                className={`ml-auto rounded-xl px-4 py-1.5 text-[0.82rem] font-bold transition-colors ${
-                  selected === match.roleId
-                    ? "bg-brand-teal text-white"
-                    : "bg-brand-violet text-white hover:bg-brand-violet-deep"
-                } disabled:opacity-60`}
-              >
-                {selected === match.roleId ? "✓ Selected" : "Choose this role"}
-              </button>
-            </div>
-          </section>
-        ))}
+              }}
+              style={{ animationDelay: `${i * 90}ms` }}
+              className={`animate-fade-up cursor-pointer rounded-2xl border bg-surface p-4 transition-colors hover:shadow-md ${
+                selected === match.roleId
+                  ? "border-brand-teal ring-2 ring-brand-teal/25"
+                  : "border-slate-200"
+              }`}
+            >
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h2 className="text-[1.05rem] font-semibold text-slate-900">
+                  {i + 1}. {match.title}
+                </h2>
+                <span className="text-xs text-slate-400">{worldTitle(match.world)}</span>
+                <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-[0.75rem] text-slate-500 hover:text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={compareIds.includes(match.roleId)}
+                    onChange={(e) =>
+                      setCompareIds((ids) =>
+                        e.target.checked
+                          ? [...ids, match.roleId]
+                          : ids.filter((id) => id !== match.roleId),
+                      )
+                    }
+                    className="h-3.5 w-3.5 accent-[#6d5ce7]"
+                  />
+                  Compare
+                </label>
+              </div>
+              <p className="mt-0.5 text-[0.82rem] text-slate-600">{match.summary}</p>
+
+              {/* The engine's own line stays: it is the auditable reason this
+                  role is here, and it renders with or without the read-out. */}
+              <ul className="mt-1.5 grid gap-1">
+                {match.why.slice(0, 1).map((reason) => (
+                  <li key={reason} className="text-[0.8rem] leading-snug text-slate-500">
+                    · {reason}
+                  </li>
+                ))}
+              </ul>
+              {match.uncertainty && (
+                <p className="mt-1.5 rounded-lg bg-amber-50 px-2.5 py-1 text-[0.72rem] text-amber-800">
+                  {match.uncertainty}
+                </p>
+              )}
+
+              {/* Folded away on every match, not just the ones below the top.
+                  Three open read-outs is a wall of text, and a person who has
+                  just been handed three roles wants the shortlist first and the
+                  reasoning when they ask for it. */}
+              {brief && (
+                <details className="group mt-3">
+                  <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[0.84rem] font-semibold text-brand-violet-deep [&::-webkit-details-marker]:hidden">
+                    <span
+                      aria-hidden
+                      className="transition-transform duration-200 group-open:rotate-90 motion-reduce:transition-none"
+                    >
+                      <ChevronRight size={16} />
+                    </span>
+                    Why this suits you
+                  </summary>
+                  <div className="mt-2.5">
+                    <RoleBrief brief={brief} title={match.title} />
+                  </div>
+                </details>
+              )}
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-slate-100 pt-3">
+                <span
+                  className={`rounded-full px-2.5 py-1 text-[0.7rem] font-bold uppercase tracking-wide ${
+                    match.band === "strong"
+                      ? "bg-teal-50 text-teal-700"
+                      : match.band === "adjacent"
+                        ? "bg-violet-50 text-violet-700"
+                        : "bg-amber-50 text-amber-700"
+                  }`}
+                >
+                  {match.band} fit · {match.score}%
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPreviewRole(match.roleId)}
+                  className="text-[0.8rem] font-semibold text-slate-500 hover:text-slate-900"
+                >
+                  See the reality
+                </button>
+                <button
+                  type="button"
+                  disabled={busy || selected === match.roleId}
+                  onClick={() => void choose(match.roleId)}
+                  className={`ml-auto rounded-xl px-4 py-1.5 text-[0.82rem] font-bold transition-colors ${
+                    selected === match.roleId
+                      ? "bg-brand-teal text-white"
+                      : "bg-brand-violet text-white hover:bg-brand-violet-deep"
+                  } disabled:opacity-60`}
+                >
+                  {selected === match.roleId ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check size={14} /> Selected
+                    </span>
+                  ) : "Choose this role"}
+                </button>
+              </div>
+            </section>
+          );
+        })}
       </div>
 
       {/* The rest of the catalogue, plainly. Not a browse experience — just a
@@ -560,7 +698,12 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
                 // controls, and a button cannot contain buttons.
                 <div
                   key={role.id}
-                  className="flex flex-col rounded-xl border border-slate-200 bg-surface p-3.5 transition-colors hover:border-slate-300"
+                  onClick={(event) => {
+                    const el = event.target as HTMLElement;
+                    if (el.closest("button, a, input, label, summary")) return;
+                    setPreviewRole(role.id);
+                  }}
+                  className="flex cursor-pointer flex-col rounded-xl border border-slate-200 bg-surface p-3.5 transition-colors hover:border-slate-300 hover:shadow-md"
                 >
                   <div className="flex items-start gap-2">
                     <button
@@ -611,7 +754,11 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
                           : "border border-slate-300 text-slate-700 hover:border-brand-violet hover:text-brand-violet-deep"
                       }`}
                     >
-                      {selected === role.id ? "✓ Selected" : "Choose this role"}
+                      {selected === role.id ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check size={14} /> Selected
+                    </span>
+                  ) : "Choose this role"}
                     </button>
                   </div>
                 </div>

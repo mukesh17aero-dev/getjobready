@@ -4,6 +4,7 @@ import { Dialog } from "@/components/dialog";
 import { PayProgression } from "@/components/pay-progression";
 import { WorkMix } from "@/components/work-mix";
 import type { RoleDetail } from "@/lib/api";
+import { Check } from "@/components/icons";
 
 const money = (n: number) => `₹${Math.round(n / 1000)}K`;
 export const payRange = (p: { min: number; max: number }) =>
@@ -74,11 +75,15 @@ export function RolePreview({
                   : "bg-brand-violet hover:bg-brand-violet-deep"
               }`}
             >
-              {chosen
-                ? "✓ Your selected role"
-                : choosing
+              {chosen ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <Check size={15} /> Your selected role
+                </span>
+              ) : (
+                choosing
                   ? "Saving…"
-                  : "Choose this role"}
+                  : "Choose this role"
+              )}
             </button>
           </>
         )
@@ -166,8 +171,8 @@ export function RolePreview({
         <ul className="grid gap-1.5 text-[0.85rem] text-slate-600">
           {role.suitsYouIf.map((line) => (
             <li key={line} className="flex gap-2">
-              <span aria-hidden className="text-brand-teal-deep">
-                ✓
+              <span className="mt-0.5 shrink-0 text-brand-teal-deep">
+                <Check size={14} />
               </span>
               {line}
             </li>

@@ -15,7 +15,10 @@
   --color-brand-teal-deep: #0e9a95;
   --color-brand-teal-soft: #4fd4c9;
   --color-brand-ink: #1c2333;
-  --color-brand-mist: #f6f7fb;
+  /* The page ground. Warmed a few degrees towards the violet accent rather
+     than a neutral grey: a companion should not open on the colour of an
+     admin panel. */
+  --color-brand-mist: #f7f6fb;
   /* the card/panel surface: white in light, near-black in dark. Kept apart
      from `white` so text-white on coloured buttons stays white in both. */
   --color-surface: #ffffff;
@@ -33,6 +36,34 @@
      rather than as something asking for attention. */
   --animate-drift: drift 18s ease-in-out infinite;
   --animate-drift-slow: drift 26s ease-in-out infinite reverse;
+
+  /* The thread: a step's marker filling in once it is earned. */
+  --animate-draw: draw 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  /* A score ring sweeping to its value. The two ends are supplied per element
+     as --ring-from and --ring-to, so one keyframe serves any number. */
+  --animate-ring: ring 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  /* A bar growing from its own left edge rather than fading in place. */
+  --animate-grow: grow 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  /* A cursor sitting in a half-written message. */
+  --animate-blink: blink 1.1s steps(1, end) infinite;
+
+  /* A band of light passing once across a dark panel as it arrives. Slow, and
+     it never repeats — a looping shine is jewellery, a single pass is arrival. */
+  --animate-sweep: sweep 1.6s cubic-bezier(0.4, 0, 0.2, 1) 0.35s both;
+
+  /* A small mark landing: overshoots slightly, then settles. */
+  --animate-pop: pop 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+
+  /* A scroll cue nudging downward. Small enough to notice only when the eye
+     is resting, which is exactly when someone needs it. */
+  --animate-bob: bob 2.2s ease-in-out infinite;
+
+  /* An official stamp coming down on a page: overshoots, then settles. The
+     rotation lives in the keyframe because transform is what is animated. */
+  --animate-stamp: stamp 0.42s cubic-bezier(0.2, 0.85, 0.35, 1.25) both;
 
   @keyframes fade-up {
     from {
@@ -65,6 +96,85 @@
     }
   }
 
+  @keyframes draw {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+
+  @keyframes ring {
+    from {
+      stroke-dashoffset: var(--ring-from);
+    }
+    to {
+      stroke-dashoffset: var(--ring-to);
+    }
+  }
+
+  @keyframes sweep {
+    from {
+      transform: translateX(-120%) skewX(-18deg);
+    }
+    to {
+      transform: translateX(320%) skewX(-18deg);
+    }
+  }
+
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(3px);
+    }
+  }
+
+  @keyframes stamp {
+    from {
+      opacity: 0;
+      transform: rotate(-13deg) scale(1.7);
+    }
+    to {
+      opacity: 1;
+      transform: rotate(-13deg) scale(1);
+    }
+  }
+
+  @keyframes blink {
+    0%,
+    45% {
+      opacity: 1;
+    }
+    50%,
+    95% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes grow {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
   @keyframes drift {
     0%,
     100% {
@@ -91,6 +201,12 @@
 @layer base {
   :root {
     color-scheme: light;
+
+    /* The ambient aurora behind every screen (components/ambience.tsx).
+       Present enough over the light ground that a page never reads as a
+       flat white sheet, quiet enough that cards keep their contrast … */
+    --ambience-violet: rgb(109 92 231 / 0.22);
+    --ambience-teal: rgb(25 184 176 / 0.16);
   }
 
   :root[data-theme="dark"],
@@ -147,6 +263,12 @@
     --color-rose-50: #3a1d22;
     --color-rose-600: #fb7185;
     --color-rose-700: #fda4af;
+
+    /* … and fuller over the dark one, where the glow is the atmosphere.
+       These are the vivid landing-page hues on purpose: blurred light stays
+       light even when the theme's own accents are desaturated. */
+    --ambience-violet: rgb(109 92 231 / 0.3);
+    --ambience-teal: rgb(25 184 176 / 0.2);
   }
 }
 
@@ -197,13 +319,65 @@
   --color-rose-50: #3a1d22;
   --color-rose-600: #fb7185;
   --color-rose-700: #fda4af;
+
+  /* … and fuller over the dark one, where the glow is the atmosphere.
+     These are the vivid landing-page hues on purpose: blurred light stays
+     light even when the theme's own accents are desaturated. */
+  --ambience-violet: rgb(109 92 231 / 0.3);
+  --ambience-teal: rgb(25 184 176 / 0.2);
 }
+
+/* --- light palette: the neutrals are chosen, not inherited ---
+ *
+ * Tailwind's slate is a blue-grey. Against a violet accent that reads as two
+ * competing cool hues, which is most of why the screens felt like a generic
+ * admin tool. These are the same steps biased a few degrees towards the
+ * accent, so borders and captions belong to the same world as the brand.
+ */
+@layer base {
+  :root:not([data-theme="dark"]) {
+    --color-slate-50: #f8f7fc;
+    --color-slate-100: #f0eef8;
+    --color-slate-200: #e3e0ef;
+    --color-slate-300: #cbc7dd;
+    --color-slate-400: #8e8aa3;
+    --color-slate-500: #6f6b85;
+    --color-slate-600: #57536b;
+    --color-slate-700: #423f54;
+    --color-slate-800: #2c2a3b;
+    --color-slate-900: #1c1a29;
+  }
+}
+
+
 
 body {
   background-color: var(--color-surface);
   color: var(--color-slate-900);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
+
+/*
+ * Demo panels build themselves on arrival.
+ *
+ * Each panel's parts animate in on a stagger. Left alone they would all run at
+ * mount, off-screen, and be finished before anyone reached them — so the panel
+ * that is not in view holds its animations at the first frame instead, and
+ * only the one that has arrived is allowed to run.
+ *
+ * Holding rather than remounting is what stops the flicker: a remount shows
+ * the finished panel for an instant before resetting it, and pausing never
+ * shows a frame that is not part of the sequence.
+ */
+.demo-stage [class*="animate-"] {
+  animation-play-state: paused;
+}
+
+.demo-stage[data-live="true"] [class*="animate-"] {
+  animation-play-state: running;
+}
+
+
 
 /*
  * Motion is decoration here — nothing on this site depends on it to be

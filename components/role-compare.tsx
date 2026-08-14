@@ -3,6 +3,7 @@
 import { Dialog } from "@/components/dialog";
 import { payRange } from "@/components/role-preview";
 import type { RoleDetail } from "@/lib/api";
+import { Check } from "@/components/icons";
 
 // Side-by-side comparison of two or three roles across the facts people
 // actually weigh up. Wide content scrolls inside its own container.
@@ -104,7 +105,11 @@ export function RoleCompare({
                           : "bg-brand-violet hover:bg-brand-violet-deep"
                       }`}
                     >
-                      {chosenRoleId === role.roleId ? "✓ Selected" : "Choose this"}
+                      {chosenRoleId === role.roleId ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check size={14} /> Selected
+                    </span>
+                  ) : "Choose this"}
                     </button>
                   </td>
                 ))}
