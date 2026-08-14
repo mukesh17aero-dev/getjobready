@@ -95,8 +95,31 @@ function summarise(tally: SignalTally) {
 
 export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
   const content = initial?.content ?? null;
-  const [run, setRun] = useState<AdaptiveState | null>(null);
-  const [stage, setStage] = useState<Stage>("intro");
+  // A finished attempt arrives with the page itself, so the results screen
+  // opens on it directly — the intro must never flash past someone who
+  // already has a result while a network round trip confirms it. The
+  // adaptive fetch below still runs and replaces this with the engine's
+  // fuller state (real rushed and asked counts) when it lands.
+  const savedRun = ((): AdaptiveState | null => {
+    const attempt = initial?.attempt;
+    const matches = attempt?.matches?.matches ?? [];
+    if (attempt?.status !== "completed" || matches.length === 0) return null;
+    return {
+      askedCount:
+        Object.keys(attempt.answers.choices ?? {}).length +
+        Object.keys(attempt.answers.scenarios ?? {}).length,
+      openAnswer: attempt.answers.explanation ?? null,
+      confidence: 100,
+      noted: null,
+      rushed: 0,
+      question: null,
+      done: true,
+      matches,
+      strongestSkills: [],
+    };
+  })();
+  const [run, setRun] = useState<AdaptiveState | null>(savedRun);
+  const [stage, setStage] = useState<Stage>(savedRun ? "results" : "intro");
   // Whether this results view came from finishing the survey in this
   // sitting. The "Building your matches" ceremony belongs to that moment
   // only — a returning visit shows the saved result straight away.
