@@ -65,7 +65,7 @@ function PathDemo() {
           </span>
           <div className="min-w-0 flex-1 rounded-2xl bg-teal-50 px-3 py-2.5 text-center">
             <SceneTeam className="mx-auto h-11 w-full" />
-            <p className="mt-1 text-[0.76rem] font-semibold text-teal-900">
+            <p className="mt-1 text-[0.76rem] font-semibold text-teal-700">
               In the job, ready for it
             </p>
           </div>
@@ -286,13 +286,13 @@ function DiscoveryDemo() {
                   ].map((row) => (
                     <li
                       key={row.skill}
-                      className="text-[0.8rem] leading-relaxed text-teal-900"
+                      className="text-[0.8rem] leading-relaxed text-teal-700"
                     >
                       <span className="font-semibold">{row.skill}</span> — {row.why}.
                     </li>
                   ))}
                 </ul>
-                <p className="mt-1.5 border-t border-teal-600/15 pt-1.5 text-[0.76rem] leading-relaxed text-teal-900/70">
+                <p className="mt-1.5 border-t border-teal-600/15 pt-1.5 text-[0.76rem] leading-relaxed text-teal-700/70">
                   Not seen yet: coordinating people. It matters here, and one
                   practice task covers it.
                 </p>
@@ -608,13 +608,13 @@ function InterviewDemo() {
               <Spark size={12} />
               Coach
             </p>
-            <p className="mt-1.5 text-[0.83rem] leading-relaxed text-teal-900">
+            <p className="mt-1.5 text-[0.83rem] leading-relaxed text-teal-700">
               You did the hard part most people skip — you called before she
               did, and you gave a date instead of an apology.
             </p>
             {/* The single most useful thing a coach can hand back: the words
                 to say next time, not an adjective about the answer. */}
-            <p className="mt-2 border-l-2 border-brand-teal/50 pl-2.5 text-[0.81rem] leading-relaxed text-teal-900/80">
+            <p className="mt-2 border-l-2 border-brand-teal/50 pl-2.5 text-[0.81rem] leading-relaxed text-teal-700/80">
               Add the ending: &ldquo;She had it by five, and I moved the next
               two deliveries so it didn&apos;t happen again.&rdquo;
             </p>

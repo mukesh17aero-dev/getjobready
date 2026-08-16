@@ -370,7 +370,7 @@ function EvidenceDemo() {
         </ul>
 
         {/* One good day is luck. The same behaviour twice is a skill. */}
-        <p className="mt-3 flex gap-2 rounded-xl bg-teal-50 px-3 py-2.5 text-[0.8rem] leading-snug text-teal-900">
+        <p className="mt-3 flex gap-2 rounded-xl bg-teal-50 px-3 py-2.5 text-[0.8rem] leading-snug text-teal-700">
           <span className="mt-0.5 shrink-0 text-brand-teal-deep">
             <Spark size={13} />
           </span>

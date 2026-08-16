@@ -585,7 +585,7 @@ export function ProfileForm({
           </p>
         )}
         {imported && (
-          <div className="mt-3 rounded-lg bg-teal-50 px-3.5 py-2.5 text-[0.82rem] text-teal-900">
+          <div className="mt-3 rounded-lg bg-teal-50 px-3.5 py-2.5 text-[0.82rem] text-teal-700">
             <p className="font-semibold">
               Read {imported.suggestions.length} details
               {imported.skills.length > 0 && `, ${imported.skills.length} skills`}
@@ -593,7 +593,7 @@ export function ProfileForm({
                 `, ${imported.activities.length} activities`}{" "}
               from your {imported.source === "linkedin" ? "LinkedIn export" : "CV"}.
             </p>
-            <ul className="mt-1.5 grid gap-0.5 text-[0.76rem] text-teal-800">
+            <ul className="mt-1.5 grid gap-0.5 text-[0.76rem] text-teal-700">
               {imported.suggestions.map((suggestion) => (
                 <li key={suggestion.field}>
                   <strong className="font-semibold">{suggestion.field}:</strong>{" "}

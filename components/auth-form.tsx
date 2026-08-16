@@ -227,7 +227,7 @@ export function AuthForm({
           <p
             role="status"
             className={`rounded-xl px-3.5 py-2.5 text-sm ${
-              dark ? "bg-teal-500/10 text-teal-200" : "bg-teal-50 text-teal-800"
+              dark ? "bg-teal-500/10 text-teal-200" : "bg-teal-50 text-teal-700"
             }`}
           >
             {notice}

@@ -31,9 +31,11 @@ const CARD_LOOKS = [
 export function StartRouter({
   initialState,
   profile = null,
+  fallbackName = "",
 }: {
   initialState: JourneyState | null;
   profile?: CareerProfile | null;
+  fallbackName?: string;
 }) {
   const router = useRouter();
   const [opening, setOpening] = useState<string | null>(null);
@@ -90,7 +92,8 @@ export function StartRouter({
   const landings = Object.fromEntries(
     state.routes.map((r) => [r.id, r.landing]),
   );
-  const name = progressOf(state).name?.split(" ")[0] ?? null;
+  const name =
+    (progressOf(state).name ?? fallbackName ?? "").split(" ")[0] || null;
   // Where this person stands inside each door. Coming back to this page every
   // day, "what can I do" is answered once and "where did I get to" is the
   // question from then on.
@@ -105,6 +108,23 @@ export function StartRouter({
   const currentDone = state.current
     ? routeStatus(state.current.route, state, journey).done
     : false;
+  const fields = toFields(profile);
+  const percent = completeness(fields);
+  const { selectedRole } = progressOf(state);
+  // What a step NEEDS before it can honestly be the next step: Discovery
+  // wants half a profile to work from; everything role-shaped (readiness,
+  // practice, interview) is meaningless before a role is chosen. The doors
+  // themselves stay open - only the recommendation is gated.
+  const eligibleNext = (routeId: string): boolean => {
+    if (routeId === "discovery" || routeId === "full_journey") return percent >= 50;
+    if (routeId === "readiness" || routeId === "practice" || routeId === "interview") {
+      return Boolean(selectedRole);
+    }
+    // The resume is a tool, not a journey stage - always available from
+    // its card, never pushed as "your next step".
+    if (routeId === "resume") return false;
+    return true;
+  };
   // The recommendation follows the journey's own order: after Discovery
   // comes the assessment, then practice, then the interview. The backend's
   // static flag (the whole package) is only the fallback when the ladder
@@ -113,18 +133,19 @@ export function StartRouter({
   const nextOnLadder =
     LADDER.map((id) => state.routes.find((r) => r.id === id))
       .filter((r): r is (typeof state.routes)[number] => Boolean(r))
-      .find((r) => !routeStatus(r.id, state, journey).done) ?? null;
+      .find((r) => !routeStatus(r.id, state, journey).done && eligibleNext(r.id)) ?? null;
   const spotlight =
-    !state.current || currentDone
+    !state.current || currentDone || !eligibleNext(state.current.route)
       ? (nextOnLadder ??
         state.routes.find(
-          (r) => r.recommended && !routeStatus(r.id, state, journey).done,
+          (r) =>
+            r.recommended &&
+            !routeStatus(r.id, state, journey).done &&
+            eligibleNext(r.id),
         ) ??
         null)
       : null;
 
-  const fields = toFields(profile);
-  const percent = profile ? completeness(fields) : null;
   const travelled = journeyPercent(journey);
   const role = fields.currentRole || fields.course || null;
   // The role they chose at the end of Discovery - the single most
@@ -136,16 +157,21 @@ export function StartRouter({
 
   // The banner's one continuation, in priority order: something already
   // started, an incomplete profile, then the recommendation.
-  const continueTo = state.current && !currentDone
-    ? {
-        label: `Continue: ${titles[state.current.route] ?? "where you left off"}`,
-        act: () => router.push(landings[state.current!.route] ?? "/"),
-      }
-    : percent !== null && percent < 100
-      ? { label: "Continue: finish your profile", act: () => router.push("/profile") }
-      : spotlight
-        ? { label: `Start: ${spotlight.title}`, act: () => void choose(spotlight.id) }
-        : null;
+  // A person we know nothing about goes to the profile first - always.
+  // Only then does an unfinished route reclaim the button.
+  const continueTo =
+    percent === 0
+      ? { label: "Start: tell us about you", act: () => router.push("/profile") }
+      : state.current && !currentDone && eligibleNext(state.current.route)
+        ? {
+            label: `Continue: ${titles[state.current.route] ?? "where you left off"}`,
+            act: () => router.push(landings[state.current!.route] ?? "/"),
+          }
+        : percent < 100
+          ? { label: "Continue: finish your profile", act: () => router.push("/profile") }
+          : spotlight
+            ? { label: `Start: ${spotlight.title}`, act: () => void choose(spotlight.id) }
+            : null;
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-6 sm:px-6">
@@ -165,7 +191,13 @@ export function StartRouter({
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-display text-xl font-bold">
-                {name ? `Hi ${name} - welcome back.` : "Welcome back."}
+                {percent === 0
+                  ? name
+                    ? `Hi ${name} - let\u2019s begin.`
+                    : "Welcome to Ascend - let\u2019s begin."
+                  : name
+                    ? `Hi ${name} - welcome back.`
+                    : "Welcome back."}
               </p>
               {role && (
                 <p className="mt-0.5 text-[0.9rem] font-medium text-white/95">
@@ -184,7 +216,7 @@ export function StartRouter({
               </button>
             )}
           </div>
-          {(targetRole || spaces.length > 0 || (percent !== null && percent < 100)) && (
+          {(targetRole || spaces.length > 0 || (percent > 0 && percent < 100)) && (
             <div className="mt-3.5 flex flex-wrap gap-1.5">
               {targetRole && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[0.74rem] font-bold ring-1 ring-white/40">
@@ -205,7 +237,7 @@ export function StartRouter({
                   {space}
                 </span>
               ))}
-              {percent !== null && percent < 100 && (
+              {percent > 0 && percent < 100 && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[0.74rem] font-medium ring-1 ring-white/20">
                   <span className="text-[0.56rem] font-bold uppercase tracking-wider text-white/60">
                     profile
@@ -273,7 +305,9 @@ export function StartRouter({
                     </span>
                   ) : started ? (
                     <span className="rounded-full bg-teal-50 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-teal-700">
-                      {status.label}
+                      {/* The resume card's status is the record count, which
+                          reads as bureaucracy here - a plain label instead. */}
+                      {route.id === "resume" ? "In progress" : status.label}
                     </span>
                   ) : recommended ? (
                     <span className="rounded-full bg-brand-teal-deep px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-white">

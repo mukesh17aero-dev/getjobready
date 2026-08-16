@@ -48,7 +48,11 @@ export default async function Home({
         {notice && (
           <div className="mx-auto max-w-3xl px-4 pt-6 sm:px-6">{notice}</div>
         )}
-        <StartRouter initialState={state} profile={record?.profile ?? null} />
+        <StartRouter
+          initialState={state}
+          profile={record?.profile ?? null}
+          fallbackName={(session?.user.user_metadata?.full_name as string | undefined) ?? ""}
+        />
       </main>
     );
   }

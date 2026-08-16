@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeSwitch } from "@/components/theme-switch";
@@ -138,7 +138,7 @@ function AuthControls({
           <button
             type="button"
             onClick={() => setMode("signup")}
-            className="whitespace-nowrap rounded-xl bg-white px-3.5 py-1.5 text-sm font-bold text-brand-ink transition-transform hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
+            className="whitespace-nowrap rounded-xl bg-white px-3.5 py-1.5 text-sm font-bold text-[#16233f] transition-transform hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
           >
             Sign up
           </button>
@@ -178,6 +178,7 @@ function AuthControls({
 // Avatar opens an account menu (Blueprint header pattern) instead of showing
 // a bare "Sign out" link next to the photo.
 function AccountMenu({ account, night }: { account: Account; night: boolean }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -281,7 +282,14 @@ function AccountMenu({ account, night }: { account: Account; night: boolean }) {
             role="menuitem"
             onClick={() => {
               setOpen(false);
-              void supabaseBrowser().auth.signOut();
+              // Sign out, then land on the front door - never leave someone
+              // staring at a signed-in page their session no longer owns.
+              void supabaseBrowser()
+                .auth.signOut()
+                .then(() => {
+                  router.push("/welcome");
+                  router.refresh();
+                });
             }}
             className="block w-full px-3.5 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
           >

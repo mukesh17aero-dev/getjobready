@@ -1012,7 +1012,7 @@ export function AdminConsole({
               )}
 
               {imported && (
-                <div className="mt-3 rounded-lg bg-teal-50 px-3.5 py-2.5 text-[0.82rem] text-teal-900">
+                <div className="mt-3 rounded-lg bg-teal-50 px-3.5 py-2.5 text-[0.82rem] text-teal-700">
                   <p className="font-semibold">
                     {imported.added.length} added, {imported.updated.length}{" "}
                     updated — saved as a draft.

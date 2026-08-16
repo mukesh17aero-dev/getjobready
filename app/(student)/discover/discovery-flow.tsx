@@ -73,7 +73,7 @@ function HowItWorksDemo() {
             aria-pressed={scene === i}
             className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-[0.76rem] font-semibold transition-colors ${
               scene === i
-                ? "border-brand-teal bg-teal-50 text-teal-900"
+                ? "border-brand-teal bg-teal-50 text-teal-700"
                 : "border-slate-200 text-slate-500 hover:border-slate-300"
             }`}
           >
@@ -130,7 +130,7 @@ function HowItWorksDemo() {
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
               <div className="h-full w-[62%] rounded-full bg-brand-teal" />
             </div>
-            <p className="mt-3 rounded-xl bg-teal-50 px-3.5 py-2.5 text-[0.85rem] text-teal-900">
+            <p className="mt-3 rounded-xl bg-teal-50 px-3.5 py-2.5 text-[0.85rem] text-teal-700">
               Noted - you reach for the person before the process. That
               leans you towards guest-facing work.
             </p>
@@ -185,7 +185,7 @@ function HowItWorksDemo() {
           <div key="s3" className="animate-fade-up">
             <div className="grid gap-2.5 sm:grid-cols-2">
               <div className="rounded-2xl border border-slate-200 px-4 py-3">
-                <p className="text-[0.7rem] font-bold uppercase tracking-wide text-teal-800">
+                <p className="text-[0.7rem] font-bold uppercase tracking-wide text-teal-700">
                   The ladder, with pay
                 </p>
                 <div className="mt-2 space-y-1.5 text-[0.8rem] text-slate-700">
@@ -195,7 +195,7 @@ function HowItWorksDemo() {
                 </div>
               </div>
               <div className="rounded-2xl border border-slate-200 px-4 py-3">
-                <p className="text-[0.7rem] font-bold uppercase tracking-wide text-teal-800">
+                <p className="text-[0.7rem] font-bold uppercase tracking-wide text-teal-700">
                   Voices from the work
                 </p>
                 <p className="mt-2 text-[0.8rem] italic leading-snug text-slate-600">
@@ -208,7 +208,7 @@ function HowItWorksDemo() {
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200 px-4 py-3">
-                <p className="text-[0.7rem] font-bold uppercase tracking-wide text-teal-800">
+                <p className="text-[0.7rem] font-bold uppercase tracking-wide text-teal-700">
                   Compare, side by side
                 </p>
                 <p className="mt-2 text-[0.8rem] leading-snug text-slate-600">
@@ -217,7 +217,7 @@ function HowItWorksDemo() {
                 </p>
               </div>
               <div className="rounded-2xl border border-teal-700/40 bg-teal-50/50 px-4 py-3">
-                <p className="text-[0.7rem] font-bold uppercase tracking-wide text-teal-800">
+                <p className="text-[0.7rem] font-bold uppercase tracking-wide text-teal-700">
                   Beyond your three
                 </p>
                 <p className="mt-2 text-[0.8rem] leading-snug text-slate-700">
@@ -560,7 +560,7 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
 
         <section className="mt-4 grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-teal-50 px-3.5 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-teal-800">
+            <span className="inline-flex items-center gap-2 rounded-full bg-teal-50 px-3.5 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-teal-700">
               <span aria-hidden>{"\u2726"}</span> Discovery {"\u00b7"} 3-5 min
             </span>
             <h1 className="mt-4 font-display text-[2.1rem] font-bold leading-[1.05] tracking-tight text-brand-ink sm:text-[2.4rem]">
@@ -586,7 +586,7 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
               </button>
               <a
                 href="#how-discovery-works"
-                className="text-[0.88rem] font-semibold text-teal-800 underline-offset-4 hover:underline"
+                className="text-[0.88rem] font-semibold text-teal-700 underline-offset-4 hover:underline"
               >
                 See how it works
               </a>
