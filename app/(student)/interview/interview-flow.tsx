@@ -363,7 +363,7 @@ function PastInterviews({
 }
 
 export function InterviewFlow({ initial }: { initial: InterviewHome }) {
-  const [view, setView] = useState<"setup" | "room" | "summary">(
+  const [view, setView] = useState<"setup" | "room" | "wrapup" | "summary">(
     initial.session && initial.session.status === "in_progress" ? "room" : "setup",
   );
   const [session, setSession] = useState<InterviewSessionView | null>(initial.session);
@@ -404,9 +404,15 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
   // Early end, done gracefully: the interviewer says goodbye in the thread
   // while the read-out is written, instead of the screen jumping away.
   const [endingEarly, setEndingEarly] = useState(false);
-  // The read-out is written after the person is back on the setup screen.
+  // The read-out is written on the wrap-up screen, or behind them if they
+  // chose to carry on elsewhere.
   const [summaryPending, setSummaryPending] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
+  // Where they are when the write lands decides whether it opens itself.
+  const viewRef = useRef(view);
+  useEffect(() => {
+    viewRef.current = view;
+  }, [view]);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recordingCapRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -655,15 +661,13 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
     if (secondsLeft === 0 && recording) stopRecording();
   }, [secondsLeft, recording]);
 
-  // Ending hands the person back to the scheduling screen straight away and
-  // writes the read-out behind them. Waiting on the screen was the worst
-  // place to be when the write failed - now a slow or failed write costs
-  // them nothing, and the read-out arrives when it is ready.
+  // Ending goes to a wrap-up screen that says plainly what is happening, and
+  // the read-out opens itself the moment it exists - the person never has to
+  // notice a badge or decide when to look. Leaving early is allowed, and the
+  // scheduling screen keeps a card so nothing is lost either way.
   const finish = async () => {
     setError(null);
-    setSummaryError(null);
-    setSummaryPending(true);
-    setView("setup");
+    setView("wrapup");
     await writeReadOut();
   };
 
@@ -680,6 +684,15 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
       return;
     }
     setSummary(result.summary);
+    if (viewRef.current === "wrapup") {
+      // Open it for them: the read-out is the whole point of the ten minutes.
+      setView("summary");
+    } else {
+      // They chose to wait elsewhere - bring the ready card into view rather
+      // than leaving it to be spotted.
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+    }
   };
 
   // Ending early, gracefully: the interviewer signs off in the thread, the
@@ -726,6 +739,77 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
   };
 
   // ---- views ----
+
+  // The wrap-up: one screen, one message, no decision to make. It opens the
+  // read-out itself when the write lands, so nobody has to watch for a badge.
+  if (view === "wrapup") {
+    return (
+      <main className="mx-auto flex min-h-[calc(100dvh-3.5rem)] max-w-lg flex-col items-center justify-center px-4 py-10 text-center sm:px-6">
+        <InterviewerAvatar />
+        <p className="mt-4 text-lg font-semibold text-brand-ink">
+          {summaryError
+            ? "That is the interview - your answers are saved."
+            : "Thank you - that is the interview."}
+        </p>
+
+        {summaryError ? (
+          <>
+            <p className="mt-2 max-w-sm text-sm leading-relaxed text-slate-600">
+              {summaryError}
+            </p>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => void writeReadOut()}
+                className="inline-flex min-h-12 cursor-pointer items-center rounded-full bg-brand-teal-deep px-6 text-sm font-bold text-white transition-colors hover:bg-brand-teal motion-reduce:transition-none"
+              >
+                Try again
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("setup")}
+                className="min-h-11 cursor-pointer text-sm font-semibold text-slate-500 transition-colors hover:text-brand-ink motion-reduce:transition-none"
+              >
+                I&rsquo;ll come back to it
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="mt-2 max-w-sm text-sm leading-relaxed text-slate-600">
+              Your interviewer is writing up how it went - what you did well,
+              what to sharpen, and the one thing to work on next. It usually
+              takes a few seconds, and it opens here on its own.
+            </p>
+            <p
+              role="status"
+              className="mt-5 inline-flex items-center gap-2.5 rounded-full border border-brand-teal/30 bg-teal-50 px-4 py-2.5 text-sm font-semibold text-teal-700"
+            >
+              <span aria-hidden className="flex gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-teal-700 motion-safe:animate-pulse" />
+                <span
+                  className="h-1.5 w-1.5 rounded-full bg-teal-700 motion-safe:animate-pulse"
+                  style={{ animationDelay: "150ms" }}
+                />
+                <span
+                  className="h-1.5 w-1.5 rounded-full bg-teal-700 motion-safe:animate-pulse"
+                  style={{ animationDelay: "300ms" }}
+                />
+              </span>
+              Writing your read-out…
+            </p>
+            <button
+              type="button"
+              onClick={() => setView("setup")}
+              className="mt-5 min-h-11 cursor-pointer text-sm font-semibold text-slate-500 underline underline-offset-2 transition-colors hover:text-brand-ink motion-reduce:transition-none"
+            >
+              I&rsquo;ll read it later
+            </button>
+          </>
+        )}
+      </main>
+    );
+  }
 
   if (view === "summary" && summary && session) {
     return (
