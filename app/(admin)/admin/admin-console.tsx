@@ -15,9 +15,14 @@ import {
   type SkillModel,
   type SkillModelReview,
 } from "@/lib/api";
+import {
+  adminAssessmentContent,
+  type AssessmentBank,
+} from "@/lib/assessment-api";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { SkillModelEditor } from "./skill-model-editor";
 import { QuestionBankEditor, type QuestionBank } from "./question-bank";
+import { AssessmentBankEditor } from "./assessment-bank";
 import { Collapsible } from "@/components/collapsible";
 
 // The admin console: edit the Discovery questions and the role catalogue, then
@@ -327,9 +332,9 @@ export function AdminConsole({
 }) {
   // Roles first, then the skills they need, then the questions that measure
   // them — the order the work is actually done in.
-  const [tab, setTab] = useState<"roles" | "skills" | "questions" | "legacy">(
-    "roles",
-  );
+  const [tab, setTab] = useState<
+    "roles" | "skills" | "questions" | "assessments" | "legacy"
+  >("roles");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
@@ -372,6 +377,11 @@ export function AdminConsole({
   const [bank, setBank] = useState<QuestionBank>({
     questions: startingBank.questions ?? [],
   });
+  // The assessment bank loads client-side on mount: it is a newer kind the
+  // server page does not fetch, and the tab must not be empty when opened.
+  const [assessmentBank, setAssessmentBank] = useState<AssessmentBank>({
+    questions: [],
+  });
   // One review for the whole console; each tab shows the findings it owns.
   const [review, setReview] = useState<SkillModelReview | null>(null);
   const [checking, setChecking] = useState(false);
@@ -404,7 +414,26 @@ export function AdminConsole({
     roles: Boolean(roles?.draft),
     skills: Boolean(skillModel?.draft),
     questions: Boolean(questionBank?.draft),
+    assessments: false,
   });
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabaseBrowser().auth.getSession();
+      const t = data.session?.access_token;
+      if (!t) return;
+      const doc = await adminAssessmentContent(t);
+      if (cancelled || !doc) return;
+      const stored = (doc.draft?.data ?? doc.published?.data ?? {}) as {
+        questions?: AssessmentBank["questions"];
+      };
+      setAssessmentBank({ questions: stored.questions ?? [] });
+      if (doc.draft) setHasDraft((h) => ({ ...h, assessments: true }));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function token() {
     const { data } = await supabaseBrowser().auth.getSession();
@@ -415,7 +444,8 @@ export function AdminConsole({
     | "discovery_content"
     | "role_catalogue"
     | "skill_model"
-    | "question_bank";
+    | "question_bank"
+    | "assessment_bank";
   const slotFor = (kind: Kind) =>
     kind === "discovery_content"
       ? "discovery"
@@ -423,7 +453,9 @@ export function AdminConsole({
         ? "roles"
         : kind === "skill_model"
           ? "skills"
-          : "questions";
+          : kind === "assessment_bank"
+            ? "assessments"
+            : "questions";
 
   async function save(kind: Kind) {
     setBusy(true);
@@ -441,7 +473,9 @@ export function AdminConsole({
           ? { roles: roleSummaries, details }
           : kind === "skill_model"
             ? model
-            : bank;
+            : kind === "assessment_bank"
+              ? assessmentBank
+              : bank;
     const saved = await adminSaveDraft(t, kind, data);
     // Skill requirements are edited on the role card but belong to the skill
     // model, so saving roles saves both.
@@ -670,9 +704,19 @@ export function AdminConsole({
         ? "skill_model"
         : tab === "questions"
           ? "question_bank"
-          : "discovery_content";
+          : tab === "assessments"
+            ? "assessment_bank"
+            : "discovery_content";
   const doc =
-    tab === "roles" ? roles : tab === "skills" ? skillModel : tab === "questions" ? questionBank : discovery;
+    tab === "roles"
+      ? roles
+      : tab === "skills"
+        ? skillModel
+        : tab === "questions"
+          ? questionBank
+          : tab === "assessments"
+            ? null
+            : discovery;
   const draftPending =
     tab === "roles"
       ? hasDraft.roles
@@ -680,7 +724,9 @@ export function AdminConsole({
         ? hasDraft.skills
         : tab === "questions"
           ? hasDraft.questions
-          : hasDraft.discovery;
+          : tab === "assessments"
+            ? hasDraft.assessments
+            : hasDraft.discovery;
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 pb-16 sm:px-6">
@@ -724,6 +770,7 @@ export function AdminConsole({
           { id: "roles" as const, label: "Roles" },
           { id: "skills" as const, label: "Skills & mappings" },
           { id: "questions" as const, label: "Discovery questions" },
+          { id: "assessments" as const, label: "Assessments" },
           { id: "legacy" as const, label: "Role Assessment" },
         ].map((t) => (
           <button
@@ -1458,6 +1505,16 @@ export function AdminConsole({
           model={model}
           aiConfigured={aiConfigured}
           onChange={setBank}
+        />
+      )}
+
+      {tab === "assessments" && (
+        <AssessmentBankEditor
+          bank={assessmentBank}
+          model={model}
+          roles={roleSummaries}
+          aiConfigured={aiConfigured}
+          onChange={setAssessmentBank}
         />
       )}
 

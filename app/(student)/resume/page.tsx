@@ -1,15 +1,20 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { redirect } from "next/navigation";
+import { getServerSession } from "@/lib/supabase-server";
+import { getResumeRecord, getResumeTarget } from "@/lib/resume-api";
+import { ResumeBuilder } from "@/components/resume-builder";
 
-export const metadata = { title: "Resume Studio" };
+export const metadata = { title: "Build your resume" };
+export const dynamic = "force-dynamic";
 
-export default function ResumePage() {
-  return (
-    <ComingSoon
-      stage="Stage 1 · Resume"
-      title="Resume Studio"
-      delivers="Upload what you have or start from scratch. Ascend builds a marketable, ATS-safe resume in Word and PDF — and creates the career record every later module reuses."
-      backHref={"/tools"}
-      backLabel={"Back to career tools"}
-    />
-  );
+// The AI Resume Builder page: fetch where this person stands (their career
+// record and the role locked from Discovery), then hand both to the builder.
+export default async function ResumePage() {
+  const session = await getServerSession();
+  if (!session) redirect("/login?next=/resume");
+  const [record, target] = await Promise.all([
+    getResumeRecord(session.access_token),
+    getResumeTarget(session.access_token),
+  ]);
+
+  return <ResumeBuilder profile={record?.profile ?? null} target={target} />;
 }

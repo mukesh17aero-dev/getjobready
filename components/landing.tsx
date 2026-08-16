@@ -320,10 +320,10 @@ export function Landing({ signedIn }: { signedIn: boolean }) {
                 className="animate-fade-up mt-6 max-w-[46ch] text-[1.05rem] leading-relaxed text-[var(--lp-body)]"
                 style={{ animationDelay: "160ms" }}
               >
-                Choosing a dream career in an AI-squeezed market feels like a
-                guess against thousands. Ascend replaces the guess: work that
-                fits how you think, a plan to get ready, and proof employers
-                trust.
+                Chasing a dream career in a competitive, AI-driven market is
+                challenging - thousands chase the same opportunity. Ascend
+                clears your path: work that fits how you think, a plan to get
+                ready, and proof employers trust.
               </p>
 
             </header>
