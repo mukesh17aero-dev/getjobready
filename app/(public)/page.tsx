@@ -1,5 +1,5 @@
 import { getServerSession } from "@/lib/supabase-server";
-import { getJourneyState } from "@/lib/api";
+import { getCareerRecord, getJourneyState } from "@/lib/api";
 import { Landing } from "@/components/landing";
 import { StartRouter } from "@/app/(student)/start/start-router";
 
@@ -22,7 +22,12 @@ export default async function Home({
 }) {
   const { erased } = await searchParams;
   const session = await getServerSession();
-  const state = session ? await getJourneyState(session.access_token) : null;
+  const [state, record] = session
+    ? await Promise.all([
+        getJourneyState(session.access_token),
+        getCareerRecord(session.access_token),
+      ])
+    : [null, null];
 
   const notice = erased ? (
     <p
@@ -43,7 +48,7 @@ export default async function Home({
         {notice && (
           <div className="mx-auto max-w-3xl px-4 pt-6 sm:px-6">{notice}</div>
         )}
-        <StartRouter initialState={state} />
+        <StartRouter initialState={state} profile={record?.profile ?? null} />
       </main>
     );
   }

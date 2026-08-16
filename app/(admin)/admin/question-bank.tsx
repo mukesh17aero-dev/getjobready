@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   adminGenerateQuestions,
   type GeneratedQuestion,
@@ -92,6 +92,25 @@ export function QuestionBankEditor({
   // Questions read as a student sees them until you choose to edit one.
   const [editing, setEditing] = useState<string | null>(null);
 
+  // Self-healing: a bank that already carries colliding ids (from the
+  // batch-numbering collision) is repaired once, in place.
+  useEffect(() => {
+    const seen = new Set<string>();
+    let changed = false;
+    const repaired = bank.questions.map((q) => {
+      let id = q.id;
+      let bump = 1;
+      while (seen.has(id)) {
+        id = `${q.id}_${++bump}`;
+        changed = true;
+      }
+      seen.add(id);
+      return id === q.id ? q : { ...q, id };
+    });
+    if (changed) onChange({ questions: repaired });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const countFor = (skillId: string) =>
     bank.questions.filter((q) => q.forSkillId === skillId).length;
 
@@ -111,7 +130,7 @@ export function QuestionBankEditor({
     const skillIds = picked.length > 0 ? picked : shortOfTarget;
     if (skillIds.length === 0) {
       setNote(
-        `Every skill already has its ${TARGET_PER_SKILL}. Remove some questions to generate replacements.`,
+        `Every skill already has its ${TARGET_PER_SKILL}. Tick the skills you want and regenerate - their questions are replaced with a fresh batch.`,
       );
       return;
     }
@@ -127,28 +146,61 @@ export function QuestionBankEditor({
       catalogue: model.skills,
       // Ask only for what each skill is short of, kind by kind. A skill that
       // already has its scenarios gets none.
-      wanted: skillIds.map((skillId) => ({
-        skillId,
-        choices: Math.max(0, MIX.choices - countKind(skillId, "choice")),
-        scenarios: Math.max(0, MIX.scenarios - countKind(skillId, "scenario")),
-        explanations: Math.max(
-          0,
-          MIX.explanations - countKind(skillId, "explanation"),
-        ),
-      })).filter((w) => w.choices + w.scenarios + w.explanations > 0),
+      // Unticked skills are topped up to the target. A skill the admin has
+      // explicitly ticked gets a fresh full mix even when it is already at
+      // target - that is what "regenerate with this guidance" means. The
+      // new questions are added alongside; nothing is deleted.
+      wanted: skillIds
+        .map((skillId) => {
+          const deficit = {
+            skillId,
+            choices: Math.max(0, MIX.choices - countKind(skillId, "choice")),
+            scenarios: Math.max(0, MIX.scenarios - countKind(skillId, "scenario")),
+            explanations: Math.max(
+              0,
+              MIX.explanations - countKind(skillId, "explanation"),
+            ),
+          };
+          const empty =
+            deficit.choices + deficit.scenarios + deficit.explanations === 0;
+          return picked.includes(skillId) && empty
+            ? { skillId, ...MIX }
+            : deficit;
+        })
+        .filter((w) => w.choices + w.scenarios + w.explanations > 0),
       existingPrompts: bank.questions.map((q) =>
         q.kind === "scenario" ? q.situation : q.prompt,
       ),
       guidance: guidance.trim() || undefined,
     });
     setBusy(false);
-    if (!result) {
-      setNote("Could not generate. Try again, or add questions by hand.");
+    if ("error" in result) {
+      setNote(`Could not generate - ${result.error}. Try again, or add questions by hand.`);
       return;
     }
-    onChange({ questions: [...bank.questions, ...result.questions] });
+    // Ticked skills are being REGENERATED: their old questions step aside
+    // for the fresh batch. Unticked top-ups only ever add. This edits the
+    // draft - students see nothing until Publish.
+    const replacing = new Set(picked);
+    const kept = bank.questions.filter((q) => !replacing.has(q.forSkillId));
+    // Batch ids restart at 1 on the backend - every incoming id is made
+    // unique against what remains and within its own batch.
+    const used = new Set(kept.map((q) => q.id));
+    const fresh = result.questions.map((q) => {
+      let id = q.id;
+      let bump = 1;
+      while (used.has(id)) id = `${q.id}_${++bump}`;
+      used.add(id);
+      return id === q.id ? q : { ...q, id };
+    });
+    const replaced = bank.questions.length - kept.length;
+    onChange({ questions: [...kept, ...fresh] });
     setNote(
-      `Added ${result.questions.length} ${result.questions.length === 1 ? "question" : "questions"}. Check them, then save the draft.${
+      `${
+        replaced > 0
+          ? `Replaced ${replaced} with ${fresh.length} fresh questions`
+          : `Added ${fresh.length} ${fresh.length === 1 ? "question" : "questions"}`
+      }. Check them, then save the draft.${
         result.usedStub ? " (No API key yet — these are placeholders.)" : ""
       }`,
     );
@@ -182,7 +234,9 @@ export function QuestionBankEditor({
         </h2>
         <p className="mt-1 text-[0.8rem] leading-snug text-slate-500">
           Pick the skills to write for. With none ticked, every skill short of{" "}
-          {TARGET_PER_SKILL} is topped up. One request covers all of them.
+          {TARGET_PER_SKILL} is topped up. Ticked skills are regenerated -
+          their existing questions are replaced by the fresh batch (draft
+          only, until you publish).
         </p>
 
         <div className="mt-2.5 flex flex-wrap gap-1.5">

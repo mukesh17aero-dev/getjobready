@@ -469,7 +469,9 @@ export type GeneratedQuestion =
     }
   | { kind: "explanation"; id: string; forSkillId: string; prompt: string };
 
-export const adminGenerateQuestions = (
+// Unlike apiCall, failures here carry the server's own explanation - an
+// admin staring at "could not generate" needs the why.
+export async function adminGenerateQuestions(
   token: string,
   body: {
     catalogue: Array<{ id: string; name: string; description: string }>;
@@ -482,12 +484,27 @@ export const adminGenerateQuestions = (
     existingPrompts?: string[];
     guidance?: string;
   },
-) =>
-  apiCall<{ questions: GeneratedQuestion[]; usedStub: boolean }>(
-    token,
-    "/v1/admin/questions/generate",
-    { method: "POST", body },
-  );
+): Promise<
+  { questions: GeneratedQuestion[]; usedStub: boolean } | { error: string }
+> {
+  try {
+    const res = await fetch(`${API_URL}/v1/admin/questions/generate`, {
+      method: "POST",
+      cache: "no-store",
+      headers: requestHeaders({ token, json: true }),
+      body: JSON.stringify(body),
+    });
+    const data = (await res.json().catch(() => null)) as
+      | { questions?: GeneratedQuestion[]; usedStub?: boolean; error?: string }
+      | null;
+    if (!res.ok || !data?.questions) {
+      return { error: data?.error ?? `the server said ${res.status}` };
+    }
+    return { questions: data.questions, usedStub: data.usedStub ?? false };
+  } catch {
+    return { error: "the request never reached the server" };
+  }
+}
 
 export const adminReviewSkillModel = (token: string, model: SkillModel) =>
   apiCall<SkillModelReview>(token, "/v1/admin/skill-model/review", {
@@ -615,6 +632,22 @@ export const saveCareerProfile = (
   apiCall<CareerProfile>(token, "/v1/career-record/profile", {
     method: "PUT",
     body: profile,
+  });
+
+export type ProfileReflection = {
+  issues: Array<{ field: string; message: string }>;
+  summary: string | null;
+};
+
+// Advisory: the model double-checks the saved answers and reflects the
+// person's story back. Failures return null and the caller moves on.
+export const reflectCareerProfile = (
+  token: string,
+  preferences: Record<string, unknown>,
+) =>
+  apiCall<ProfileReflection>(token, "/v1/career-record/reflect", {
+    method: "POST",
+    body: { preferences },
   });
 
 export async function selectJourneyRoute(

@@ -1,7 +1,10 @@
-import { AuthForm } from "../auth-form";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Sign up" };
-
-export default function SignupPage() {
-  return <AuthForm mode="signup" />;
+export default async function SignupRedirect({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  redirect(`/welcome?auth=signup${next ? `&next=${encodeURIComponent(next)}` : ""}`);
 }

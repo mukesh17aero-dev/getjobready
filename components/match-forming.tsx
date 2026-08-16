@@ -42,7 +42,7 @@ export function MatchForming({
           // The strongest match develops first: each tile trails the one
           // before it, so the row reads as a ranking even while faceless.
           const formed =
-            Math.max(0, Math.min(100, drive * 1.15 - i * 12)) / 100;
+            Math.max(0, Math.min(100, drive * 1.2 - i * 7)) / 100;
           return (
             <div
               key={i}
@@ -58,14 +58,17 @@ export function MatchForming({
                   style={{ animationDelay: `${i * 120}ms` }}
                 />
               )}
-              <p className="text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+              <p className="flex items-baseline justify-between text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400">
                 Match {i + 1}
+                <span className="font-display text-[0.72rem] tracking-normal text-brand-violet-soft">
+                  {Math.round(formed * 100)}%
+                </span>
               </p>
               <div
                 className="mt-2 transition-[filter,opacity] duration-700 motion-reduce:transition-none"
                 style={{
-                  filter: `blur(${(1 - formed) * 5}px) grayscale(${1 - formed})`,
-                  opacity: 0.35 + formed * 0.65,
+                  filter: `blur(${(1 - formed) * 9}px) grayscale(${1 - formed})`,
+                  opacity: 0.2 + formed * 0.8,
                 }}
               >
                 <span className="block h-8 w-8 rounded-full bg-brand-violet/30" />

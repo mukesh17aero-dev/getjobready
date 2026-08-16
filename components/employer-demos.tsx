@@ -177,7 +177,7 @@ function ShortlistDemo() {
             <Spark size={13} />
           </span>
           <span>
-            They appear here because they sent you their passport. Nobody is
+            They appear here because they sent you their record. Nobody is
             listed without doing that.
           </span>
         </p>
@@ -198,14 +198,14 @@ function SkillsDemo() {
       need: "Core",
       score: 88,
       level: "Strong",
-      evidence: "2 missions marked · assessed",
+      evidence: "2 tasks marked · assessed",
     },
     {
       name: "Following through",
       need: "Core",
       score: 82,
       level: "Strong",
-      evidence: "1 mission marked · assessed",
+      evidence: "1 task marked · assessed",
     },
     {
       name: "Working with numbers",
@@ -219,7 +219,7 @@ function SkillsDemo() {
       need: "Helpful",
       score: 58,
       level: "Developing",
-      evidence: "mission in progress",
+      evidence: "practice in progress",
     },
   ];
 
@@ -338,7 +338,7 @@ function EvidenceDemo() {
             compete for the same twenty minutes.
           </p>
           <p className="mt-1.5 text-[0.72rem] text-slate-400">
-            Mission 2 · timed · marked against the role rubric
+            Task 2 · timed · marked against the role’s bar
           </p>
         </div>
 
@@ -375,7 +375,7 @@ function EvidenceDemo() {
             <Spark size={13} />
           </span>
           <span>
-            Same three behaviours in Mission 4, under a longer queue. Scored
+            Same three behaviours in task 4, under a longer queue. Scored
             twice, not once.
           </span>
         </p>
@@ -459,10 +459,10 @@ function VerifiedPassportDemo() {
   );
 }
 
-const EMPLOYER_PANELS: DemoPanel[] = [
+export const EMPLOYER_PANELS: DemoPanel[] = [
   {
     name: "Who is ready",
-    caption: "Illustrative. Candidates appear only when they send their passport.",
+    caption: "Illustrative. Candidates appear only when they send you their record.",
     line: "Shortlisted on skills, against a bar you set.",
     Demo: ShortlistDemo,
   },
@@ -473,14 +473,14 @@ const EMPLOYER_PANELS: DemoPanel[] = [
     Demo: SkillsDemo,
   },
   {
-    name: "The stamped passport",
+    name: "The verified record",
     caption: "Illustrative. Issued by Ascend, not written by the candidate.",
     line: "What arrives in your hands, and who stands behind it.",
     Demo: VerifiedPassportDemo,
   },
   {
     name: "The evidence",
-    caption: "Illustrative. Every score on the passport opens like this.",
+    caption: "Illustrative. Every score on the record opens like this.",
     line: "What each skill was tested in, and what they did.",
     Demo: EvidenceDemo,
   },

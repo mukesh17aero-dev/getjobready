@@ -8,6 +8,8 @@ import {
   Spark,
 } from "@/components/icons";
 import { DemoRail, Panel, type DemoPanel } from "@/components/demo-rail";
+import { PayProgression } from "@/components/pay-progression";
+import type { RoleDetail } from "@/lib/api";
 import {
   AscendStamp,
   SceneCounter,
@@ -43,7 +45,7 @@ function PathDemo() {
     { label: "Tell us about you", note: "5 min, once", here: true },
     { label: "Find the work that fits", note: "4 min" },
     { label: "Get ready for that role", note: "gaps, then practice" },
-    { label: "Prove you can do it", note: "missions, scored" },
+    { label: "Prove you can do it", note: "real tasks, scored" },
     { label: "Hired — and ready for it", note: "" },
   ];
 
@@ -292,7 +294,7 @@ function DiscoveryDemo() {
                 </ul>
                 <p className="mt-1.5 border-t border-teal-600/15 pt-1.5 text-[0.76rem] leading-relaxed text-teal-900/70">
                   Not seen yet: coordinating people. It matters here, and one
-                  mission covers it.
+                  practice task covers it.
                 </p>
               </div>
             )}
@@ -438,7 +440,7 @@ function MissionsDemo() {
         {/* The shift is running. A mission has a clock because the job does. */}
         <div className="flex animate-fade-up items-center justify-between gap-3">
           <span className={`${CHIP} bg-violet-50 text-violet-700`}>
-            Live shift · mission 2 of 5
+            Live shift · task 2 of 5
           </span>
           <span className="flex items-center gap-1.5 font-mono text-[0.78rem] tabular-nums text-slate-500">
             <Clock size={14} />
@@ -697,7 +699,7 @@ function PassportDemo() {
           {[
             "Discovery completed · role chosen",
             "Readiness check · Operations Coordinator",
-            "2 missions submitted and scored",
+            "2 practice tasks submitted and scored",
           ].map((line, i) => (
             <li
               key={line}
@@ -752,7 +754,7 @@ function OpportunitiesDemo() {
       where: "Hyderabad · On-site · From 1 Sept",
       matched: "following through, working with numbers",
       state: "gap" as const,
-      note: "Leans on coordinating people. One mission closes it.",
+      note: "Leans on coordinating people. One practice task closes it.",
       action: "See what closes it",
       Scene: SceneScreen,
     },
@@ -840,7 +842,164 @@ function OpportunitiesDemo() {
 
 // ---- the showcase -----------------------------------------------------------
 
-const FEATURES: DemoPanel[] = [
+
+// ---- career progression, sneak peek and voices ---------------------------
+//
+// These three are deliberately NOT stylised for the landing: they are the
+// discover page's own sections, with the real Customer Operations data, so
+// what the slide shows is what the product shows.
+
+const CS_GROWTH: RoleDetail["growth"] = [
+  {
+    title: "Customer Success Associate",
+    when: "now",
+    pay: { min: 20000, max: 30000 },
+  },
+  {
+    title: "Escalation Specialist",
+    when: "in 1–3 years",
+    pay: { min: 30000, max: 45000 },
+  },
+  { title: "Team lead level", when: "in 3–6 years", pay: { min: 45000, max: 80000 } },
+];
+
+function LadderDemo() {
+  return (
+    <Panel>
+      <div className="flex flex-1 flex-col">
+        <div className="flex animate-fade-up items-baseline justify-between gap-3">
+          <p className="text-[0.9rem] font-semibold text-slate-900">
+            Career and pay progression
+          </p>
+          <span className="text-[0.74rem] text-slate-400">
+            Customer Success Associate
+          </span>
+        </div>
+        <div
+          className="mt-3 flex flex-1 animate-fade-up flex-col justify-center"
+          style={{ animationDelay: "140ms" }}
+        >
+          <PayProgression growth={CS_GROWTH} />
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+function DayPeekDemo() {
+  const conditions: Array<[string, string]> = [
+    ["Environment", "Office or hybrid, desk-based, headset and ticket system"],
+    ["Hours", "Usually 9–6; rotational shifts on international accounts"],
+    ["Pace", "Steady with sharp spikes when something breaks"],
+    ["Team", "Pod of 5–10 associates under a team lead"],
+  ];
+  const truths = [
+    "You absorb other people’s frustration daily and stay polite anyway",
+    "You are measured on numbers you only partly control, like satisfaction scores",
+  ];
+  return (
+    <Panel>
+      <div className="flex flex-1 flex-col">
+        <div className="flex animate-fade-up items-baseline justify-between gap-3">
+          <p className="text-[0.9rem] font-semibold text-slate-900">
+            Working conditions
+          </p>
+          <span className="text-[0.74rem] text-slate-400">
+            Customer Success Associate
+          </span>
+        </div>
+        <dl className="mt-3 grid gap-x-6 gap-y-2 text-[0.82rem] sm:grid-cols-2">
+          {conditions.map(([label, value], i) => (
+            <div
+              key={label}
+              className="animate-fade-up"
+              style={{ animationDelay: `${100 + i * 90}ms` }}
+            >
+              <dt className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+                {label}
+              </dt>
+              <dd className="mt-0.5 text-slate-600">{value}</dd>
+            </div>
+          ))}
+        </dl>
+        <div
+          className="mt-auto animate-fade-up pt-3"
+          style={{ animationDelay: "500ms" }}
+        >
+          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+            The hard parts, honestly
+          </p>
+          <ul className="mt-1.5 grid gap-1.5 rounded-xl bg-amber-50/70 p-3.5 text-[0.82rem] text-amber-900">
+            {truths.map((truth) => (
+              <li key={truth} className="flex gap-2">
+                <span aria-hidden>·</span>
+                {truth}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+function VoicesDemo() {
+  const voices = [
+    {
+      name: "Arjun",
+      quote:
+        "Nobody asked about my college. They watched how I handled an angry client on a Friday evening. That call is still the reason I got promoted.",
+      title: "Escalation Specialist, e-commerce support, Chennai",
+      journey: "Two years in, now handles the escalated accounts",
+    },
+    {
+      name: "Priya",
+      quote:
+        "My first month I apologised for everything. Now I tell customers exactly what I can and cannot do, and give them a date I will actually hit.",
+      title: "Customer Success Associate, SaaS company, Bengaluru",
+      journey: "Joined at 22 from a B.Com; handles escalations in her second year",
+    },
+  ];
+  return (
+    <Panel>
+      <div className="flex flex-1 flex-col">
+        <p className="animate-fade-up text-[0.9rem] font-semibold text-slate-900">
+          People doing this job
+        </p>
+        <p
+          className="mt-2 animate-fade-up rounded-lg bg-slate-100 px-3 py-2 text-[0.7rem] leading-snug text-slate-600"
+          style={{ animationDelay: "80ms" }}
+        >
+          <strong className="font-semibold">Illustrative:</strong> composite
+          stories written from the pay and progression data — real, named
+          quotes replace them as pilot employers supply them.
+        </p>
+        <ul className="mt-2.5 grid flex-1 content-center gap-2.5">
+          {voices.map((voice, i) => (
+            <li
+              key={voice.name}
+              className="animate-fade-up rounded-xl bg-slate-50 p-3"
+              style={{ animationDelay: `${180 + i * 160}ms` }}
+            >
+              <p className="text-[0.8rem] italic leading-relaxed text-slate-700">
+                &ldquo;{voice.quote}&rdquo;
+              </p>
+              <p className="mt-1 text-[0.72rem] font-semibold text-slate-700">
+                {voice.name} &middot;{" "}
+                <span className="font-normal text-slate-500">
+                  {voice.title}
+                </span>
+              </p>
+              <p className="text-[0.68rem] text-slate-400">{voice.journey}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </Panel>
+  );
+}
+
+export const STUDENT_PANELS: DemoPanel[] = [
   {
     name: "From student to hired",
     caption: "Illustrative. Your own path starts from what you tell us.",
@@ -854,10 +1013,28 @@ const FEATURES: DemoPanel[] = [
     Demo: ResumeDemo,
   },
   {
-    name: "Role Discovery",
+    name: "Find what fits",
     caption: "Illustrative result. Yours comes from your own answers.",
     line: "Three roles that fit how you work — and why.",
     Demo: DiscoveryDemo,
+  },
+  {
+    name: "Where it leads",
+    caption: "The discover page's own chart, with the catalogue's real bands.",
+    line: "One choice opens a ladder, with pay at every step.",
+    Demo: LadderDemo,
+  },
+  {
+    name: "Inside a role",
+    caption: "Every role opens like this before you choose it.",
+    line: "The working conditions and the hard parts, honestly.",
+    Demo: DayPeekDemo,
+  },
+  {
+    name: "People doing this job",
+    caption: "Illustrative composites — replaced by real quotes as pilots supply them.",
+    line: "What the job sounds like from the inside.",
+    Demo: VoicesDemo,
   },
   {
     name: "Readiness check",
@@ -866,8 +1043,8 @@ const FEATURES: DemoPanel[] = [
     Demo: ReadinessDemo,
   },
   {
-    name: "Role missions",
-    caption: "Illustrative brief. Missions are written for real work.",
+    name: "Practice the job",
+    caption: "Illustrative brief. Practice is written from real work.",
     line: "Do the actual work. Get scored on it.",
     Demo: MissionsDemo,
   },
@@ -878,7 +1055,7 @@ const FEATURES: DemoPanel[] = [
     Demo: InterviewDemo,
   },
   {
-    name: "Readiness Passport",
+    name: "Your proof",
     caption: "Illustrative. Nothing reaches an employer until you send it.",
     line: "Proof of what you can do, shared on your say-so.",
     Demo: PassportDemo,
@@ -894,6 +1071,6 @@ const FEATURES: DemoPanel[] = [
 
 export function FeatureDemos() {
   return (
-    <DemoRail panels={FEATURES} tone="dark" label="What Ascend does for you" />
+    <DemoRail panels={STUDENT_PANELS} tone="dark" label="What Ascend does for you" />
   );
 }

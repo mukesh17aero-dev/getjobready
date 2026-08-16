@@ -30,6 +30,213 @@ import { Check, ChevronRight, Circle, Spark } from "@/components/icons";
 // clearly ahead. This screen holds no questions of its own — it renders
 // whatever it is handed and sends back the answer.
 
+// "See how it works", answered with the product itself: three miniature
+// scenes built from the real survey and results UI - a choice being made,
+// the sureness bar learning from it, and the three explained matches. It
+// plays on its own; the step tabs put any scene under the pointer's
+// control. Reduced-motion gets the tabs without the autoplay.
+function HowItWorksDemo() {
+  const [scene, setScene] = useState(0);
+
+  // One timeout per scene rather than a free-running interval: picking a
+  // tab restarts the clock from that scene, and the show never stalls.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = setTimeout(() => setScene((s) => (s + 1) % 4), 3800);
+    return () => clearTimeout(id);
+  }, [scene]);
+
+  const STEPS = [
+    "Choose what feels most like you",
+    "Every choice sharpens the picture",
+    "Meet your top matches, explained",
+    "Open any role - pay, days, voices",
+  ];
+
+  return (
+    <section
+      id="how-discovery-works"
+      className="mt-4 scroll-mt-20 rounded-2xl border border-slate-200 bg-surface p-5"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-[0.8rem] font-bold text-brand-ink">
+          How Discovery works
+        </h2>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {STEPS.map((step, i) => (
+          <button
+            key={step}
+            type="button"
+            onClick={() => setScene(i)}
+            aria-pressed={scene === i}
+            className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-[0.76rem] font-semibold transition-colors ${
+              scene === i
+                ? "border-brand-teal bg-teal-50 text-teal-900"
+                : "border-slate-200 text-slate-500 hover:border-slate-300"
+            }`}
+          >
+            <span
+              className={`grid h-5 w-5 place-items-center rounded-full text-[0.66rem] font-bold ${
+                scene === i ? "bg-brand-teal-deep text-white" : "bg-slate-100 text-slate-500"
+              }`}
+            >
+              {i + 1}
+            </span>
+            {step}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-4 min-h-[15rem]">
+        {scene === 0 && (
+          <div key="s0" className="animate-fade-up">
+            <p className="text-[1.05rem] font-semibold leading-snug text-slate-900">
+              It&rsquo;s 6 pm and two things need you at once. Which do you
+              pick up first?
+            </p>
+            <div className="mt-3 grid gap-2">
+              <div className="flex items-center gap-3 rounded-2xl border-2 border-brand-teal bg-teal-50/60 px-4 py-3">
+                <span className="min-w-0 flex-1 text-[0.9rem] text-slate-800">
+                  The upset customer - I&rsquo;d rather calm the person, then
+                  fix the process.
+                </span>
+                <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-teal-deep text-[0.7rem] font-bold text-white">
+                  ✓
+                </span>
+              </div>
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 opacity-70">
+                <span className="min-w-0 flex-1 text-[0.9rem] text-slate-600">
+                  The stuck order queue - I&rsquo;d rather clear the blockage,
+                  then tell the person.
+                </span>
+                <span className="h-5 w-5 shrink-0 rounded-full border-2 border-slate-300" />
+              </div>
+            </div>
+            <p className="mt-2.5 text-[0.78rem] text-slate-400">
+              No right answers - just which one is more you.
+            </p>
+          </div>
+        )}
+        {scene === 1 && (
+          <div key="s1" className="animate-fade-up">
+            <div className="flex items-baseline justify-between">
+              <p className="text-[0.85rem] font-semibold text-slate-700">
+                62% of the way to your match
+              </p>
+              <p className="text-[0.72rem] text-slate-400">question 6</p>
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
+              <div className="h-full w-[62%] rounded-full bg-brand-teal" />
+            </div>
+            <p className="mt-3 rounded-xl bg-teal-50 px-3.5 py-2.5 text-[0.85rem] text-teal-900">
+              Noted - you reach for the person before the process. That
+              leans you towards guest-facing work.
+            </p>
+            <div className="mt-3 grid grid-cols-3 gap-2.5">
+              {["Customer Success", "Guest Experience", "Operations"].map((tile, i) => (
+                <div
+                  key={tile}
+                  className={`rounded-xl border border-slate-200 px-3 py-3 text-center text-[0.78rem] font-semibold text-slate-700 ${
+                    i === 2 ? "opacity-40 blur-[2px]" : ""
+                  }`}
+                >
+                  {tile}
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-[0.78rem] text-slate-400">
+              Your matches take shape as you answer - the unsure ones stay
+              blurred until the survey knows.
+            </p>
+          </div>
+        )}
+        {scene === 2 && (
+          <div key="s2" className="animate-fade-up">
+            <div className="grid gap-2">
+              {[
+                { role: "Customer Success Associate", why: "Your answers leaned on customer care, which this role needs most." },
+                { role: "Guest Experience Associate", why: "You chose the person over the process - the heart of this work." },
+                { role: "Operations Coordinator", why: "You kept order under pressure when the choices got busy." },
+              ].map((match, i) => (
+                <div
+                  key={match.role}
+                  className={`rounded-2xl border px-4 py-3 ${
+                    i === 0 ? "border-brand-teal bg-teal-50/50" : "border-slate-200"
+                  }`}
+                >
+                  <p className="text-[0.9rem] font-bold text-brand-ink">
+                    {i + 1}. {match.role}
+                  </p>
+                  <p className="mt-0.5 text-[0.78rem] leading-snug text-slate-500">
+                    {match.why}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-[0.78rem] text-slate-400">
+              Every match opens to its reasons - then you pick the one to aim
+              at.
+            </p>
+          </div>
+        )}
+        {scene === 3 && (
+          <div key="s3" className="animate-fade-up">
+            <div className="grid gap-2.5 sm:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 px-4 py-3">
+                <p className="text-[0.7rem] font-bold uppercase tracking-wide text-teal-800">
+                  The ladder, with pay
+                </p>
+                <div className="mt-2 space-y-1.5 text-[0.8rem] text-slate-700">
+                  <p>Customer Success Associate <span className="font-semibold">₹20-30k</span> <span className="text-slate-400">now</span></p>
+                  <p>Escalation Specialist <span className="font-semibold">₹30-45k</span> <span className="text-slate-400">in 1-3 yrs</span></p>
+                  <p>Team lead level <span className="font-semibold">₹45-80k</span> <span className="text-slate-400">in 3-6 yrs</span></p>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-200 px-4 py-3">
+                <p className="text-[0.7rem] font-bold uppercase tracking-wide text-teal-800">
+                  Voices from the work
+                </p>
+                <p className="mt-2 text-[0.8rem] italic leading-snug text-slate-600">
+                  &ldquo;Nobody asked about my college. They watched how I
+                  handled an angry client on a Friday evening.&rdquo;
+                </p>
+                <p className="mt-1.5 text-[0.66rem] text-slate-400">
+                  Illustrative - replaced by real quotes as pilot employers
+                  supply them.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 px-4 py-3">
+                <p className="text-[0.7rem] font-bold uppercase tracking-wide text-teal-800">
+                  Compare, side by side
+                </p>
+                <p className="mt-2 text-[0.8rem] leading-snug text-slate-600">
+                  Customer Success vs Guest Experience - the day, the pay and
+                  the ladder on one table, so the decision is yours on facts.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-teal-700/40 bg-teal-50/50 px-4 py-3">
+                <p className="text-[0.7rem] font-bold uppercase tracking-wide text-teal-800">
+                  Beyond your three
+                </p>
+                <p className="mt-2 text-[0.8rem] leading-snug text-slate-700">
+                  The whole role library stays open - explore any role, the
+                  same depth, whether we recommended it or not.
+                </p>
+              </div>
+            </div>
+            <p className="mt-2 text-[0.78rem] text-slate-400">
+              Every number above is from the real catalogue - the same
+              screens you get after the survey.
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 type Stage = "intro" | "questions" | "explanation" | "results";
 
 async function token(): Promise<string | null> {
@@ -334,51 +541,156 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
   // ---------- intro ----------
   if (stage === "intro") {
     const resuming = (run?.askedCount ?? 0) > 0 && !run?.done;
+    // Dressing per world position: a tint and a decorative glyph. The
+    // meaning is the world's own title and caption, never the glyph.
+    const LOOKS = [
+      { tint: "#be185d", glyph: "\u{1F6CD}" },
+      { tint: "#0369a1", glyph: "\u{1F3E6}" },
+      { tint: "#047857", glyph: "\u{1F4E6}" },
+      { tint: "#b45309", glyph: "\u{1F37D}" },
+      { tint: "#0d9488", glyph: "\u{1F3A7}" },
+    ];
+    const fanSides = content.worlds.slice(0, 4);
     return (
-      <main className="mx-auto max-w-5xl px-4 pb-10">
+      <main className="mx-auto max-w-5xl px-4 pb-12">
         <RememberHub path="/discover" />
         <div className="pt-4">
           <BackLink />
         </div>
-        <section className="mt-4 rounded-2xl bg-brand-panel px-6 py-5 text-white">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-teal-soft">
-            Discovery
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-            Discover what fits you.
-          </h1>
-          <p className="mt-1.5 text-sm text-white/70">
-            3–5 minutes of real work choices — no test, no wrong answers. Your
-            picks build three explainable role matches.
-          </p>
+
+        <section className="mt-4 grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full bg-teal-50 px-3.5 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-teal-800">
+              <span aria-hidden>{"\u2726"}</span> Discovery {"\u00b7"} 3-5 min
+            </span>
+            <h1 className="mt-4 font-display text-[2.1rem] font-bold leading-[1.05] tracking-tight text-brand-ink sm:text-[2.4rem]">
+              Discover what fits you.
+            </h1>
+            <p className="mt-3 max-w-[46ch] text-[0.98rem] leading-relaxed text-slate-500">
+              Quick, real-world choices that uncover the careers matching
+              your strengths, interests and work style. No test. No
+              pressure. Just clearer direction.
+            </p>
+            <p className="mt-3 flex items-center gap-2 text-[0.9rem] font-semibold text-brand-ink">
+              <span aria-hidden>{"\u{1F3C6}"}</span> Your top 3 role matches, explained.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center gap-4">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void begin(false)}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-gradient-to-r from-teal-700 to-emerald-700 px-6 py-3 text-[0.92rem] font-bold text-white shadow-[0_12px_30px_-10px_rgba(13,148,136,0.5)] transition-transform hover:-translate-y-0.5 disabled:opacity-50 motion-reduce:hover:translate-y-0"
+              >
+                {resuming ? "Continue where you left off" : "Begin Discovery"}
+                <span aria-hidden>{"\u2192"}</span>
+              </button>
+              <a
+                href="#how-discovery-works"
+                className="text-[0.88rem] font-semibold text-teal-800 underline-offset-4 hover:underline"
+              >
+                See how it works
+              </a>
+            </div>
+            {error && <p className="mt-3 text-sm text-rose-600">{error}</p>}
+          </div>
+
+          {/* The fan: the worlds' own captions splayed like held cards,
+              the promise card front and centre. Decorative - each world is
+              named properly in the grid below. */}
+          <div aria-hidden className="relative hidden h-72 items-center justify-center md:flex">
+            {[
+              ...fanSides.slice(0, 2).map((w, i) => ({ text: w.caption, look: LOOKS[i], off: i - 2 })),
+              { text: "Find roles where your strengths shine and your day feels right.", look: LOOKS[4], off: 0 },
+              ...fanSides.slice(2, 4).map((w, i) => ({ text: w.caption, look: LOOKS[i + 2], off: i + 1 })),
+            ].map((card) => (
+              <div
+                key={card.text}
+                className={`absolute rounded-2xl border bg-surface p-4 text-center shadow-lg ${
+                  card.off === 0
+                    ? "z-10 w-52 border-teal-700/40"
+                    : "w-44 border-slate-200 opacity-90"
+                }`}
+                style={{
+                  transform: `translateX(${card.off * 74}px) rotate(${card.off * 7}deg) translateY(${Math.abs(card.off) * 16}px)`,
+                }}
+              >
+                <span
+                  className="mx-auto grid h-11 w-11 place-items-center rounded-full text-xl"
+                  style={{ background: `${card.look.tint}18` }}
+                >
+                  {card.look.glyph}
+                </span>
+                <p
+                  className={`mt-2 leading-snug ${
+                    card.off === 0
+                      ? "text-[0.85rem] font-semibold text-brand-ink"
+                      : "text-[0.7rem] text-slate-500"
+                  }`}
+                >
+                  {card.text}
+                </p>
+              </div>
+            ))}
+          </div>
         </section>
-        <section className="mt-5">
-          <h2 className="text-sm font-semibold text-slate-900">
-            Five worlds your matches come from
+
+        <section className="mt-8">
+          <h2 className="text-[0.8rem] font-bold text-brand-ink">
+            Your matches can come from these career worlds
           </h2>
-          <ul className="mt-2 flex flex-wrap gap-2">
-            {content.worlds.map((w) => (
+          <ul className="mt-2.5 grid gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
+            {content.worlds.map((w, i) => (
               <li
                 key={w.id}
-                title={w.caption}
-                className="rounded-full border border-slate-200 bg-surface px-3 py-1.5 text-[0.82rem] font-semibold text-slate-700"
+                className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-surface px-3 py-2.5"
               >
-                {w.title}
+                <span
+                  aria-hidden
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-lg"
+                  style={{ background: `${LOOKS[i % LOOKS.length].tint}15` }}
+                >
+                  {LOOKS[i % LOOKS.length].glyph}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[0.78rem] font-semibold leading-tight text-brand-ink">
+                    {w.title}
+                  </span>
+                  <span className="block truncate text-[0.68rem] text-slate-400">
+                    {w.caption}
+                  </span>
+                </span>
               </li>
             ))}
           </ul>
         </section>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void begin(false)}
-          // Full width on a phone where it is the whole thumb target; sized to
-          // its words on a wide screen, where a 64rem button looks like a bar.
-          className="mt-6 w-full rounded-xl bg-brand-violet px-8 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-violet-deep disabled:opacity-50 sm:w-auto"
-        >
-          {resuming ? "Continue where you left off" : "Begin Discovery"}
-        </button>
-        {error && <p className="mt-3 text-sm text-rose-600">{error}</p>}
+
+        <section className="mt-4 grid gap-2.5 sm:grid-cols-3">
+          {[
+            { title: "No right or wrong answers", line: "There's no test. Just you.", glyph: "\u{1F6E1}" },
+            { title: "Built for real-world roles", line: "Practical paths. Real opportunities.", glyph: "\u2728" },
+            { title: "Private to you \u00b7 saved as you go", line: "Your answers are secure and yours alone.", glyph: "\u{1F512}" },
+          ].map((item) => (
+            <div
+              key={item.title}
+              className="flex items-start gap-3 rounded-xl border border-slate-200 bg-surface px-3.5 py-3"
+            >
+              <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-teal-50 text-lg">
+                {item.glyph}
+              </span>
+              <span>
+                <span className="block text-[0.8rem] font-bold text-brand-ink">
+                  {item.title}
+                </span>
+                <span className="block text-[0.72rem] text-slate-400">
+                  {item.line}
+                </span>
+              </span>
+            </div>
+          ))}
+        </section>
+
+        <HowItWorksDemo />
+
       </main>
     );
   }
@@ -808,16 +1120,37 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
       })()}
 
       {selected && selected !== "none" && (
-        <section className="mt-3 rounded-2xl border border-teal-100 bg-teal-50 px-4 py-3 text-sm text-teal-800">
-          Role saved to your career record. Next:{" "}
-          <Link href="/readiness" className="font-bold underline">
-            check your readiness for it
-          </Link>{" "}
-          — or{" "}
-          <Link href="/start" className="font-bold underline">
-            revisit your path
-          </Link>
-          .
+        <section>
+          {/* Spacer so the pinned bar never covers the page's last content. */}
+          <div aria-hidden className="h-24" />
+          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-teal-700/30 bg-surface/95 px-4 py-3 backdrop-blur">
+            <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-teal-700">
+                  Role saved to your career record
+                </p>
+                <p className="truncate text-[0.95rem] font-semibold text-brand-ink">
+                  Now get trained for{" "}
+                  {matches.find((m) => m.roleId === selected)?.title ?? "your role"}
+                  <span className="hidden text-[0.8rem] font-normal text-slate-500 sm:inline">
+                    {" "}- the readiness check finds your gaps and builds the plan.
+                  </span>
+                </p>
+              </div>
+              <Link
+                href="/readiness"
+                className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-brand-teal-deep px-5 py-2.5 text-[0.85rem] font-bold text-white transition-transform hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
+              >
+                Start my readiness check {"\u2192"}
+              </Link>
+              <Link
+                href="/start"
+                className="hidden text-[0.78rem] font-semibold text-teal-700 underline underline-offset-2 sm:block"
+              >
+                revisit path
+              </Link>
+            </div>
+          </div>
         </section>
       )}
 

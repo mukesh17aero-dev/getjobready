@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
@@ -11,19 +10,24 @@ const COPY = {
     sub: "Log in to continue your journey.",
     cta: "Log in",
     footer: "New to Ascend?",
-    footerLink: { label: "Create an account", href: "/signup" },
+    footerLink: { label: "Create an account", mode: "signup" as const },
   },
   signup: {
     title: "Create your account",
     sub: "One account. One career record. Every module.",
     cta: "Sign up",
     footer: "Already have an account?",
-    footerLink: { label: "Log in", href: "/login" },
+    footerLink: { label: "Log in", mode: "login" as const },
   },
 } as const;
 
-// Shared by /login and /signup. Auth is the one Supabase interaction that
-// lives in the frontend; everything else goes through the backend API.
+export type AuthMode = keyof typeof COPY;
+
+// Shared by /login, /signup and the landing's auth dialog. Auth is the one
+// Supabase interaction that lives in the frontend; everything else goes
+// through the backend API. The "page" variant wears the app's light theme;
+// the "modal" variant wears the landing's night theme and swaps modes in
+// place via onSwitchMode instead of navigating.
 // Where to land after a successful sign-in: an in-app ?next=/path if present
 // (same-origin paths only), the homepage otherwise.
 function nextPath(): string {
@@ -31,9 +35,18 @@ function nextPath(): string {
   return next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
 }
 
-export function AuthForm({ mode }: { mode: keyof typeof COPY }) {
+export function AuthForm({
+  mode,
+  variant = "page",
+  onSwitchMode,
+}: {
+  mode: AuthMode;
+  variant?: "page" | "modal";
+  onSwitchMode?: (mode: AuthMode) => void;
+}) {
   const router = useRouter();
   const copy = COPY[mode];
+  const dark = variant === "modal";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -81,7 +94,7 @@ export function AuthForm({ mode }: { mode: keyof typeof COPY }) {
         router.refresh();
       } else {
         setNotice(
-          "Almost there — open the confirmation email we just sent, then log in.",
+          "Almost there - open the confirmation email we just sent, then log in.",
         );
       }
     } else {
@@ -99,18 +112,32 @@ export function AuthForm({ mode }: { mode: keyof typeof COPY }) {
     setBusy(false);
   }
 
+  const Wrapper = dark ? "div" : "main";
+
   return (
-    <main className="mx-auto w-full max-w-sm px-4 py-16">
-      <h1 className="text-3xl font-semibold tracking-tight text-brand-ink">
+    <Wrapper className={dark ? "relative" : "mx-auto w-full max-w-sm px-4 py-16"}>
+      <h1
+        className={
+          dark
+            ? "font-display text-2xl font-bold tracking-tight text-white"
+            : "text-3xl font-semibold tracking-tight text-brand-ink"
+        }
+      >
         {copy.title}
       </h1>
-      <p className="mt-2 text-sm text-slate-500">{copy.sub}</p>
+      <p className={dark ? "mt-2 text-sm text-white/55" : "mt-2 text-sm text-slate-500"}>
+        {copy.sub}
+      </p>
 
       <button
         type="button"
         onClick={() => void googleSignIn()}
         disabled={busy}
-        className="mt-8 flex w-full items-center justify-center gap-2.5 rounded-xl border border-slate-300 bg-surface px-5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+        className={`mt-7 flex w-full items-center justify-center gap-2.5 rounded-xl border px-5 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+          dark
+            ? "border-white/15 bg-white/5 text-white/85 hover:bg-white/10"
+            : "border-slate-300 bg-surface text-slate-700 hover:bg-slate-50"
+        }`}
       >
         <svg aria-hidden width="18" height="18" viewBox="0 0 48 48">
           <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
@@ -121,10 +148,14 @@ export function AuthForm({ mode }: { mode: keyof typeof COPY }) {
         Continue with Google
       </button>
 
-      <div className="mt-5 flex items-center gap-3 text-xs uppercase tracking-wide text-slate-400">
-        <span className="h-px flex-1 bg-slate-200" />
+      <div
+        className={`mt-5 flex items-center gap-3 text-xs uppercase tracking-wide ${
+          dark ? "text-white/35" : "text-slate-400"
+        }`}
+      >
+        <span className={`h-px flex-1 ${dark ? "bg-white/10" : "bg-slate-200"}`} />
         or
-        <span className="h-px flex-1 bg-slate-200" />
+        <span className={`h-px flex-1 ${dark ? "bg-white/10" : "bg-slate-200"}`} />
       </div>
 
       {/* method="post" is a pre-hydration safety net: if the form is somehow
@@ -137,7 +168,11 @@ export function AuthForm({ mode }: { mode: keyof typeof COPY }) {
         noValidate
       >
         <label className="block">
-          <span className="mb-1.5 block text-sm font-medium text-slate-700">
+          <span
+            className={`mb-1.5 block text-sm font-medium ${
+              dark ? "text-white/70" : "text-slate-700"
+            }`}
+          >
             Email
           </span>
           <input
@@ -147,11 +182,19 @@ export function AuthForm({ mode }: { mode: keyof typeof COPY }) {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-surface px-3.5 py-2.5 text-[0.95rem] outline-none transition-colors focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/25"
+            className={`w-full rounded-xl border px-3.5 py-2.5 text-[0.95rem] outline-none transition-colors ${
+              dark
+                ? "border-white/15 bg-white/[0.06] text-white placeholder:text-white/30 focus:border-[#2dd4bf] focus:ring-2 focus:ring-[#2dd4bf]/25"
+                : "border-slate-300 bg-surface focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/25"
+            }`}
           />
         </label>
         <label className="block">
-          <span className="mb-1.5 block text-sm font-medium text-slate-700">
+          <span
+            className={`mb-1.5 block text-sm font-medium ${
+              dark ? "text-white/70" : "text-slate-700"
+            }`}
+          >
             Password
           </span>
           <input
@@ -162,17 +205,31 @@ export function AuthForm({ mode }: { mode: keyof typeof COPY }) {
             minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-surface px-3.5 py-2.5 text-[0.95rem] outline-none transition-colors focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/25"
+            className={`w-full rounded-xl border px-3.5 py-2.5 text-[0.95rem] outline-none transition-colors ${
+              dark
+                ? "border-white/15 bg-white/[0.06] text-white placeholder:text-white/30 focus:border-[#2dd4bf] focus:ring-2 focus:ring-[#2dd4bf]/25"
+                : "border-slate-300 bg-surface focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/25"
+            }`}
           />
         </label>
 
         {error && (
-          <p role="alert" className="rounded-xl bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700">
+          <p
+            role="alert"
+            className={`rounded-xl px-3.5 py-2.5 text-sm ${
+              dark ? "bg-rose-500/10 text-rose-300" : "bg-rose-50 text-rose-700"
+            }`}
+          >
             {error}
           </p>
         )}
         {notice && (
-          <p role="status" className="rounded-xl bg-teal-50 px-3.5 py-2.5 text-sm text-teal-800">
+          <p
+            role="status"
+            className={`rounded-xl px-3.5 py-2.5 text-sm ${
+              dark ? "bg-teal-500/10 text-teal-200" : "bg-teal-50 text-teal-800"
+            }`}
+          >
             {notice}
           </p>
         )}
@@ -180,21 +237,28 @@ export function AuthForm({ mode }: { mode: keyof typeof COPY }) {
         <button
           type="submit"
           disabled={busy}
-          className="mt-1 rounded-xl bg-brand-violet px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-violet-deep disabled:cursor-not-allowed disabled:opacity-60"
+          className={`mt-1 rounded-xl px-5 py-2.5 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+            dark
+              ? "border border-[#2dd4bf]/35 bg-[#123a34] text-[#c7f5ea] hover:border-[#2dd4bf]/60 hover:bg-[#16463f]"
+              : "bg-brand-violet text-white hover:bg-brand-violet-deep"
+          }`}
         >
           {busy ? "One moment…" : copy.cta}
         </button>
       </form>
 
-      <p className="mt-6 text-sm text-slate-500">
+      <p className={`mt-6 text-sm ${dark ? "text-white/55" : "text-slate-500"}`}>
         {copy.footer}{" "}
-        <Link
-          href={copy.footerLink.href}
-          className="font-semibold text-brand-violet-deep hover:underline"
+        <button
+          type="button"
+          onClick={() => onSwitchMode?.(copy.footerLink.mode)}
+          className={`font-semibold hover:underline ${
+            dark ? "text-[#5eead4]" : "text-brand-violet-deep"
+          }`}
         >
           {copy.footerLink.label}
-        </Link>
+        </button>
       </p>
-    </main>
+    </Wrapper>
   );
 }
