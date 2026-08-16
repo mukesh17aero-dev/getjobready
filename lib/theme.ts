@@ -5,25 +5,26 @@ const KEY = "ascend:theme";
 export function readTheme(): Theme {
   try {
     const stored = localStorage.getItem(KEY);
-    return stored === "light" || stored === "dark" ? stored : "system";
+    return stored === "light" || stored === "system" ? stored : "dark";
   } catch {
-    return "system";
+    return "dark";
   }
 }
 
-// "system" removes the attribute so the OS preference (a media query in
-// globals.css) takes over again.
+// Dark is the product's default: a first-time visitor gets the night theme
+// regardless of their OS. "system" is an explicit choice now, so it is
+// stored like the others rather than being the absence of one.
 export function applyTheme(theme: Theme): void {
   const root = document.documentElement;
   if (theme === "system") root.removeAttribute("data-theme");
   else root.setAttribute("data-theme", theme);
   try {
-    if (theme === "system") localStorage.removeItem(KEY);
-    else localStorage.setItem(KEY, theme);
+    localStorage.setItem(KEY, theme);
   } catch {
     // Storage unavailable: the choice simply does not persist.
   }
 }
 
-// Runs before first paint so a dark-mode user never sees a white flash.
-export const THEME_BOOTSTRAP = `try{var t=localStorage.getItem("${KEY}");if(t==="light"||t==="dark"){document.documentElement.setAttribute("data-theme",t)}}catch(e){}`;
+// Runs before first paint. No stored choice means dark - never a light
+// flash for the default visitor.
+export const THEME_BOOTSTRAP = `try{var t=localStorage.getItem("${KEY}");if(t==="light"){document.documentElement.setAttribute("data-theme","light")}else if(t!=="system"){document.documentElement.setAttribute("data-theme","dark")}}catch(e){document.documentElement.setAttribute("data-theme","dark")}`;

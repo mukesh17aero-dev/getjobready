@@ -7,6 +7,7 @@ import { supabaseBrowser } from "@/lib/supabase-browser";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { AuthModal } from "@/components/auth-modal";
+import { applyTheme } from "@/lib/theme";
 import type { AuthMode } from "@/components/auth-form";
 
 // The five persistent destinations from the Blueprint. Every route in the app
@@ -85,6 +86,33 @@ function useAccount(): Account | null | undefined {
 
 // On the landing (night = true) the auth actions open the in-place dialog
 // instead of navigating away; everywhere else they link to the pages.
+// Signed-out visitors have no account menu, so the theme choice lives
+// here: one button flipping dark and light. (System stays available in the
+// account menu once signed in.)
+function ThemeQuickToggle({ night }: { night: boolean }) {
+  const flip = () => {
+    const attr = document.documentElement.getAttribute("data-theme");
+    const isDark =
+      attr === "dark" ||
+      (!attr && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    applyTheme(isDark ? "light" : "dark");
+  };
+  return (
+    <button
+      type="button"
+      onClick={flip}
+      aria-label="Switch between dark and light theme"
+      className={`grid h-9 w-9 place-items-center rounded-full text-[1rem] transition-colors ${
+        night
+          ? "text-white/60 hover:bg-white/10 hover:text-white"
+          : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+      }`}
+    >
+      <span aria-hidden>{"\u25D1"}</span>
+    </button>
+  );
+}
+
 function AuthControls({
   account,
   night,
@@ -99,6 +127,7 @@ function AuthControls({
     if (night) {
       return (
         <span className="flex items-center gap-2">
+          <ThemeQuickToggle night />
           <button
             type="button"
             onClick={() => setMode("login")}
@@ -121,6 +150,7 @@ function AuthControls({
     }
     return (
       <span className="flex items-center gap-2">
+        <ThemeQuickToggle night={false} />
         <button
           type="button"
           onClick={() => setMode("login")}

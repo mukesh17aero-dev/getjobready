@@ -11,7 +11,7 @@ export function ThemeSwitch() {
   const stored = useSyncExternalStore(
     () => () => {},
     readTheme,
-    () => "system" as Theme,
+    () => "dark" as Theme,
   );
   const [picked, setPicked] = useState<Theme | null>(null);
   const theme = picked ?? stored;
