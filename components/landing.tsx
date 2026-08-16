@@ -600,17 +600,24 @@ export function Landing({ signedIn }: { signedIn: boolean }) {
               <p className="mt-2 text-[0.78rem] text-[var(--lp-faint)]">
                 1,000+ applicants, identical qualifications
               </p>
-              <span
+              <div
                 aria-hidden
-                className="mx-auto mt-2.5 block h-6 w-px bg-gradient-to-b from-white/25 to-[#22d3ee]"
-              />
-              <p className="mx-auto mt-3 inline-block rounded-xl border border-[var(--lp-cyan)] px-5 py-2 font-display text-[0.85rem] font-semibold tracking-wide text-[var(--lp-cyan)]">
-                A bar you set · skills, demonstrated
-              </p>
-              <span
-                aria-hidden
-                className="mx-auto mt-2.5 block h-6 w-px bg-gradient-to-b from-[#22d3ee] to-[#34d399]"
-              />
+                className="relative mx-auto mt-2.5 w-[86%] max-w-[22rem] px-6 py-3 text-white"
+                style={{
+                  clipPath: "polygon(0 0, 100% 0, 70% 100%, 30% 100%)",
+                  background:
+                    "linear-gradient(180deg, #155e63 0%, #0f766e 55%, #059669 100%)",
+                }}
+              >
+                <p className="text-center font-display text-[0.95rem] font-extrabold tracking-[0.22em]">
+                  ASCEND
+                </p>
+                <ul className="mt-1 space-y-0.5 text-center text-[0.68rem] font-medium text-white/85">
+                  <li>skills demonstrated on real work</li>
+                  <li>scored against our standards</li>
+                  <li>ranked at the bar you set</li>
+                </ul>
+              </div>
               <div className="mt-3 flex flex-wrap justify-center gap-3">
                 {[
                   ["Student A", 84],
