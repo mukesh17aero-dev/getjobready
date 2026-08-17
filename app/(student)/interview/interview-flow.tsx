@@ -399,6 +399,12 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
   // Which turn the fetched audio belongs to, so every interviewer bubble can
   // offer its own replay pill.
   const [audioTurn, setAudioTurn] = useState<number | null>(null);
+  // The newest turn the room is allowed to show. A question waits here until
+  // its voice is ready, so the interviewer is heard and read at once.
+  const [revealed, setRevealed] = useState<number>(
+    initial.session ? (initial.session.turns.length - 1) : -1,
+  );
+  const [preparingVoice, setPreparingVoice] = useState(false);
   // Turns answered by voice this session - they wear the waveform motif.
   const [voiceTurns, setVoiceTurns] = useState<ReadonlySet<number>>(new Set());
   // Early end, done gracefully: the interviewer says goodbye in the thread
@@ -420,7 +426,11 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
   const threadEndRef = useRef<HTMLDivElement | null>(null);
 
   const openTurn = session?.turns[session.turns.length - 1];
-  const awaitingAnswer = Boolean(openTurn && openTurn.answer === null);
+  // Not "answerable" until it has actually been asked: a mic that goes live
+  // before the question appears invites an answer to nothing.
+  const awaitingAnswer = Boolean(
+    openTurn && openTurn.answer === null && openTurn.index <= revealed,
+  );
 
   // The clock is the server's; this just counts it down between renders.
   useEffect(() => {
@@ -437,19 +447,45 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
 
   // Fetch and play the interviewer's voice for the newest question.
   const speakTurn = useCallback(
-    async (turnIndex: number) => {
-      if (!voiceOn) return;
+    async (turnIndex: number): Promise<boolean> => {
+      if (!voiceOn) return false;
       const t = await token();
-      if (!t) return;
+      if (!t) return false;
       const url = await fetchQuestionAudio(t, turnIndex);
-      if (!url) return;
+      if (!url) return false;
       setAudioTurn(turnIndex);
       setAudioUrl((old) => {
         if (old) URL.revokeObjectURL(old);
         return url;
       });
+      return true;
     },
     [voiceOn],
+  );
+
+  // A question arrives with its voice, not before it: text appearing while
+  // the interviewer is still silent reads as a person who has stopped
+  // speaking mid-sentence. Two safeguards, because a question nobody can see
+  // is worse than one that arrives unvoiced - if the speech fails, or takes
+  // longer than this, the question is shown anyway.
+  const VOICE_WAIT_MS = 6000;
+  const deliverTurn = useCallback(
+    async (next: InterviewSessionView) => {
+      setSession(next);
+      const newest = next.turns[next.turns.length - 1];
+      if (!newest || newest.answer !== null || !voiceOn) {
+        setRevealed(newest?.index ?? 0);
+        return;
+      }
+      setPreparingVoice(true);
+      await Promise.race([
+        speakTurn(newest.index),
+        new Promise((resolve) => setTimeout(resolve, VOICE_WAIT_MS)),
+      ]);
+      setPreparingVoice(false);
+      setRevealed(newest.index);
+    },
+    [speakTurn, voiceOn],
   );
 
   useEffect(() => {
@@ -552,11 +588,10 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
     }
     // The mic check has done its job; the room opens its own stream.
     micStopRef.current?.();
-    setSession(started);
     setSecondsLeft(started.secondsLeft);
     setTyping(preferTyping);
     setView("room");
-    void speakTurn(0);
+    void deliverTurn(started);
   };
 
   const fetchNextTurn = useCallback(async () => {
@@ -569,10 +604,8 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
       setError("The next question did not arrive. Use Continue to try again.");
       return;
     }
-    setSession(next);
-    const newest = next.turns[next.turns.length - 1];
-    if (newest && newest.answer === null) void speakTurn(newest.index);
-  }, [speakTurn]);
+    await deliverTurn(next);
+  }, [deliverTurn]);
 
   const advance = useCallback(
     async (afterAnswer: InterviewSessionView) => {
@@ -838,7 +871,14 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
     const readyToFinish = session.done;
     // A refresh or a failed request can leave the last question answered with
     // nothing open — this is the deterministic way back in.
-    const needsNextTurn = !awaitingAnswer && !readyToFinish && busy === null && !endingEarly;
+    // Waiting for a question's voice is not the same as being stranded, so
+    // the recovery button stays out of the way while it arrives.
+    const needsNextTurn =
+      !awaitingAnswer &&
+      !readyToFinish &&
+      busy === null &&
+      !endingEarly &&
+      !preparingVoice;
     const stageNow: InterviewStage =
       openTurn?.stage ?? session.turns[session.turns.length - 1]?.stage ?? "icebreaker";
     const cannotEndYet = busy !== null || !session.turns.some((turn) => turn.answer != null);
@@ -899,7 +939,9 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
               left, you on the right, newest at the bottom. */}
           <div aria-live="polite">
             <ol className="mt-5 space-y-4" aria-label="Interview conversation">
-              {session.turns.map((turn) => {
+              {session.turns
+                .filter((turn) => turn.index <= revealed)
+                .map((turn) => {
                 const isOpen = turn.answer === null;
                 const hasAudio = audioUrl !== null && audioTurn === turn.index;
                 return (
@@ -961,7 +1003,25 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
             </ol>
 
             {/* The interviewer thinking, as a typing-indicator bubble. */}
-            {busy === "thinking" ? (
+            {preparingVoice ? (
+              <div className="mt-4 flex items-end gap-2">
+                <InterviewerAvatar />
+                <div className="flex w-fit items-center gap-2.5 rounded-2xl rounded-bl-md border border-slate-200 bg-surface px-4 py-3 text-sm text-slate-500">
+                  <span aria-hidden className="flex gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-400 motion-safe:animate-pulse" />
+                    <span
+                      className="h-1.5 w-1.5 rounded-full bg-slate-400 motion-safe:animate-pulse"
+                      style={{ animationDelay: "150ms" }}
+                    />
+                    <span
+                      className="h-1.5 w-1.5 rounded-full bg-slate-400 motion-safe:animate-pulse"
+                      style={{ animationDelay: "300ms" }}
+                    />
+                  </span>
+                  The interviewer is about to speak…
+                </div>
+              </div>
+            ) : busy === "thinking" ? (
               <div className="mt-4 flex items-end gap-2">
                 <InterviewerAvatar />
                 <div className="flex w-fit items-center gap-2.5 rounded-2xl rounded-bl-md border border-slate-200 bg-surface px-4 py-3 text-sm text-slate-500">
