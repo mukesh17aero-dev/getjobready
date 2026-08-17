@@ -18,6 +18,8 @@ export type InterviewTurnView = {
 
 export type InterviewSessionView = {
   id: string;
+  /** The interviewer's name, so the room can say who is speaking. */
+  interviewer?: string;
   roleTitle: string;
   round: InterviewRound;
   status: "in_progress" | "completed";
@@ -100,7 +102,16 @@ export const getInterviewHome = (token: string) =>
 
 export const startInterview = (
   token: string,
-  body: { roleId?: string; roleTitle: string; jd?: string; round: InterviewRound },
+  body: {
+    roleId?: string;
+    roleTitle: string;
+    jd?: string;
+    /** What they asked to be pushed on, in their own words. */
+    focus?: string;
+    /** Who takes it - the round sets the default, the person may change it. */
+    interviewer?: "asha" | "ravi";
+    round: InterviewRound;
+  },
 ) => call<InterviewSessionView>(token, "/v1/interview/sessions", { method: "POST", body });
 
 export const requestNextTurn = (token: string) =>
@@ -109,12 +120,36 @@ export const requestNextTurn = (token: string) =>
     body: {},
   });
 
-export const answerWithText = (token: string, text: string) =>
-  call<{ transcript: string; session: InterviewSessionView }>(
-    token,
-    "/v1/interview/sessions/current/answer",
-    { method: "POST", body: { text } },
-  );
+export const answerWithText = async (
+  token: string,
+  text: string,
+): Promise<
+  | { ok: true; transcript: string; session: InterviewSessionView }
+  | { ok: false; error: string; session?: InterviewSessionView; finished?: boolean }
+> => {
+  try {
+    const res = await fetch(`${API_URL}/v1/interview/sessions/current/answer`, {
+      method: "POST",
+      cache: "no-store",
+      headers: headers(token, true),
+      body: JSON.stringify({ text }),
+    });
+    const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!res.ok) {
+      return {
+        ok: false,
+        error: String(body.error ?? "That answer did not go through. Try again."),
+        ...(body.session ? { session: body.session as InterviewSessionView } : {}),
+        // The interview was already wrapped up when this landed.
+        ...(body.finished === true ? { finished: true } : {}),
+      };
+    }
+    const data = body as unknown as { transcript: string; session: InterviewSessionView };
+    return { ok: true, transcript: data.transcript, session: data.session };
+  } catch {
+    return { ok: false, error: "Could not reach the server. Try again in a moment." };
+  }
+};
 
 // Voice answers go up as multipart so the server can transcribe them. A
 // failure returns the server's own explanation — the screen offers typing.
@@ -124,7 +159,7 @@ export async function answerWithAudio(
   filename: string,
 ): Promise<
   | { ok: true; transcript: string; session: InterviewSessionView }
-  | { ok: false; error: string }
+  | { ok: false; error: string; session?: InterviewSessionView; finished?: boolean }
 > {
   try {
     const form = new FormData();
@@ -139,6 +174,9 @@ export async function answerWithAudio(
       return {
         ok: false,
         error: String(body.error ?? "That recording did not go through. Try typing instead."),
+        // Present when the server is telling us our view is behind.
+        ...(body.session ? { session: body.session as InterviewSessionView } : {}),
+        ...(body.finished === true ? { finished: true } : {}),
       };
     }
     const data = body as unknown as { transcript: string; session: InterviewSessionView };

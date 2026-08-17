@@ -53,13 +53,20 @@ const ROUNDS: Array<{ id: InterviewRound; title: string; line: string }> = [
   {
     id: "hr",
     title: "HR round",
-    line: "Motivation, communication and how you work with people.",
+    line: "Communication and how you work with people.",
   },
   {
     id: "managerial",
     title: "Managerial round",
-    line: "Real work situations - judgement, ownership and pressure.",
+    line: "Real situations - judgement and pressure.",
   },
+];
+
+// Two interviewers, so nobody rehearses against the same voice every time -
+// and so anyone who finds one harder to follow has the other.
+const INTERVIEWERS: Array<{ id: "asha" | "ravi"; title: string }> = [
+  { id: "asha", title: "Asha" },
+  { id: "ravi", title: "Ravi" },
 ];
 
 // Recording formats, most widely transcribable first. Safari records mp4.
@@ -394,6 +401,19 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
   const [useSelected, setUseSelected] = useState(Boolean(initial.selectedRole));
   const [roleTitle, setRoleTitle] = useState(initial.selectedRole?.title ?? "");
   const [jd, setJd] = useState("");
+  // The job description is worth having and rarely to hand. Kept behind a
+  // line of its own so the empty box does not push the join button off the
+  // screen for everyone who does not have one.
+  const [showJd, setShowJd] = useState(false);
+  // What they asked to be pushed on - carried into every question this
+  // interview asks.
+  const [focus, setFocus] = useState("");
+  // Behind a line of its own, like the job description: most people join
+  // without a request, and an empty box asks them for one anyway.
+  const [showFocus, setShowFocus] = useState(false);
+  // Who takes the interview. The round sets the default - it is not a rule,
+  // and anyone can change it.
+  const [interviewer, setInterviewer] = useState<"asha" | "ravi" | null>(null);
   const [round, setRound] = useState<InterviewRound>("hr");
   const [starting, setStarting] = useState(false);
   // The green room's mic check: idle until the person asks for it, so the
@@ -408,6 +428,9 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
 
   // ---- room state ----
   const [secondsLeft, setSecondsLeft] = useState(initial.session?.secondsLeft ?? 600);
+  const secondsLeftRef = useRef(initial.session?.secondsLeft ?? 600);
+  // Shown once, when the clock stops a recording that was still running.
+  const [timeUpNotice, setTimeUpNotice] = useState(false);
   const [typed, setTyped] = useState("");
   const [typing, setTyping] = useState(false);
   const [busy, setBusy] = useState<"sending" | "thinking" | null>(null);
@@ -439,6 +462,10 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
   useEffect(() => {
     viewRef.current = view;
   }, [view]);
+  // One answer at a time. Two sends can overlap - a recorder stopped twice,
+  // a second tap, a retry racing the first - and the second always loses,
+  // because by then the question it answers is closed.
+  const sendingRef = useRef(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recordingCapRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -458,7 +485,9 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
     const startedAt = new Date(session.startedAt).getTime();
     const tick = () => {
       const elapsed = Math.round((Date.now() - startedAt) / 1000);
-      setSecondsLeft(Math.max(0, session.totalSeconds - elapsed));
+      const left = Math.max(0, session.totalSeconds - elapsed);
+      secondsLeftRef.current = left;
+      setSecondsLeft(left);
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -598,6 +627,8 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
           roleTitle: title,
           ...(useSelected && initial.selectedRole ? { roleId: initial.selectedRole.id } : {}),
           ...(jd.trim() ? { jd: jd.trim() } : {}),
+          ...(focus.trim() ? { focus: focus.trim() } : {}),
+          interviewer: interviewer ?? (round === "managerial" ? "ravi" : "asha"),
           round,
         })
       : null;
@@ -638,14 +669,34 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
 
   const submitText = async () => {
     const text = typed.trim();
-    if (!text || !awaitingAnswer) return;
+    if (!text || !awaitingAnswer || sendingRef.current) return;
+    sendingRef.current = true;
     setBusy("sending");
     setError(null);
     const t = await token();
-    const result = t ? await answerWithText(t, text) : null;
+    const result = t
+      ? await answerWithText(t, text)
+      : { ok: false as const, error: "Your session expired. Sign in again." };
+    sendingRef.current = false;
     setBusy(null);
-    if (!result) {
-      setError("Your answer did not go through. It is still here - try sending again.");
+    if (!result.ok) {
+      // The server sends the interview as it really stands when our view has
+      // fallen behind - a reload, a retry, a second tap. Catching up quietly
+      // is right: the person did answer, and telling them otherwise is a lie
+      // about their own interview.
+      if (result.session) {
+        setTyped("");
+        setTyping(false);
+        await deliverTurn(result.session);
+        return;
+      }
+      if (result.finished) {
+        setTyped("");
+        setTyping(false);
+        void finish();
+        return;
+      }
+      setError(result.error);
       return;
     }
     setTyped("");
@@ -670,16 +721,35 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
       recorder.onstop = async () => {
         stream.getTracks().forEach((track) => track.stop());
         setRecording(false);
+        // Stopped by the clock rather than by them: say so, so the cut-off
+        // reads as the end of an interview and not as a broken microphone.
+        if (secondsLeftRef.current === 0) setTimeUpNotice(true);
         const blob = new Blob(chunksRef.current, { type: format.mime });
-        if (blob.size === 0) return;
+        if (blob.size === 0 || sendingRef.current) {
+          // Nothing captured. If the clock has run out there is no way back
+          // into the interview, so it ends properly here rather than leaving
+          // a question open that can never be answered.
+          if (secondsLeftRef.current === 0 && !sendingRef.current) void finish();
+          return;
+        }
+        sendingRef.current = true;
         setBusy("sending");
         setError(null);
         const t = await token();
         const result = t
           ? await answerWithAudio(t, blob, format.filename)
           : { ok: false as const, error: "Your session expired. Sign in again." };
+        sendingRef.current = false;
         setBusy(null);
         if (!result.ok) {
+          if (result.session) {
+            await deliverTurn(result.session);
+            return;
+          }
+          if (result.finished) {
+            void finish();
+            return;
+          }
           setError(result.error);
           setTyping(true);
           return;
@@ -709,7 +779,9 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
     recorderRef.current = null;
   };
 
-  // A recording left running when time expires is stopped and submitted.
+  // A recording left running when time expires is stopped and submitted -
+  // announced, because a microphone that cuts out mid-sentence with no word
+  // about why reads as a broken app, not as the end of an interview.
   useEffect(() => {
     if (secondsLeft === 0 && recording) stopRecording();
   }, [secondsLeft, recording]);
@@ -802,7 +874,7 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
         <p className="mt-4 text-lg font-semibold text-brand-ink">
           {summaryError
             ? "That is the interview - your answers are saved."
-            : "Thank you - that is the interview."}
+            : "Thank you."}
         </p>
 
         {summaryError ? (
@@ -931,8 +1003,11 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
           <div className="mx-auto max-w-2xl px-4 pb-2 pt-2.5 sm:px-6">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
+                {/* Who is taking it, named in view: the voice you hear should
+                    never be a surprise, and it settles at the start. */}
                 <p className="truncate text-[0.65rem] font-bold uppercase tracking-wide text-brand-violet-deep">
                   Practice interview · {session.round === "hr" ? "HR round" : "Managerial round"}
+                  {session.interviewer ? ` · with ${session.interviewer}` : ""}
                 </p>
                 <h1 className="truncate text-sm font-bold text-brand-ink">{session.roleTitle}</h1>
               </div>
@@ -951,7 +1026,9 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
         <div className="mx-auto max-w-2xl px-4 sm:px-6">
           {timeUp && !readyToFinish ? (
             <p className="mt-4 rounded-xl border border-amber-400/40 bg-amber-50 p-3 text-sm text-amber-800">
-              That is time - finish this answer and the interviewer will wrap up.
+              {timeUpNotice
+                ? "That is time - we sent what you had said, and the interviewer is wrapping up."
+                : "That is time - finish this answer and the interviewer will wrap up."}
             </p>
           ) : null}
 
@@ -1438,7 +1515,7 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
                 </p>
               </>
             ) : (
-              <div className="mt-1 space-y-3">
+              <div className="mt-1 space-y-2">
                 <div>
                   <label htmlFor="role-title" className="text-xs font-semibold text-slate-600">
                     Role you are interviewing for
@@ -1456,22 +1533,33 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
                     }}
                     maxLength={120}
                     placeholder="e.g. Customer Support Associate"
-                    className="mt-1 w-full rounded-xl border border-slate-300 bg-slate-50 p-3 text-sm text-brand-ink outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/30"
+                    className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm text-brand-ink outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/30"
                   />
                 </div>
-                <div>
-                  <label htmlFor="role-jd" className="text-xs font-semibold text-slate-600">
-                    Job description (optional - paste it and the questions will use it)
-                  </label>
-                  <textarea
-                    id="role-jd"
-                    value={jd}
-                    onChange={(e) => setJd(e.target.value)}
-                    rows={3}
-                    maxLength={8000}
-                    className="mt-1 w-full rounded-xl border border-slate-300 bg-slate-50 p-3 text-sm text-brand-ink outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/30"
-                  />
-                </div>
+                {showJd || jd ? (
+                  <div>
+                    <label htmlFor="role-jd" className="text-xs font-semibold text-slate-600">
+                      Job description - the questions will use it
+                    </label>
+                    <textarea
+                      id="role-jd"
+                      value={jd}
+                      onChange={(e) => setJd(e.target.value)}
+                      rows={3}
+                      maxLength={8000}
+                      autoFocus
+                      className="mt-1 w-full rounded-xl border border-slate-300 bg-slate-50 p-3 text-sm text-brand-ink outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/30"
+                    />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowJd(true)}
+                    className="inline-flex min-h-11 cursor-pointer items-center text-[0.78rem] font-semibold text-slate-600 underline underline-offset-2 transition-colors hover:text-brand-ink motion-reduce:transition-none"
+                  >
+                    Paste the job description (optional)
+                  </button>
+                )}
                 {initial.selectedRole ? (
                   <button
                     type="button"
@@ -1484,8 +1572,9 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
               </div>
             )}
 
+
             {/* The round, as two quiet segments. */}
-            <fieldset className="mt-4">
+            <fieldset className="mt-3">
               <legend className="text-xs font-semibold text-slate-600">Which round?</legend>
               <div className="mt-1.5 grid gap-2 sm:grid-cols-2">
                 {ROUNDS.map((option) => {
@@ -1493,7 +1582,7 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
                   return (
                     <label
                       key={option.id}
-                      className={`flex cursor-pointer flex-col rounded-xl border-2 p-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-teal/40 motion-reduce:transition-none ${
+                      className={`flex cursor-pointer flex-col rounded-xl border-2 px-3 py-2.5 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-teal/40 motion-reduce:transition-none ${
                         selected
                           ? "border-brand-teal bg-teal-50"
                           : "border-slate-200 hover:border-slate-300"
@@ -1531,19 +1620,89 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
               </div>
             </fieldset>
 
-            <p className="mt-3 text-[0.8rem] leading-relaxed text-slate-600">
-              10 minutes - up to ten questions, and it ends on time, just like
-              the real thing.
+            {/* Who takes it, in the same two cards as the round. The round
+                moves the choice to its usual person; either name is always
+                available, because a default that cannot be changed is a rule
+                wearing a default's clothes. */}
+            <fieldset className="mt-3">
+              <legend className="text-xs font-semibold text-slate-600">Who takes it?</legend>
+              {/* Slot-sized, the way a call scheduler offers times: small,
+                  side by side, the chosen one filled in. */}
+              <div className="mt-1.5 flex flex-wrap gap-2">
+                {INTERVIEWERS.map((person) => {
+                  const chosen =
+                    (interviewer ?? (round === "managerial" ? "ravi" : "asha")) === person.id;
+                  return (
+                    <label
+                      key={person.id}
+                      className={`inline-flex min-h-11 min-w-[6.5rem] cursor-pointer items-center justify-center rounded-lg border-2 px-4 text-[0.82rem] font-bold transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-teal/40 motion-reduce:transition-none ${
+                        chosen
+                          ? "border-brand-teal-deep bg-brand-teal-deep text-white"
+                          : "border-slate-200 text-slate-600 hover:border-slate-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="interviewer"
+                        value={person.id}
+                        checked={chosen}
+                        onChange={() => setInterviewer(person.id)}
+                        className="sr-only"
+                      />
+                      {person.title}
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+
+            {/* Theirs to set: what they want pushed on. Somebody who says
+                "ask me about angry customers" has told us where they feel
+                weakest, which is exactly what a rehearsal is for. */}
+            {showFocus || focus ? (
+              <div className="mt-3">
+                <label htmlFor="focus" className="text-xs font-semibold text-slate-600">
+                  What you want to be pushed on
+                </label>
+                <input
+                  id="focus"
+                  type="text"
+                  value={focus}
+                  onChange={(e) => setFocus(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (!starting) begin();
+                    }
+                  }}
+                  maxLength={400}
+                  autoFocus
+                  placeholder="Handling angry customers, or explaining a gap in my studies"
+                  className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 text-sm text-brand-ink outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/30"
+                />
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowFocus(true)}
+                className="mt-2 inline-flex min-h-11 cursor-pointer items-center text-[0.78rem] font-semibold text-slate-600 underline underline-offset-2 transition-colors hover:text-brand-ink motion-reduce:transition-none"
+              >
+                Anything you want to be pushed on? (optional)
+              </button>
+            )}
+
+            <p className="mt-2.5 text-[0.78rem] leading-relaxed text-slate-600">
+              10 minutes, up to ten questions, ends on time.
               {initial.speechAvailable
-                ? " The interviewer speaks; answer out loud, or type if you prefer."
-                : " Questions arrive as text this session; answer by voice or typing."}
+                ? " Answer out loud, or type."
+                : " Questions arrive as text; answer by voice or typing."}
             </p>
 
             <button
               type="button"
               onClick={begin}
               disabled={starting}
-              className="mt-4 inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-brand-teal-deep px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-brand-teal disabled:opacity-50 motion-reduce:transition-none"
+              className="mt-3 inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-brand-teal-deep px-6 text-sm font-bold text-white shadow-sm transition-colors hover:bg-brand-teal disabled:opacity-50 motion-reduce:transition-none"
             >
               <MicIcon className="h-4 w-4" />
               {starting ? "Setting up your interviewer…" : "Join the interview"}
