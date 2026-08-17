@@ -13,14 +13,15 @@ export function InterviewSummary({
   summary,
   roleTitle,
   turns,
-  onPractiseAgain,
+  onRetake,
 }: {
   summary: InterviewSummaryView;
   roleTitle: string;
   /** The interview's own turns: the read-out quotes the question as it was
       actually asked rather than the model's shorthand for it. */
   turns?: Array<{ index: number; question: string }>;
-  onPractiseAgain: () => void;
+  /** Start a fresh interview from the top. */
+  onRetake: () => void;
 }) {
   const askedQuestion = (index: number | undefined) =>
     typeof index === "number"
@@ -158,7 +159,7 @@ export function InterviewSummary({
             href="/practice"
             className="mt-3 inline-flex min-h-11 items-center justify-center rounded-full bg-brand-teal-deep px-5 text-sm font-bold text-white transition-colors hover:bg-brand-teal motion-reduce:transition-none"
           >
-            Build these in Practice
+            Close the gap in Practice →
           </Link>
         </section>
       ) : null}
@@ -166,10 +167,10 @@ export function InterviewSummary({
       <div className="flex flex-wrap items-center gap-3 border-t border-slate-200 pt-5">
         <button
           type="button"
-          onClick={onPractiseAgain}
+          onClick={onRetake}
           className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border border-slate-300 px-5 text-sm font-bold text-brand-ink transition-colors hover:border-slate-400 motion-reduce:transition-none"
         >
-          Practise again
+          Retake interview
         </button>
         <p className="text-xs text-slate-500">
           Saved to your record - your next interview will check on these areas.

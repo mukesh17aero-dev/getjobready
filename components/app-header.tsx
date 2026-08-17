@@ -14,7 +14,7 @@ import type { AuthMode } from "@/components/auth-form";
 // belongs to exactly one destination (`match`), so the bar always shows where
 // you are — modules open inside destinations, never as separate islands.
 const DESTINATIONS = [
-  { label: "Home", href: "/", match: ["/", "/start", "/tools", "/resume", "/journey"] },
+  { label: "Home", href: "/", match: ["/", "/start", "/resume", "/journey"] },
   { label: "Discover", href: "/discover", match: ["/discover"] },
   { label: "Practice", href: "/practice", match: ["/practice", "/readiness", "/interview"] },
   { label: "Passport", href: "/passport", match: ["/passport"] },

@@ -72,9 +72,13 @@ function Sheet({
       data-sheet
       className="relative lg:sticky lg:top-14 lg:snap-start lg:snap-always"
     >
+      {/* Flat, full-bleed sheets: with every sheet on the same ground, a
+          rounded top edge revealed the same colour behind it and read as a
+          notch under the header rather than as one card over another. The
+          hairline border still marks where one sheet ends. */}
       <div
         className={`stack-recede relative overflow-hidden ${tone} ${
-          first ? "" : "rounded-t-[2.5rem] border-t border-[var(--lp-border)]"
+          first ? "" : "border-t border-[var(--lp-border)]"
         }`}
       >
         {children}

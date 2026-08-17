@@ -351,7 +351,7 @@ function PastInterviews({
                   summary={past.summary}
                   roleTitle={past.roleTitle}
                   turns={past.turns}
-                  onPractiseAgain={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                  onRetake={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                 />
               </div>
             )}
@@ -820,7 +820,7 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
             summary={summary}
             roleTitle={session.roleTitle}
             turns={session.turns}
-            onPractiseAgain={practiseAgain}
+            onRetake={practiseAgain}
           />
         </div>
 
@@ -1078,6 +1078,13 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
                   id="typed-answer"
                   value={typed}
                   onChange={(e) => setTyped(e.target.value)}
+                  onKeyDown={(e) => {
+                    // Enter sends, Shift+Enter starts a new line.
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      if (busy === null && typed.trim() && awaitingAnswer) submitText();
+                    }
+                  }}
                   rows={3}
                   maxLength={6000}
                   placeholder="Say it the way you would say it out loud."
@@ -1361,6 +1368,12 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
                     type="text"
                     value={roleTitle}
                     onChange={(e) => setRoleTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (!starting) begin();
+                      }
+                    }}
                     maxLength={120}
                     placeholder="e.g. Customer Support Associate"
                     className="mt-1 w-full rounded-xl border border-slate-300 bg-slate-50 p-3 text-sm text-brand-ink outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/30"

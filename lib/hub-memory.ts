@@ -4,7 +4,6 @@
 
 export const HUB_LABELS: Record<string, string> = {
   "/start": "Back to your goals",
-  "/tools": "Back to career tools",
   "/practice": "Back to Practice",
   "/discover": "Back to Discovery",
 };

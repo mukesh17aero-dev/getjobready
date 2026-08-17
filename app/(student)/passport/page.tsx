@@ -8,6 +8,8 @@ export default function PassportPage() {
       stage="Stage 5 · Passport"
       title="Your Ascend Passport"
       delivers="Your portable, evidence-backed professional identity: resume, benchmark report, verified competencies and simulation evidence — with sharing you control."
+      backHref="/"
+      backLabel="Back to home"
     />
   );
 }

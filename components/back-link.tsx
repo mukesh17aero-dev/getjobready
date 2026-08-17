@@ -12,9 +12,10 @@ import { HUB_LABELS, readHub } from "@/lib/hub-memory";
 const neverChanges = () => () => {};
 
 export function BackLink({
-  fallbackHref = "/start",
-  fallbackLabel = "Back to your goals",
+  fallbackHref,
+  fallbackLabel,
 }: {
+  /** This page's own parent. Given, it always wins - back means up. */
   fallbackHref?: string;
   fallbackLabel?: string;
 }) {
@@ -23,8 +24,16 @@ export function BackLink({
   // never offer to go "back" to the page you are already on.
   const pathname = usePathname();
   const hub = remembered === pathname ? null : remembered;
-  const href = hub ?? fallbackHref;
-  const label = hub ? HUB_LABELS[hub] : fallbackLabel;
+  // A page that knows its own parent uses it. The remembered hub is only for
+  // pages that have no parent of their own - otherwise every screen ends up
+  // pointing at whichever hub was visited last, which is usually home.
+  const href = fallbackHref ?? hub ?? "/start";
+  const label =
+    fallbackHref !== undefined
+      ? (fallbackLabel ?? "Back")
+      : hub
+        ? HUB_LABELS[hub]
+        : "Back to your goals";
 
   return (
     <Link

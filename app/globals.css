@@ -404,10 +404,10 @@
   :root:not([data-theme="light"]) {
     color-scheme: dark;
 
-    --color-surface: #0c121c;
-    --color-slate-50: #0a0f17;
-    --color-slate-100: #131a26;
-    --color-slate-200: #1f2836;
+    --color-surface: #0a1512;
+    --color-slate-50: #081310;
+    --color-slate-100: #0f1c19;
+    --color-slate-200: #1a2b26;
     --color-slate-300: #3a4a5f;
     --color-slate-400: #8091a5;
     --color-slate-500: #9aa9bb;
@@ -417,8 +417,8 @@
     --color-slate-900: #f2f6fb;
 
     --color-brand-ink: #eef2f8;
-    --color-brand-mist: #070b12;
-    --color-brand-panel: #12202e;
+    --color-brand-mist: #060f0d;
+    --color-brand-panel: #102420;
     /* Dark mode is quieter on purpose: the same hues, desaturated and
        darkened, so panels read as surfaces rather than neon. */
     --color-brand-violet: #159e93;
@@ -460,10 +460,10 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --color-surface: #0c121c;
-  --color-slate-50: #0a0f17;
-  --color-slate-100: #131a26;
-  --color-slate-200: #1f2836;
+  --color-surface: #0a1512;
+  --color-slate-50: #081310;
+  --color-slate-100: #0f1c19;
+  --color-slate-200: #1a2b26;
   --color-slate-300: #3a4a5f;
   --color-slate-400: #8091a5;
   --color-slate-500: #9aa9bb;
@@ -473,8 +473,8 @@
   --color-slate-900: #f2f6fb;
 
   --color-brand-ink: #eef2f8;
-  --color-brand-mist: #070b12;
-  --color-brand-panel: #12202e;
+  --color-brand-mist: #060f0d;
+  --color-brand-panel: #102420;
   /* Dark mode is quieter on purpose: the same hues, desaturated and
      darkened, so panels read as surfaces rather than neon. */
   --color-brand-violet: #159e93;
@@ -657,9 +657,12 @@ body {
  */
 .landing-surface,
 .lp-dark {
-  --lp-bg-a: #090d15;
-  --lp-bg-b: #0a1118;
-  --lp-bg-c: #0a121a;
+  /* One green-black through the whole story: the closing sheet's tone was
+     the warmest of the four, so the other three now sit on it too. The
+     sheets stay apart by their rounded top edge, not by hue. */
+  --lp-bg-a: #071310;
+  --lp-bg-b: #081210;
+  --lp-bg-c: #081412;
   --lp-bg-d: #081210;
   --lp-ink: #ffffff;
   --lp-body-strong: rgba(255, 255, 255, 0.82);
@@ -674,8 +677,8 @@ body {
   --lp-dots: rgba(255, 255, 255, 0.07);
   --lp-cta-bg: #ffffff;
   --lp-cta-ink: #16233f;
-  --lp-wall-fade: rgba(10, 18, 26, 0.92);
-  --lp-wall-bg: #0a121a;
+  --lp-wall-fade: rgba(8, 20, 18, 0.92);
+  --lp-wall-bg: #081412;
 }
 
 [data-theme="light"] .landing-surface {

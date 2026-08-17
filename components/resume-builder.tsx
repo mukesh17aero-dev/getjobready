@@ -10,11 +10,14 @@ import { track as trackEvent } from "@/lib/footprints";
 import {
   downloadResumeDocx,
   generateResume,
+  refineResume,
   resumeGapCheck,
+  reviewResume,
   saveResumeProfile,
   type GapCheckResult,
   type ResumeCareerProfile,
   type ResumeData,
+  type ResumeReview,
   type ResumeTarget,
   type ResumeTemplate,
 } from "@/lib/resume-api";
@@ -178,7 +181,7 @@ function GapModal({
         {flagged.length > 0 && (
           <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3.5">
             <p className="text-[0.8rem] font-semibold text-amber-900">
-              These aren&rsquo;t in your record yet
+              Worth a second look
             </p>
             <div className="mt-2 grid gap-2">
               {flagged.map((skill) => (
@@ -194,15 +197,14 @@ function GapModal({
                   />
                   <span className="text-[0.8rem] leading-snug text-amber-900">
                     <strong className="font-semibold">{skill}</strong> - this
-                    isn&rsquo;t in your record yet - confirm it&rsquo;s true
-                    and you can back it up in an interview.
+                    is new - confirm it is true and you could back it up in an
+                    interview.
                   </span>
                 </label>
               ))}
             </div>
             <p className="mt-2 text-[0.72rem] text-amber-800">
-              Confirmed skills join your record; unticked ones stay out of the
-              resume.
+              Confirmed skills go on the resume; unticked ones stay off it.
             </p>
           </div>
         )}
@@ -219,6 +221,226 @@ function GapModal({
           {unconfirmed.length > 0 && (
             <span className="text-[0.75rem] text-amber-800">
               Tick or clear the flagged skills first.
+            </span>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+// How the review's verdict reads on screen, and where its one next step
+// leads. Plain words, no score - a resume is not a number.
+const STANDING_LABEL: Record<"early" | "competitive" | "strong", string> = {
+  early: "This is an honest start, and thin for the bar this role sets.",
+  competitive: "This holds up against what this role usually asks for.",
+  strong: "This is strong for the role - it carries real evidence.",
+};
+
+const NEXT_STEP_HREF: Record<string, string> = {
+  readiness: "/readiness",
+  practice: "/practice",
+  interview: "/interview",
+  profile: "/profile",
+};
+
+const NEXT_STEP_LABEL: Record<string, string> = {
+  readiness: "Prove these skills →",
+  practice: "Do the real work →",
+  interview: "Rehearse for it →",
+  profile: "Fill in what is missing →",
+};
+
+// What can be asked for, shown one at a time in Scribe's own box - a person
+// who has never edited a resume does not know that "this one is not true" is
+// a thing they are allowed to say.
+const SCRIBE_EXAMPLES = [
+  "Make the profile shorter",
+  "Move the college fest above the store job",
+  "Add that I handled about 60 customers a day",
+  "This bullet is not true - take it out",
+  "Say more about the stock work",
+];
+
+type LedgerEntry = {
+  role: string;
+  at: string;
+  skillsHighlighted?: string[];
+  resume?: ResumeData;
+  template?: ResumeTemplate;
+  /** When they took it away, if they have. */
+  downloadedAt?: string;
+  /** The read-out they were given on the version they downloaded. */
+  review?: ResumeReview;
+};
+
+// One turn of the revision loop, kept so the change log can show what was
+// asked, what happened, and can put any change back.
+type Revision = {
+  ask: string;
+  /** What Scribe said back - always present. */
+  reply: string;
+  changed: string[];
+  /** Whether the document actually differs from `before`. The model does not
+      always describe what it did, but the page can always tell. */
+  didChange: boolean;
+  /** Facts this instruction brought in, which are the person's own claim. */
+  added: string[];
+  /** One question that would make the change stronger, if there was one. */
+  followUp?: string;
+  declined: string | null;
+  /** The resume as it was BEFORE this revision, for "Put it back". */
+  before: ResumeData;
+};
+
+// ---- The first few details ----
+//
+// Asked here rather than sending someone to the profile page and hoping they
+// come back. Every answer is written to the same record the profile page
+// reads, so it is filled in there too and never asked twice.
+
+const ESSENTIALS: Array<{
+  key: "fullName" | "city" | "skills" | "institution" | "course" | "internshipExperience";
+  label: string;
+  hint?: string;
+  placeholder: string;
+  required?: boolean;
+  lines?: number;
+}> = [
+  { key: "fullName", label: "Your full name", placeholder: "Aarav Sharma", required: true },
+  { key: "city", label: "City", placeholder: "Hyderabad" },
+  {
+    key: "skills",
+    label: "What can you do?",
+    hint: "Comma separated. Only what you could back up in an interview.",
+    placeholder: "Customer service, Google Sheets, Hindi typing",
+    required: true,
+  },
+  { key: "institution", label: "Where you studied", placeholder: "Osmania University" },
+  { key: "course", label: "What you studied", placeholder: "B.Com" },
+  {
+    key: "internshipExperience",
+    label: "Any work, internship or project so far (optional)",
+    hint: "A line or two is plenty - we will ask for the details next.",
+    placeholder: "Helped at the family store: billing, stock lists, customers",
+    lines: 3,
+  },
+];
+
+function EssentialsModal({
+  firstName,
+  busy,
+  onClose,
+  onSubmit,
+}: {
+  firstName: string;
+  busy: boolean;
+  onClose: () => void;
+  onSubmit: (values: Record<string, string>) => void;
+}) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const missing = ESSENTIALS.filter(
+    (f) => f.required && !(values[f.key] ?? "").trim(),
+  );
+
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    panelRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="The first few details for your resume"
+    >
+      <button
+        type="button"
+        aria-label="Close dialog"
+        onClick={onClose}
+        className="absolute inset-0 cursor-default bg-black/50 backdrop-blur-sm"
+      />
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        className="relative max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-3xl border border-slate-200 bg-surface p-6 shadow-[0_40px_90px_-20px_rgba(0,0,0,0.4)] outline-none sm:p-7"
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close dialog"
+          className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+        >
+          ✕
+        </button>
+        <h2 className="pr-10 text-lg font-semibold text-brand-ink">
+          {firstName ? `${firstName}, let's start with you` : "Let's start with you"}
+        </h2>
+        <p className="mt-1 text-[0.85rem] leading-relaxed text-slate-600">
+          Your resume can only say what is true about you, so we need a little
+          to work from. This is saved to your profile - you will not be asked
+          again.
+        </p>
+
+        <div className="mt-4 grid gap-4">
+          {ESSENTIALS.map((field) => (
+            <label key={field.key} className="block">
+              <span className="text-[0.82rem] font-semibold text-slate-800">
+                {field.label}
+              </span>
+              {field.hint && (
+                <span className="block text-[0.72rem] text-slate-400">
+                  {field.hint}
+                </span>
+              )}
+              {field.lines ? (
+                <textarea
+                  rows={field.lines}
+                  value={values[field.key] ?? ""}
+                  placeholder={field.placeholder}
+                  onChange={(e) =>
+                    setValues((v) => ({ ...v, [field.key]: e.target.value }))
+                  }
+                  className="mt-1 w-full resize-y rounded-lg border border-slate-300 bg-surface px-3 py-2 text-[0.88rem] outline-none focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/20"
+                />
+              ) : (
+                <input
+                  value={values[field.key] ?? ""}
+                  placeholder={field.placeholder}
+                  onChange={(e) =>
+                    setValues((v) => ({ ...v, [field.key]: e.target.value }))
+                  }
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-surface px-3 py-2 text-[0.9rem] outline-none focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/20"
+                />
+              )}
+            </label>
+          ))}
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            disabled={busy || missing.length > 0}
+            onClick={() => onSubmit(values)}
+            className="rounded-lg bg-brand-teal-deep px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-teal disabled:opacity-50"
+          >
+            {busy ? "Saving…" : "Save and keep going"}
+          </button>
+          {missing.length > 0 && (
+            <span className="text-[0.75rem] text-slate-500">
+              Your name and what you can do are the two we cannot do without.
             </span>
           )}
         </div>
@@ -700,27 +922,23 @@ function ResumeSheet({
 // ---- The builder ----
 
 export function ResumeBuilder({
-  profile,
+  profile: initialProfile,
   target,
 }: {
   profile: ResumeCareerProfile | null;
   target: ResumeTarget | null;
 }) {
   const router = useRouter();
+  // The record can change from inside this screen - the first few details are
+  // asked for here rather than sending someone away to the profile page - so
+  // it is state, not just a prop.
+  const [profile, setProfile] = useState(initialProfile);
   const ledger = (() => {
     const raw = profile?.preferences?.["resumeLedger"];
     if (!Array.isArray(raw)) return [];
     return raw
       .filter(
-        (
-          e,
-        ): e is {
-          role: string;
-          at: string;
-          skillsHighlighted: string[];
-          resume?: ResumeData;
-          template?: ResumeTemplate;
-        } =>
+        (e): e is LedgerEntry =>
           typeof e === "object" && e !== null && typeof (e as { role?: unknown }).role === "string",
       )
       .slice()
@@ -741,6 +959,18 @@ export function ResumeBuilder({
   } | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+  const [essentialsOpen, setEssentialsOpen] = useState(false);
+  const [review, setReview] = useState<ResumeReview | null>(null);
+  const [reviewing, setReviewing] = useState(false);
+  // The read-back is a page of its own, shown once the resume is downloaded.
+  const [showFeedback, setShowFeedback] = useState(false);
+  // The revision loop: each instruction, what came back, and the resume it
+  // replaced - so any change can be put back.
+  const [comment, setComment] = useState("");
+  const [revising, setRevising] = useState(false);
+  const [revisions, setRevisions] = useState<Revision[]>([]);
+  const [exampleIndex, setExampleIndex] = useState(0);
   const [template, setTemplate] = useState<ResumeTemplate>("classic");
 
   const profileSkills = useMemo(
@@ -780,12 +1010,72 @@ export function ResumeBuilder({
   const chosenRole = () =>
     customMode ? roleInput.trim() : (lockedRole?.title ?? "");
 
+  const asText = (key: string) => {
+    const value = profile?.preferences?.[key];
+    return typeof value === "string" ? value.trim() : "";
+  };
+  // Two things a truthful resume cannot be written without.
+  const needsEssentials = !asText("fullName") || profileSkills.length === 0;
+
+  // Saved straight into the record the profile page reads, so these answers
+  // show up there and are never asked for twice.
+  async function saveEssentials(values: Record<string, string>) {
+    setBusy("checking");
+    setError(null);
+    const token = await withToken();
+    if (!token) return;
+    const prefs = profile?.preferences ?? {};
+    const typed = (key: string) => (values[key] ?? "").trim();
+    const merged: Record<string, unknown> = { ...prefs };
+    for (const field of ESSENTIALS) {
+      const value = typed(field.key);
+      if (!value) continue;
+      merged[field.key] =
+        field.key === "skills"
+          ? [...profileSkills, ...splitList(value)]
+              .filter((s, i, all) => all.findIndex((o) => o.toLowerCase() === s.toLowerCase()) === i)
+              .join(", ")
+          : value;
+    }
+    const saved = await saveResumeProfile(token, {
+      education: profile?.education ?? [],
+      experience: profile?.experience ?? [],
+      projects: profile?.projects ?? [],
+      achievements: profile?.achievements ?? [],
+      preferences: merged,
+    });
+    setBusy(null);
+    if (!saved) {
+      setError("Those details didn't save. Give it another try.");
+      return;
+    }
+    setProfile(saved);
+    setEssentialsOpen(false);
+    // Straight on with what they asked for - the build. runBuild is called
+    // rather than begin so the just-saved details are not re-requested from
+    // a stale closure.
+    await runBuild();
+  }
+
   // The role line on the preview follows whatever they are aiming at now.
   const previewRole =
     (customMode || !lockedRole ? roleInput.trim() : lockedRole.title) ||
     "The role you are aiming at";
 
-  async function begin() {
+  function begin() {
+    if (!chosenRole()) return;
+    setError(null);
+    // The record has to hold something true before a resume can be written -
+    // but that ask belongs here, at the moment of building, not as a gate on
+    // the door.
+    if (needsEssentials) {
+      setEssentialsOpen(true);
+      return;
+    }
+    void runBuild();
+  }
+
+  async function runBuild() {
     const targetRole = chosenRole();
     if (!targetRole) return;
     setError(null);
@@ -799,7 +1089,7 @@ export function ResumeBuilder({
     const check = await resumeGapCheck(token, body);
     if (!check) {
       setBusy(null);
-      setError("We couldn't check your record just now. Give it another try.");
+      setError("Something went wrong just then. Give it another try.");
       return;
     }
     trackEvent({
@@ -833,6 +1123,7 @@ export function ResumeBuilder({
       return;
     }
     setResult({ resume: generated.resume, targetRole: generated.targetRole });
+    setShowFeedback(false);
     trackEvent({
       family: "engagement",
       event: "resume_generated",
@@ -840,6 +1131,147 @@ export function ResumeBuilder({
       target: generated.targetRole,
       meta: { keywordsUsed: generated.resume.keywordsUsed.length },
     });
+  }
+
+  // The examples cycle only while the box is empty and untouched, and not at
+  // all for someone who asked for less motion.
+  useEffect(() => {
+    if (!result || comment.trim() || revising) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = setInterval(
+      () => setExampleIndex((i) => (i + 1) % SCRIBE_EXAMPLES.length),
+      3200,
+    );
+    return () => clearInterval(id);
+  }, [result, comment, revising]);
+
+  // A menu that will not go away is a trap: a click anywhere else, or Escape,
+  // closes the download menu.
+  useEffect(() => {
+    if (!exportOpen) return;
+    const onPointer = (e: MouseEvent | TouchEvent) => {
+      if (!exportRef.current?.contains(e.target as Node)) setExportOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExportOpen(false);
+    };
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("touchstart", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("touchstart", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [exportOpen]);
+
+  // One revision, in the person's own words. The reply always carries a valid
+  // resume, so the page can simply take what comes back; anything Scribe
+  // would not do comes back as a plain sentence rather than an error.
+  async function reviseResume() {
+    const ask = comment.trim();
+    if (!ask || !result) return;
+    setRevising(true);
+    setError(null);
+    const token = await withToken();
+    if (!token) {
+      setRevising(false);
+      return;
+    }
+    const before = result.resume;
+    const revised = await refineResume(token, {
+      resume: before,
+      comment: ask,
+      targetRole: result.targetRole,
+      // The thread so far, so Scribe can answer a follow-up in context.
+      history: revisions.slice(-6).map((r) => ({ ask: r.ask, reply: r.reply })),
+    });
+    setRevising(false);
+    if (!revised) {
+      setError("That revision didn't go through. Your resume is unchanged.");
+      return;
+    }
+    const didChange =
+      JSON.stringify(revised.resume) !== JSON.stringify(before);
+    setResult({ resume: revised.resume, targetRole: result.targetRole });
+    // Anything the person asserted in their instruction is written to their
+    // record, so the resume stays backed by the record and the claim is
+    // theirs on the profile page too.
+    if (revised.added.length > 0) void keepClaims(token, revised.added);
+    setRevisions((list) => [
+      ...list,
+      {
+        ask,
+        reply: revised.reply,
+        changed: revised.changed,
+        didChange,
+        added: revised.added,
+        ...(revised.followUp ? { followUp: revised.followUp } : {}),
+        declined: revised.declined,
+        before,
+      },
+    ]);
+    setComment("");
+    trackEvent({
+      family: "engagement",
+      event: "resume_revised",
+      module: "resume",
+      target: result.targetRole,
+      meta: { declined: Boolean(revised.declined) },
+    });
+    // Any read-back already written belongs to an older draft of this page.
+    setReview(null);
+  }
+
+  // What they told Scribe is now part of their record: kept as their own
+  // claims, so nothing on the resume is unbacked and the profile page sees it.
+  async function keepClaims(token: string, claims: string[]) {
+    const prefs = profile?.preferences ?? {};
+    const previous = Array.isArray(prefs["resumeClaims"])
+      ? (prefs["resumeClaims"] as string[])
+      : [];
+    const merged = [...previous, ...claims].filter(
+      (claim, i, all) =>
+        all.findIndex((o) => o.toLowerCase() === claim.toLowerCase()) === i,
+    );
+    const saved = await saveResumeProfile(token, {
+      education: profile?.education ?? [],
+      experience: profile?.experience ?? [],
+      projects: profile?.projects ?? [],
+      achievements: profile?.achievements ?? [],
+      preferences: { ...prefs, resumeClaims: merged.slice(0, 40) },
+    });
+    if (saved) setProfile(saved);
+  }
+
+  // Put one revision back: the resume returns to how it read before that
+  // instruction, and the entry leaves the log with it.
+  function undoRevision(index: number) {
+    const entry = revisions[index];
+    if (!entry || !result) return;
+    setResult({ resume: entry.before, targetRole: result.targetRole });
+    setRevisions((list) => list.filter((_, i) => i !== index));
+  }
+
+  // The second read: what this resume already does, what it is still missing,
+  // and the one thing that would improve it most. It runs after the draft is
+  // on screen, so a slow read never delays the resume itself.
+  async function readItBack(
+    token: string,
+    resume: ResumeData,
+    targetRole: string,
+  ): Promise<ResumeReview | null> {
+    setReview(null);
+    setReviewing(true);
+    const read = await reviewResume(token, {
+      resume,
+      targetRole,
+      ...(customMode && jdInput.trim() ? { jobDescription: jdInput.trim() } : {}),
+    });
+    setReviewing(false);
+    if (!read) return null;
+    setReview(read.review);
+    return read.review;
   }
 
   // The popup's answers are saved into the record first (preferences
@@ -911,18 +1343,72 @@ export function ResumeBuilder({
     a.download = `${result.resume.header.name.replace(/\s+/g, "-").toLowerCase() || "resume"}-resume.docx`;
     a.click();
     URL.revokeObjectURL(url);
+    handOverToFeedback(token);
+  }
+
+  // Their resume is on their machine; now the honest part. The read-back runs
+  // here rather than beside the draft, so nothing argues with the document
+  // while they are still writing it.
+  function handOverToFeedback(token: string) {
+    if (!result) return;
+    const taken = result;
+    setShowFeedback(true);
+    window.scrollTo({ top: 0 });
+    void (async () => {
+      const read =
+        review ?? (await readItBack(token, taken.resume, taken.targetRole));
+      await keepDownloaded(token, taken, read);
+    })();
+  }
+
+  // The downloaded version and its read-out are stored together, so opening
+  // this resume again shows the page they actually took and the feedback
+  // they were given on it - not a newer draft, and not a blank.
+  async function keepDownloaded(
+    token: string,
+    taken: { resume: ResumeData; targetRole: string },
+    read: ResumeReview | null,
+  ) {
+    const prefs = profile?.preferences ?? {};
+    const raw = Array.isArray(prefs["resumeLedger"])
+      ? [...(prefs["resumeLedger"] as LedgerEntry[])]
+      : [];
+    // The newest entry for this role is the build they have been working on.
+    const index = raw.map((e) => e?.role).lastIndexOf(taken.targetRole);
+    const entry: LedgerEntry = {
+      ...(index >= 0 ? raw[index] : {}),
+      role: taken.targetRole,
+      at: index >= 0 ? (raw[index]?.at ?? new Date().toISOString()) : new Date().toISOString(),
+      skillsHighlighted:
+        (index >= 0 ? raw[index]?.skillsHighlighted : undefined) ??
+        taken.resume.skills.flatMap((group) => group.items).slice(0, 30),
+      resume: taken.resume,
+      template,
+      downloadedAt: new Date().toISOString(),
+      ...(read ? { review: read } : {}),
+    };
+    if (index >= 0) raw[index] = entry;
+    else raw.push(entry);
+    const saved = await saveResumeProfile(token, {
+      education: profile?.education ?? [],
+      experience: profile?.experience ?? [],
+      projects: profile?.projects ?? [],
+      achievements: profile?.achievements ?? [],
+      preferences: { ...prefs, resumeLedger: raw.slice(-20) },
+    });
+    if (saved) setProfile(saved);
   }
 
   // Rendered inside the workbench rail before a build, and under the sheet
   // after one - so it is reachable either way without lengthening the page.
   const ledgerSection = ledger.length > 0 && (
         <section className="mt-10 border-t border-slate-200 pt-6">
-          <h2 className="text-[0.8rem] font-bold text-brand-ink">
+          <h2 className="text-lg font-semibold tracking-tight text-brand-ink">
             Your previous resumes
           </h2>
           <p className="mt-1 text-[0.78rem] text-slate-500">
-            Each build is kept on your record. Rebuild any time - your resume
-            always reflects the current truth of your record.
+            Every resume you build is kept here. Come back to any of them, or
+            build a fresh one whenever something changes.
           </p>
           <div className="mt-2.5 grid gap-2">
             {ledger.map((entry, i) => (
@@ -946,10 +1432,14 @@ export function ResumeBuilder({
                   <button
                     type="button"
                     onClick={() => {
-                      setResult({ resume: entry.resume!, targetRole: entry.role });
+                      const past = entry.resume!;
+                      setResult({ resume: past, targetRole: entry.role });
                       // Re-render the look it was built in; entries from
                       // before templates existed fall back to classic.
                       setTemplate(asTemplate(entry.template));
+                      setRevisions([]);
+                      setReview(entry.review ?? null);
+                      setShowFeedback(false);
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
                     className="shrink-0 rounded-lg bg-brand-teal-deep px-3.5 py-2 text-[0.78rem] font-bold text-white transition-colors hover:bg-brand-teal"
@@ -957,37 +1447,188 @@ export function ResumeBuilder({
                     View and download
                   </button>
                 )}
+
+                {/* The read-out they were given when they downloaded this
+                    one, kept with it. Folded away - it is history, not
+                    something to answer now. */}
+                {entry.review && (
+                  <details className="group w-full border-t border-slate-200 pt-2.5">
+                    <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1.5 text-[0.78rem] font-semibold text-slate-500 [&::-webkit-details-marker]:hidden">
+                      The feedback you were given
+                      <span
+                        aria-hidden
+                        className="transition-transform group-open:rotate-180"
+                      >
+                        ▾
+                      </span>
+                    </summary>
+                    <div className="mt-2 grid gap-2">
+                      <p className="text-[0.82rem] font-semibold text-brand-ink">
+                        {STANDING_LABEL[entry.review.standing.level]}
+                      </p>
+                      <p className="text-[0.8rem] leading-relaxed text-slate-600">
+                        {entry.review.standing.why}
+                      </p>
+                      {entry.review.gaps.length > 0 && (
+                        <ul className="grid gap-1.5">
+                          {entry.review.gaps.map((gapItem) => (
+                            <li
+                              key={gapItem.what}
+                              className="text-[0.8rem] leading-relaxed text-slate-600"
+                            >
+                              <span className="font-semibold text-brand-ink">
+                                {gapItem.what}
+                              </span>{" "}
+                              {gapItem.how}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <Link
+                        href={
+                          NEXT_STEP_HREF[entry.review.nextStep?.route ?? "readiness"] ??
+                          "/readiness"
+                        }
+                        className="inline-flex min-h-11 items-center text-[0.8rem] font-semibold text-teal-700 underline underline-offset-2"
+                      >
+                        {NEXT_STEP_LABEL[entry.review.nextStep?.route ?? "readiness"] ??
+                          "Prove these skills →"}
+                      </Link>
+                    </div>
+                  </details>
+                )}
               </div>
             ))}
           </div>
         </section>
   );
 
-  // No record yet: the resume has nothing truthful to build from, so the one
-  // action is filling the profile - never generating from thin air.
-  if (!profile || profileSkills.length === 0) {
+  // ---- The read-out, after the download ----
+  //
+  // Their resume is on their machine and cannot be changed by anything said
+  // here - so this is the moment for the honest read. It is a page of its
+  // own, the way the interview read-out is, and it ends with the one thing
+  // worth doing next.
+  if (result && showFeedback) {
+    const step = review?.nextStep;
     return (
-      <main className="mx-auto w-full max-w-2xl px-4 pb-16 sm:px-6">
-        <div className="pt-4">
-          <BackLink fallbackHref="/tools" fallbackLabel="Back to career tools" />
-        </div>
-        <header className="mt-6">
-          <h1 className="text-2xl font-semibold tracking-tight text-brand-ink">
-            Your resume starts with your record
+      <main className="mx-auto w-full max-w-2xl px-4 pb-16 pt-6 sm:px-6">
+        <header>
+          <p className="text-xs font-bold uppercase tracking-wide text-brand-violet-deep">
+            Honest feedback
+          </p>
+          <h1 className="mt-1 text-2xl font-bold text-brand-ink">
+            Your {result.targetRole} resume is downloaded
           </h1>
-          <p className="mt-2 max-w-prose text-[0.9rem] leading-relaxed text-slate-600">
-            Everything on an Ascend resume is true because it comes from what
-            you&rsquo;ve told us - and right now your record{" "}
-            {profile ? "has no skills in it yet" : "is empty"}. Five minutes on
-            your profile gives the builder something real to work with.
+          <p className="mt-2 text-[0.88rem] leading-relaxed text-slate-600">
+            Here is how it reads against what this role usually asks for -
+            said plainly, because you can still do something about it.
           </p>
         </header>
-        <Link
-          href="/profile"
-          className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-brand-teal-deep px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-teal"
+
+        <section className="mt-5 rounded-2xl border border-slate-200 bg-surface p-5">
+          {reviewing ? (
+            <p className="text-[0.88rem] text-slate-500">
+              Reading it back against what this role usually asks for…
+            </p>
+          ) : !review ? (
+            <div>
+              <p className="text-[0.88rem] leading-relaxed text-slate-600">
+                I could not read your resume back just now. Your download is
+                safe - this is only the feedback on it.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  void withToken().then((token) => {
+                    if (token) void readItBack(token, result.resume, result.targetRole);
+                  });
+                }}
+                className="mt-3 inline-flex min-h-11 items-center rounded-full bg-brand-teal-deep px-5 text-sm font-bold text-white transition-colors hover:bg-brand-teal"
+              >
+                Try again
+              </button>
+            </div>
+          ) : (
+            <>
+              <p className="text-[1rem] font-semibold leading-relaxed text-brand-ink">
+                {STANDING_LABEL[review.standing.level]}
+              </p>
+              <p className="mt-1.5 text-[0.88rem] leading-relaxed text-slate-600">
+                {review.standing.why}
+              </p>
+
+              <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                <div>
+                  <p className="text-[0.7rem] font-bold uppercase tracking-wide text-teal-700">
+                    What it already does
+                  </p>
+                  <ul className="mt-2 grid gap-1.5">
+                    {review.strengths.map((point) => (
+                      <li
+                        key={point}
+                        className="text-[0.85rem] leading-relaxed text-slate-700"
+                      >
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <p className="text-[0.7rem] font-bold uppercase tracking-wide text-amber-700">
+                    What would make it stand out
+                  </p>
+                  <ul className="mt-2 grid gap-2.5">
+                    {review.gaps.map((gapItem) => (
+                      <li key={gapItem.what} className="text-[0.85rem] leading-relaxed">
+                        <span className="font-semibold text-brand-ink">
+                          {gapItem.what}
+                        </span>{" "}
+                        <span className="text-slate-600">{gapItem.how}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {review.coverage.missing.length > 0 && (
+                <p className="mt-4 text-[0.8rem] leading-relaxed text-slate-500">
+                  Words this role is screened for that your resume cannot
+                  honestly carry yet:{" "}
+                  <span className="text-slate-600">
+                    {review.coverage.missing.join(", ")}
+                  </span>
+                </p>
+              )}
+            </>
+          )}
+        </section>
+
+        {review && (
+          <section className="mt-4 rounded-2xl border border-brand-violet/30 bg-violet-50 p-5">
+            <p className="text-[0.7rem] font-bold uppercase tracking-wide text-brand-violet-deep">
+              What would move it most
+            </p>
+            <p className="mt-1.5 text-[0.88rem] leading-relaxed text-slate-700">
+              {step?.why ??
+                "The surest way to strengthen this resume is to prove the skills on it."}
+            </p>
+            <Link
+              href={NEXT_STEP_HREF[step?.route ?? "readiness"] ?? "/readiness"}
+              className="mt-3 inline-flex min-h-12 items-center rounded-full bg-brand-teal-deep px-6 text-sm font-bold text-white transition-colors hover:bg-brand-teal"
+            >
+              {NEXT_STEP_LABEL[step?.route ?? "readiness"] ?? "Prove these skills →"}
+            </Link>
+          </section>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setShowFeedback(false)}
+          className="mt-5 min-h-11 text-[0.85rem] font-semibold text-slate-500 underline underline-offset-2 transition-colors hover:text-brand-ink"
         >
-          Fill in your profile →
-        </Link>
+          Back to my resume
+        </button>
       </main>
     );
   }
@@ -1009,7 +1650,7 @@ export function ResumeBuilder({
       }`}</style>
 
       <div className="pt-4 print:hidden">
-        <BackLink fallbackHref="/tools" fallbackLabel="Back to career tools" />
+        <BackLink fallbackHref="/" fallbackLabel="Back to home" />
       </div>
 
       {!result && (
@@ -1019,9 +1660,12 @@ export function ResumeBuilder({
               Build your resume
             </h1>
             <p className="mt-1.5 max-w-prose text-[0.88rem] leading-relaxed text-slate-600">
-              Most applications are screened by software before a person reads
-              them. A resume written in the role&rsquo;s own words - and only
-              from what&rsquo;s true in your record - gets through.
+              A resume built to get through the screening software and hold a
+              recruiter&rsquo;s attention - and honest enough that you can
+              stand behind every line of it in the interview.
+              {needsEssentials
+                ? " Have a look at the three looks first. We ask about you when you are ready to build."
+                : ""}
             </p>
           </header>
 
@@ -1048,8 +1692,8 @@ export function ResumeBuilder({
                     {lockedRole.title}
                   </h2>
                   <p className="mt-1 text-[0.8rem] leading-relaxed text-slate-600">
-                    Written in the words employers use for this role - only
-                    where they are true for you.
+                    Written in the words employers use for this role, and in
+                    yours.
                   </p>
                   {(target?.keywords.length ?? 0) > 0 && (
                     <p className="mt-2 text-[0.74rem] leading-relaxed text-slate-500">
@@ -1080,6 +1724,12 @@ export function ResumeBuilder({
                       <input
                         value={roleInput}
                         onChange={(e) => setRoleInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            if (busy === null) begin();
+                          }
+                        }}
                         placeholder="Customer Support Executive"
                         className="mt-1 w-full rounded-lg border border-slate-300 bg-surface px-3 py-2 text-[0.88rem] outline-none focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/20"
                       />
@@ -1132,7 +1782,7 @@ export function ResumeBuilder({
                 className="inline-flex min-h-12 w-full max-w-sm items-center justify-center rounded-full bg-brand-teal-deep px-5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-brand-teal disabled:opacity-50"
               >
                 {busy === "checking"
-                  ? "Reading your record…"
+                  ? "Getting your details together…"
                   : busy === "building"
                     ? "Building…"
                     : "Build my resume"}
@@ -1151,10 +1801,21 @@ export function ResumeBuilder({
                 </p>
               </div>
               <div className="rounded-b-2xl border border-t-0 border-slate-200 bg-slate-100 p-2.5 sm:p-4 lg:min-h-0 lg:flex-1">
-                {/* Page-shaped: sized by the space it has, so it reads as a
-                    page rather than a wall of paper. */}
-                <div className="mx-auto aspect-[1/1.414] w-full max-w-md overflow-hidden rounded-lg bg-white shadow-sm lg:h-full lg:w-auto lg:max-w-none">
-                  <div className="w-[150%] origin-top-left scale-[0.6667]">
+                {/* Page-shaped, and scrollable: a resume longer than the box
+                    can be read to the end rather than cropped. `zoom` rather
+                    than a transform, because a transform leaves the layout at
+                    full size and there is then nothing sane to scroll. */}
+                <div className="relative mx-auto aspect-[1/1.414] w-full max-w-md overflow-y-auto overscroll-contain rounded-lg bg-white shadow-sm lg:h-full lg:w-auto lg:max-w-none">
+                  {/* Plain enough that nobody has to work out what it means:
+                      this page shows the layout, not their content. Sticky, so
+                      it stays with the page as the sample is scrolled. */}
+                  <span
+                    aria-hidden
+                    className="pointer-events-none sticky top-1/3 z-10 flex -rotate-12 select-none items-center justify-center text-[clamp(1.5rem,6vw,2.3rem)] font-bold uppercase tracking-[0.3em] text-[#111827]/[0.09]"
+                  >
+                    Example
+                  </span>
+                  <div className="-mt-[2.6rem]" style={{ zoom: 0.6667 }}>
                     <ResumeSheet
                       resume={previewResume}
                       template={template}
@@ -1187,76 +1848,198 @@ export function ResumeBuilder({
             <h1 className="text-2xl font-semibold tracking-tight text-brand-ink">
               Your resume for {result.targetRole}
             </h1>
-            <p className="mt-1.5 max-w-prose text-[0.88rem] text-slate-600">
-              Every line comes from your record and your answers - nothing
-              invented. Read it once before you send it anywhere.
+            <p className="mt-1.5 max-w-prose text-[0.88rem] leading-relaxed text-slate-600">
+              Read it through, tell Scribe anything you want changed, and take
+              it away when it reads right.
             </p>
-            {result.resume.keywordsUsed.length > 0 && (
-              <p className="mt-2 text-[0.8rem] text-teal-700">
-                Role words your record could truthfully carry:{" "}
-                {result.resume.keywordsUsed.join(", ")}
-              </p>
-            )}
           </header>
 
           {/* The resume with its actions beside it: Download stays within
               reach of the page it downloads, however far you scroll. */}
           <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start">
             <div className="min-w-0">
-              <ResumeSheet
-                resume={result.resume}
-                template={template}
-                roleLine={result.targetRole}
-              />
-              <p className="mt-3 text-[0.75rem] text-slate-500 print:hidden">
-                This build is noted in your record - which role it was for and
-                which skills it highlighted.
-              </p>
+              {/* A draft until they take it away. Screen-only: the print
+                  stylesheet shows the sheet alone, and the Word export is
+                  rendered server-side from the data, so neither carries it. */}
+              <div className="relative">
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 z-10 flex select-none items-center justify-center text-[clamp(3rem,12vw,6rem)] font-bold uppercase tracking-[0.3em] text-[#111827]/[0.06] print:hidden"
+                >
+                  Draft
+                </span>
+                <ResumeSheet
+                  resume={result.resume}
+                  template={template}
+                  roleLine={result.targetRole}
+                />
+              </div>
+
+              {/* The draft desk: the page above, then the conversation that
+                  shapes it. Scribe - the resume writer - answers every
+                  instruction, says when a change would weaken the resume, and
+                  asks for the one detail that would make a line stronger
+                  rather than inventing it. */}
+              <section className="mt-6 rounded-2xl border border-slate-200 bg-surface p-4 print:hidden sm:p-5">
+                <h2 className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-brand-violet-deep">
+                  Work on it with Scribe
+                </h2>
+
+                {revisions.length === 0 && !revising ? (
+                  <p className="mt-2 text-[0.85rem] leading-relaxed text-slate-600">
+                    I am Scribe. Tell me what to change in plain words - I will
+                    do it, and say when a change would work against you.
+                  </p>
+                ) : null}
+
+                <ol className="mt-3 grid gap-3">
+                  {revisions.map((rev, i) => (
+                    <li key={`${rev.ask}-${i}`} className="grid gap-2">
+                      <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-teal-50 px-3.5 py-2.5 text-[0.84rem] leading-relaxed text-teal-900">
+                        {rev.ask}
+                      </p>
+                      <div className="max-w-[92%] rounded-2xl rounded-bl-md border border-slate-200 bg-surface px-3.5 py-2.5">
+                        <p className="text-[0.84rem] leading-relaxed text-slate-700">
+                          {rev.reply}
+                        </p>
+                        {rev.declined && (
+                          <p className="mt-1.5 rounded-lg bg-amber-50 px-2.5 py-1.5 text-[0.78rem] leading-relaxed text-amber-900">
+                            {rev.declined}
+                          </p>
+                        )}
+                        {rev.added.length > 0 && (
+                          <p className="mt-1.5 text-[0.74rem] leading-relaxed text-slate-500">
+                            Added from what you told me: {rev.added.join("; ")}{" "}
+                            - make sure you can stand behind it in the
+                            interview.
+                          </p>
+                        )}
+                        {rev.followUp && (
+                          <p className="mt-1.5 text-[0.82rem] font-semibold leading-relaxed text-brand-ink">
+                            {rev.followUp}
+                          </p>
+                        )}
+                        {rev.didChange && (
+                          <button
+                            type="button"
+                            onClick={() => undoRevision(i)}
+                            aria-label="Undo this change"
+                            title="Undo this change"
+                            className="mt-1.5 grid h-11 w-11 place-items-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-brand-ink"
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden
+                              className="h-4 w-4"
+                            >
+                              <path d="M3 7v6h6" />
+                              <path d="M3 13a9 9 0 1 0 3-7.7L3 8" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                  {revising && (
+                    <li className="max-w-[92%] rounded-2xl rounded-bl-md border border-slate-200 bg-surface px-3.5 py-2.5 text-[0.84rem] text-slate-500">
+                      Rewriting your resume…
+                    </li>
+                  )}
+                </ol>
+
+                <div className="mt-3 flex flex-wrap items-end gap-2">
+                  <textarea
+                    rows={2}
+                    value={comment}
+                    disabled={revising}
+                    onChange={(e) => setComment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        if (!revising && comment.trim()) void reviseResume();
+                      }
+                    }}
+                    placeholder={SCRIBE_EXAMPLES[exampleIndex]}
+                    className="min-w-0 flex-1 resize-y rounded-xl border border-slate-300 bg-surface px-3 py-2 text-[0.85rem] outline-none focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/20 disabled:opacity-60"
+                  />
+                  <button
+                    type="button"
+                    disabled={revising || !comment.trim()}
+                    onClick={() => void reviseResume()}
+                    className="inline-flex min-h-11 items-center rounded-full border border-slate-300 px-5 text-[0.82rem] font-semibold text-slate-700 transition-colors hover:border-brand-teal hover:text-brand-ink disabled:opacity-50"
+                  >
+                    {revising ? "Rewriting…" : "Send"}
+                  </button>
+                </div>
+              </section>
+
+              {/* Downloading is the last step, so it sits at the end - after
+                  the resume, the conversation and the read-back. */}
+              <section className="mt-4 rounded-2xl border border-slate-200 bg-surface p-5 print:hidden">
+                <h2 className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-teal-700">
+                  When it reads right
+                </h2>
+                <p className="mt-1.5 text-[0.85rem] leading-relaxed text-slate-600">
+                  Nothing leaves Ascend until you download it, and this resume
+                  is kept for you.
+                </p>
+                <div className="relative mt-3 w-full max-w-xs" ref={exportRef}>
+                  <button
+                    type="button"
+                    disabled={downloading}
+                    onClick={() => setExportOpen((v) => !v)}
+                    aria-haspopup="menu"
+                    aria-expanded={exportOpen}
+                    className="w-full rounded-lg bg-brand-teal-deep px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-teal disabled:opacity-50"
+                  >
+                    {downloading ? "Preparing…" : "Download ▾"}
+                  </button>
+                  {exportOpen && (
+                    <div
+                      role="menu"
+                      className="absolute left-0 top-full z-20 mt-1.5 w-full min-w-52 overflow-hidden rounded-xl border border-slate-200 bg-surface shadow-lg"
+                    >
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setExportOpen(false);
+                          void downloadWord();
+                        }}
+                        className="block w-full px-4 py-2.5 text-left text-sm font-semibold text-brand-ink transition-colors hover:bg-teal-50"
+                      >
+                        Word (.docx)
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setExportOpen(false);
+                          const after = () => {
+                            window.removeEventListener("afterprint", after);
+                            void withToken().then((token) => {
+                              if (token) handOverToFeedback(token);
+                            });
+                          };
+                          window.addEventListener("afterprint", after);
+                          window.print();
+                        }}
+                        className="block w-full border-t border-slate-100 px-4 py-2.5 text-left text-sm font-semibold text-brand-ink transition-colors hover:bg-teal-50"
+                      >
+                        Print / Save as PDF
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </section>
             </div>
 
             <aside className="order-first grid gap-3 lg:sticky lg:top-20 lg:order-none print:hidden">
-              <div className="relative">
-                <button
-                  type="button"
-                  disabled={downloading}
-                  onClick={() => setExportOpen((v) => !v)}
-                  aria-haspopup="menu"
-                  aria-expanded={exportOpen}
-                  className="w-full rounded-lg bg-brand-teal-deep px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-teal disabled:opacity-50"
-                >
-                  {downloading ? "Preparing…" : "Download ▾"}
-                </button>
-                {exportOpen && (
-                  <div
-                    role="menu"
-                    className="absolute left-0 top-full z-20 mt-1.5 w-full min-w-52 overflow-hidden rounded-xl border border-slate-200 bg-surface shadow-lg"
-                  >
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setExportOpen(false);
-                        void downloadWord();
-                      }}
-                      className="block w-full px-4 py-2.5 text-left text-sm font-semibold text-brand-ink transition-colors hover:bg-teal-50"
-                    >
-                      Word (.docx)
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setExportOpen(false);
-                        window.print();
-                      }}
-                      className="block w-full border-t border-slate-100 px-4 py-2.5 text-left text-sm font-semibold text-brand-ink transition-colors hover:bg-teal-50"
-                    >
-                      Print / Save as PDF
-                    </button>
-                  </div>
-                )}
-              </div>
-
               <div className="rounded-2xl border border-slate-200 bg-surface p-3">
                 {/* The thumbnails show the real resume now, so switching looks
                     is a decision about their own page. */}
@@ -1294,6 +2077,17 @@ export function ResumeBuilder({
             if (busy === null) setGap(null);
           }}
           onSubmit={(answers, newSkills) => void submitGaps(answers, newSkills)}
+        />
+      )}
+
+      {essentialsOpen && (
+        <EssentialsModal
+          firstName={asText("fullName").split(/\s+/)[0] ?? ""}
+          busy={busy !== null}
+          onClose={() => {
+            if (busy === null) setEssentialsOpen(false);
+          }}
+          onSubmit={(values) => void saveEssentials(values)}
         />
       )}
 

@@ -158,3 +158,56 @@ export async function downloadResumeDocx(
     return null;
   }
 }
+
+// ---- The second read, and the revision loop ----
+
+export type ResumeReview = {
+  strengths: string[];
+  gaps: Array<{ what: string; how: string }>;
+  standing: { level: "early" | "competitive" | "strong"; why: string };
+  nextStep: {
+    route: "readiness" | "practice" | "interview" | "profile";
+    why: string;
+  };
+  coverage: { covered: string[]; missing: string[] };
+  /** True when the model was unavailable and the read came from the text. */
+  fromRules: boolean;
+};
+
+/** An honest read of the built resume against the bar for its role. */
+export const reviewResume = (
+  token: string,
+  body: { resume: ResumeData; targetRole?: string; jobDescription?: string },
+) =>
+  call<{ review: ResumeReview; targetRole: string; keywords: string[] }>(
+    token,
+    "/v1/resume/review",
+    { method: "POST", body },
+  );
+
+/**
+ * One revision, in the person's own words. The reply always carries a valid
+ * resume - on a refusal it is the one that was sent, with `declined` saying
+ * plainly what could not be done.
+ */
+export const refineResume = (
+  token: string,
+  body: {
+    resume: ResumeData;
+    comment: string;
+    targetRole?: string;
+    /** The conversation so far, oldest first. */
+    history?: Array<{ ask: string; reply: string }>;
+  },
+) =>
+  call<{
+    resume: ResumeData;
+    changed: string[];
+    /** Facts the instruction brought in - the person's own claim. */
+    added: string[];
+    /** What the writer says back, always. */
+    reply: string;
+    /** One question that would make the change stronger, if there is one. */
+    followUp?: string;
+    declined: string | null;
+  }>(token, "/v1/resume/refine", { method: "POST", body });

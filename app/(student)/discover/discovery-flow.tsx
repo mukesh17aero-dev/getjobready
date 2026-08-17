@@ -876,11 +876,10 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
           Your matches
         </p>
         <h1 className="mt-0.5 text-lg font-semibold tracking-tight">
-          Three roles your choices kept pointing at
+          Three roles that fit how you work
         </h1>
         <p className="mt-0.5 text-[0.74rem] text-white/65">
-          The % is how closely a role matches your choices — not a score of
-          your ability.
+          Fit is about the work, not a mark on you.
         </p>
       </section>
 
@@ -907,7 +906,7 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
               // interactive inside it — the compare box, the read-out toggle,
               // the two buttons — does its own job instead. No role="button"
               // here: a button containing buttons is announced wrongly, and
-              // "See the reality" below is the keyboard path.
+              // "Explore this role" below is the keyboard path.
               onClick={(event) => {
                 const el = event.target as HTMLElement;
                 if (el.closest("button, a, input, label, summary")) return;
@@ -1001,7 +1000,7 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
                   onClick={() => setPreviewRole(match.roleId)}
                   className="text-[0.8rem] font-semibold text-slate-500 hover:text-slate-900"
                 >
-                  See the reality
+                  Explore this role →
                 </button>
                 <button
                   type="button"
@@ -1093,7 +1092,7 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
                       onClick={() => setPreviewRole(role.id)}
                       className="text-[0.78rem] font-semibold text-slate-500 hover:text-slate-900"
                     >
-                      See the reality
+                      Explore this role →
                     </button>
                     <button
                       type="button"
