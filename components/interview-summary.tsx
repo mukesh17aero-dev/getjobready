@@ -20,8 +20,9 @@ export function InterviewSummary({
   /** The interview's own turns: the read-out quotes the question as it was
       actually asked rather than the model's shorthand for it. */
   turns?: Array<{ index: number; question: string }>;
-  /** Start a fresh interview from the top. */
-  onRetake: () => void;
+  /** Start a fresh interview. Omitted where the page places the action
+      itself - in the past-interview list it belongs below the transcript. */
+  onRetake?: () => void;
 }) {
   const askedQuestion = (index: number | undefined) =>
     typeof index === "number"
@@ -164,6 +165,7 @@ export function InterviewSummary({
         </section>
       ) : null}
 
+      {onRetake ? (
       <div className="flex flex-wrap items-center gap-3 border-t border-slate-200 pt-5">
         <button
           type="button"
@@ -176,6 +178,7 @@ export function InterviewSummary({
           Saved to your record - your next interview will check on these areas.
         </p>
       </div>
+      ) : null}
     </div>
   );
 }

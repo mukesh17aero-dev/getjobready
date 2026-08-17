@@ -159,6 +159,54 @@ export async function downloadResumeDocx(
   }
 }
 
+// ---- Whether a resume may leave ----
+//
+// A draft is always readable on screen; downloading is the line. The same
+// rules run on the server, which is the door the file really goes through -
+// this copy is here so the button can explain itself before it is pressed.
+
+export type ResumeGap = { section: string; fix: string };
+
+const said = (value: string | undefined) => Boolean(value && value.trim().length > 1);
+
+export function resumeCompleteness(resume: ResumeData): {
+  ready: boolean;
+  missing: ResumeGap[];
+} {
+  const missing: ResumeGap[] = [];
+  if (!said(resume.header.name))
+    missing.push({
+      section: "Your name",
+      fix: "Add your full name - a resume without it cannot be matched to you.",
+    });
+  if (!said(resume.header.email))
+    missing.push({
+      section: "A way to reach you",
+      fix: "Add your email so an employer who wants to talk to you can.",
+    });
+  if (!said(resume.summary))
+    missing.push({
+      section: "Your profile",
+      fix: "Two or three lines on what you can do and what you are aiming for.",
+    });
+  if (resume.skills.reduce((n, g) => n + g.items.length, 0) < 3)
+    missing.push({
+      section: "Skills",
+      fix: "Name at least three things you can do and could show someone.",
+    });
+  if (!resume.experience.some((job) => said(job.title) && job.bullets.some(said)))
+    missing.push({
+      section: "What you have done",
+      fix: "One job, internship, project or volunteering role - with a line or two on what you actually did.",
+    });
+  if (!resume.education.some((row) => said(row.qualification)))
+    missing.push({
+      section: "Education",
+      fix: "What you studied and where, even if you have not finished yet.",
+    });
+  return { ready: missing.length === 0, missing };
+}
+
 // ---- The second read, and the revision loop ----
 
 export type ResumeReview = {

@@ -538,6 +538,26 @@ export type ImportResult = {
   suggestions: ImportSuggestion[];
   skills: string[];
   activities: string[];
+  /** Every job the document lists, not only the first. */
+  experience?: Array<{
+    kind: string;
+    title: string;
+    organisation: string;
+    from: string;
+    to: string;
+    current: boolean;
+    detail: string;
+  }>;
+  /** Every qualification the document lists. */
+  education?: Array<{
+    qualification: string;
+    institution: string;
+    from: string;
+    to: string;
+    current: boolean;
+    marks: string;
+    stream: string;
+  }>;
 };
 
 // Uploads go through fetch directly: the browser sets the multipart boundary,

@@ -114,17 +114,15 @@ const SHARED_ESSENTIALS: FieldSpec[] = [
   { key: "skills", label: "Your skills" },
 ];
 
+// One profile, whoever you are. The old form asked a student about their
+// college and someone working about their employer, in two separate sets of
+// boxes - which meant a student with a part-time job had nowhere to put it,
+// and someone studying while working had to pick a side. Schooling and jobs
+// are now lists anybody can add to, and being empty says something true
+// rather than being a gap in the form.
 const TRACK_ESSENTIALS: Record<Track, FieldSpec[]> = {
-  student: [
-    { key: "institution", label: "Your college" },
-    { key: "course", label: "What you're studying" },
-    { key: "yearOfStudy", label: "Year of study" },
-  ],
-  early_career: [
-    { key: "currentRole", label: "Your current or last role" },
-    { key: "experienceMonths", label: "How long you've worked" },
-    { key: "noticePeriod", label: "When you could start" },
-  ],
+  student: [],
+  early_career: [{ key: "noticePeriod", label: "When you could start" }],
 };
 
 // Which fields count towards "complete" for this person — never the other
@@ -147,26 +145,11 @@ function relevantKeys(track: Track | ""): Array<keyof ProfileFields> {
     "favSubjectsSchool",
     "favSubjectsCollege",
   ];
-  if (track === "student") {
-    return [
-      ...shared,
-      "institution",
-      "course",
-      "yearOfStudy",
-      "expectedFinish",
-      "internshipMonths",
-      "internshipExperience",
-    ];
-  }
+  // Everyone is asked the same questions now. The only fork left is the one
+  // that genuinely differs: someone already working has a notice period and
+  // a reason for moving; someone who has never worked has neither.
   if (track === "early_career") {
-    return [
-      ...shared,
-      "currentRole",
-      "employer",
-      "experienceMonths",
-      "noticePeriod",
-      "reasonForChange",
-    ];
+    return [...shared, "noticePeriod", "reasonForChange"];
   }
   return shared;
 }
@@ -200,17 +183,23 @@ export function missingEssentials(fields: ProfileFields): string[] {
 // Fields the form itself marks optional: leaving them empty must never
 // keep someone from 100%.
 const OPTIONAL_KEYS: Array<keyof ProfileFields> = [
+  "activities",
   "employer",
   "internshipExperience",
+  "reasonForChange",
+  // Filled from the education entries rather than asked for again.
+  "tenthPercent",
+  "twelfthPercent",
+  "collegePercent",
 ];
 
 // Every counted question, in the words the form uses for it.
-const FIELD_LABELS: Partial<Record<keyof ProfileFields, string>> = {
+export const FIELD_LABELS: Partial<Record<keyof ProfileFields, string>> = {
   fullName: "your name",
   city: "where you are",
   languages: "languages you speak",
   skills: "your skills",
-  activities: "activities beyond work",
+  activities: "anything else you do",
   workPreference: "work preference",
   interestedSpaces: "business spaces that interest you",
   aspirations: "your aspirations",
@@ -249,3 +238,167 @@ export function completeness(fields: ProfileFields): number {
   // the track choice itself counts as one answered question
   return Math.round(((filled + 1) / (keys.length + 1)) * 100);
 }
+
+// ---- Repeatable history ----
+//
+// Schooling and jobs are lists, not single fields: a person has a tenth,
+// a twelfth and a degree, or three jobs across five years. These live in the
+// career record's own `education` and `experience` arrays - the same arrays
+// the resume reads - rather than in the flat preference fields, so adding a
+// second one does not mean inventing `institution2`.
+
+export type EducationEntry = {
+  qualification: string;
+  institution: string;
+  from: string;
+  to: string;
+  /** Still studying here - the "to" year does not exist yet. */
+  current: string;
+  /** Kept apart because they are different kinds of thing: one is a number
+      that can be checked, the other is words that cannot. */
+  marks: string;
+  stream: string;
+};
+
+export type ExperienceEntry = {
+  /** Job, internship, freelance, volunteering - a recruiter reads these
+      very differently, and a resume that blurs them oversells the person. */
+  kind: string;
+  title: string;
+  organisation: string;
+  from: string;
+  to: string;
+  /** Still there. A year range cannot say "now", so this does. */
+  current: string;
+  detail: string;
+};
+
+export const WORK_KINDS = [
+  { id: "job", label: "Job" },
+  { id: "internship", label: "Internship" },
+  { id: "apprenticeship", label: "Apprenticeship" },
+  { id: "freelance", label: "Freelance" },
+  { id: "family", label: "Family business" },
+  { id: "volunteering", label: "Volunteering" },
+] as const;
+
+export const workKindLabel = (id: string): string =>
+  WORK_KINDS.find((k) => k.id === id)?.label ?? "Work";
+
+const text = (row: Record<string, unknown>, key: string): string =>
+  typeof row[key] === "string" ? (row[key] as string) : "";
+
+export const emptyEducation = (): EducationEntry => ({
+  qualification: "",
+  institution: "",
+  from: "",
+  to: "",
+  current: "",
+  marks: "",
+  stream: "",
+});
+
+/** "2021 - 2024", "2023 - present", or just a start year. */
+export function periodFrom(entry: { from: string; to: string; current: string }): string {
+  const from = entry.from.trim();
+  const to = entry.current ? "present" : entry.to.trim();
+  if (from && to) return `${from} - ${to}`;
+  return from || to || "";
+}
+
+/** Split a stored "2021 - 2024" back into its parts for the form. */
+function splitPeriod(period: string): { from: string; to: string; current: string } {
+  const [from = "", to = ""] = period.split(/\s*[-–to]+\s*/i).map((part) => part.trim());
+  const present = /present|current|now|ongoing/i.test(to);
+  return { from, to: present ? "" : to, current: present ? "yes" : "" };
+}
+
+export const emptyExperience = (): ExperienceEntry => ({
+  kind: "job",
+  title: "",
+  organisation: "",
+  from: "",
+  to: "",
+  current: "",
+  detail: "",
+});
+
+export function readEducation(
+  rows: Array<Record<string, unknown>> | undefined,
+): EducationEntry[] {
+  return (rows ?? []).map((row) => ({
+    qualification: text(row, "qualification"),
+    institution: text(row, "institution"),
+    ...splitPeriod(text(row, "period")),
+    // Rows saved before these were separate carry it all in `detail`.
+    marks: text(row, "marks") || (text(row, "detail").match(/\d{1,3}(?:\.\d+)?(?=\s*%)/)?.[0] ?? ""),
+    stream: text(row, "stream") || text(row, "detail").replace(/\d{1,3}(?:\.\d+)?\s*%/g, "").replace(/^[\s,-]+|[\s,-]+$/g, ""),
+  }));
+}
+
+/**
+ * The record keeps `detail` as one line because that is what a resume prints,
+ * and the two parts beside it so the form can ask for them separately.
+ */
+export function educationForRecord(entry: EducationEntry): Record<string, string> {
+  const detail = [entry.stream.trim(), entry.marks.trim() ? `${entry.marks.trim()}%` : ""]
+    .filter(Boolean)
+    .join(", ");
+  return {
+    qualification: entry.qualification.trim(),
+    institution: entry.institution.trim(),
+    period: periodFrom(entry),
+    marks: entry.marks.trim(),
+    stream: entry.stream.trim(),
+    detail,
+  };
+}
+
+export function readExperience(
+  rows: Array<Record<string, unknown>> | undefined,
+): ExperienceEntry[] {
+  return (rows ?? []).map((row) => ({
+    kind: text(row, "kind") || "job",
+    title: text(row, "title"),
+    organisation: text(row, "organisation"),
+    ...splitPeriod(text(row, "period")),
+    detail: text(row, "detail"),
+  }));
+}
+
+/** The record keeps one period string, because that is what a resume prints. */
+export function experienceForRecord(entry: ExperienceEntry): Record<string, string> {
+  return {
+    kind: entry.kind,
+    title: entry.title.trim(),
+    organisation: entry.organisation.trim(),
+    period: periodFrom(entry),
+    detail: entry.detail.trim(),
+  };
+}
+
+/**
+ * The three percentage fields the rest of the product reads, worked out from
+ * the education entries rather than asked for a second time. Someone who has
+ * typed 78% against their Class XII should never be asked for it again three
+ * questions later.
+ */
+export function marksFromEducation(
+  entries: EducationEntry[],
+): Pick<ProfileFields, "tenthPercent" | "twelfthPercent" | "collegePercent"> {
+  const found = { tenthPercent: "", twelfthPercent: "", collegePercent: "" };
+  for (const entry of entries) {
+    const marks = entry.marks.trim();
+    if (!marks) continue;
+    const what = `${entry.qualification} ${entry.stream}`.toLowerCase();
+    if (/\b(10|x|tenth|sslc|matric)\b/.test(what)) found.tenthPercent ||= marks;
+    else if (/\b(12|xii|twelfth|hsc|intermediate|senior secondary|puc)\b/.test(what))
+      found.twelfthPercent ||= marks;
+    else found.collegePercent ||= marks;
+  }
+  return found;
+}
+
+/** An entry with nothing in it is not saved - a blank row is not a fact. */
+export const hasSubstance = (entry: Record<string, string>): boolean =>
+  Object.values(entry).some((value) => value.trim().length > 0);

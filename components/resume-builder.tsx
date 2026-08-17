@@ -7,10 +7,12 @@ import { createPortal } from "react-dom";
 import { BackLink } from "@/components/back-link";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { track as trackEvent } from "@/lib/footprints";
+import { whenLabel } from "@/lib/when";
 import {
   downloadResumeDocx,
   generateResume,
   refineResume,
+  resumeCompleteness,
   resumeGapCheck,
   reviewResume,
   saveResumeProfile,
@@ -1481,15 +1483,23 @@ export function ResumeBuilder({
                 className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-2xl border border-slate-200 bg-surface px-4 py-3"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-[0.9rem] font-semibold text-brand-ink">
+                  <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.9rem] font-semibold text-brand-ink">
                     {entry.role}
+                    {/* Which of these actually went out into the world. */}
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-wide ${
+                        entry.downloadedAt
+                          ? "bg-teal-50 text-teal-700"
+                          : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {entry.downloadedAt ? "Downloaded" : "Draft"}
+                    </span>
                   </p>
                   <p className="text-[0.72rem] text-slate-400">
-                    {new Date(entry.at).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                    {entry.downloadedAt
+                      ? `Downloaded ${whenLabel(entry.downloadedAt)}`
+                      : `Built ${whenLabel(entry.at)}`}
                   </p>
                 </div>
                 {entry.resume && (
@@ -1566,6 +1576,12 @@ export function ResumeBuilder({
           </div>
         </section>
   );
+
+  // Whether this draft may leave. The same rules run on the server; this is
+  // so the button can explain itself before it is pressed.
+  const completeness = result
+    ? resumeCompleteness(result.resume)
+    : { ready: false, missing: [] };
 
   // ---- The read-out, after the download ----
   //
@@ -1965,7 +1981,7 @@ export function ResumeBuilder({
                         <p className="text-[0.84rem] leading-relaxed text-slate-700">
                           {rev.reply}
                         </p>
-                        {rev.declined && (
+                        {rev.declined && rev.declined !== rev.reply && (
                           <p className="mt-1.5 rounded-lg bg-amber-50 px-2.5 py-1.5 text-[0.78rem] leading-relaxed text-amber-900">
                             {rev.declined}
                           </p>
@@ -2000,8 +2016,8 @@ export function ResumeBuilder({
                               aria-hidden
                               className="h-4 w-4"
                             >
-                              <path d="M3 7v6h6" />
-                              <path d="M3 13a9 9 0 1 0 3-7.7L3 8" />
+                              <path d="M9 14 4 9l5-5" />
+                              <path d="M4 9h10.5A5.5 5.5 0 0 1 20 14.5v0a5.5 5.5 0 0 1-5.5 5.5H11" />
                             </svg>
                           </button>
                         )}
@@ -2045,19 +2061,74 @@ export function ResumeBuilder({
                   the resume, the conversation and the read-back. */}
               <section className="mt-4 rounded-2xl border border-slate-200 bg-surface p-5 print:hidden">
                 <h2 className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-teal-700">
-                  When it reads right
+                  {completeness.ready ? "When it reads right" : "Not ready to send yet"}
                 </h2>
                 <p className="mt-1.5 text-[0.85rem] leading-relaxed text-slate-600">
-                  Nothing leaves Ascend until you download it, and this resume
-                  is kept for you.
+                  {completeness.ready ? (
+                    "Nothing leaves Ascend until you download it, and this resume is kept for you."
+                  ) : (
+                    <>
+                      This resume is missing{" "}
+                      <span className="font-semibold text-brand-ink">
+                        {completeness.missing.map((g) => g.section.toLowerCase()).join(", ")}
+                      </span>
+                      . Add {completeness.missing.length === 1 ? "it" : "them"} and the
+                      download opens - a resume with a section missing reads as
+                      careless, and that is not what your work deserves.
+                    </>
+                  )}
                 </p>
+
+                {!completeness.ready && (
+                  <ul className="mt-3 grid gap-2">
+                    {completeness.missing.map((gapItem) => (
+                      <li
+                        key={gapItem.section}
+                        className="flex gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5"
+                      >
+                        <span
+                          aria-hidden
+                          className="mt-0.5 text-[0.9rem] font-bold text-amber-700"
+                        >
+                          !
+                        </span>
+                        <span>
+                          <span className="block text-[0.82rem] font-semibold text-amber-900">
+                            {gapItem.section} is missing
+                          </span>
+                          <span className="mt-0.5 block text-[0.8rem] leading-relaxed text-amber-800">
+                            {gapItem.fix}
+                          </span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {!completeness.ready && (
+                  <p className="mt-3 text-[0.82rem] leading-relaxed text-slate-600">
+                    Tell Scribe above what is missing and it goes straight in -
+                    or{" "}
+                    <Link
+                      href="/profile"
+                      className="font-semibold text-teal-700 underline underline-offset-2"
+                    >
+                      fill it in on your profile
+                    </Link>{" "}
+                    and build again.
+                  </p>
+                )}
                 <div className="relative mt-3 w-full max-w-xs" ref={exportRef}>
                   <button
                     type="button"
-                    disabled={downloading}
+                    disabled={downloading || !completeness.ready}
                     onClick={() => setExportOpen((v) => !v)}
                     aria-haspopup="menu"
                     aria-expanded={exportOpen}
+                    title={
+                      completeness.ready
+                        ? undefined
+                        : "Add what is missing above and this opens"
+                    }
                     className="w-full rounded-lg bg-brand-teal-deep px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-teal disabled:opacity-50"
                   >
                     {downloading ? "Preparing…" : "Download ▾"}
