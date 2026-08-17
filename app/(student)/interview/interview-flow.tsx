@@ -1512,7 +1512,7 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
             </fieldset>
 
             <p className="mt-3 text-[0.8rem] leading-relaxed text-slate-600">
-              10 minutes - six questions at most, and it ends on time, just like
+              10 minutes - up to ten questions, and it ends on time, just like
               the real thing.
               {initial.speechAvailable
                 ? " The interviewer speaks; answer out loud, or type if you prefer."

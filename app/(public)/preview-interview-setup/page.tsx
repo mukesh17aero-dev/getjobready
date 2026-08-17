@@ -235,7 +235,7 @@ function ConceptBriefing() {
           <div className="flex items-start gap-2.5 rounded-xl bg-slate-50 px-3.5 py-3">
             <ClockIcon className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
             <p className="text-[0.8rem] leading-relaxed text-slate-600">
-              10 minutes, timeboxed - six questions at most, and it ends on time.
+              10 minutes, timeboxed - up to ten questions, and it ends on time.
               Asha speaks; answer out loud or type.
             </p>
           </div>
@@ -316,7 +316,7 @@ function ConceptGreenRoom() {
           </div>
           <p className="mt-3 flex items-start gap-2 text-[0.8rem] leading-relaxed text-slate-600">
             <ClockIcon className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-            10 minutes - six questions at most, ends on time.
+            10 minutes - up to ten questions, ends on time.
           </p>
           <span className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-teal-deep text-sm font-bold text-white shadow-sm">
             <MicIcon className="h-4 w-4" /> Join the interview
