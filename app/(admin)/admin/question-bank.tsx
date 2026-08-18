@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  adminGenerateDiscoveryPictures,
   adminGenerateQuestions,
   type GeneratedQuestion,
   type SkillModel,
@@ -19,6 +20,11 @@ import { Collapsible } from "@/components/collapsible";
 // micro-scenarios, and one optional open question.
 export const MIX = { choices: 7, scenarios: 2, explanations: 1 } as const;
 export const TARGET_PER_SKILL = MIX.choices + MIX.scenarios + MIX.explanations;
+
+// Three of every ten carry a picture. A run then reaches half with pictures,
+// because the selector prefers them while it is short - ten screens of plain
+// text is the run people abandon.
+export const PICTURES_PER_SKILL = 3;
 
 export type BankQuestion = GeneratedQuestion;
 
@@ -114,6 +120,86 @@ export function QuestionBankEditor({
   const countFor = (skillId: string) =>
     bank.questions.filter((q) => q.forSkillId === skillId).length;
 
+  // Only choices and scenarios can carry a picture: the open question is a
+  // blank box, and a drawing over it would be decoration.
+  const canHavePicture = (q: BankQuestion) => q.kind !== "explanation";
+  const picturesFor = (skillId: string) =>
+    bank.questions.filter(
+      (q) => q.forSkillId === skillId && canHavePicture(q) && q.picture?.url,
+    ).length;
+
+  // Pictures are drawn as part of writing questions, not as a separate
+  // errand - an admin who has to remember a second button ends up with a
+  // bank that is half illustrated. Each one takes about eighteen seconds, so
+  // they go one per request and three at a time: a single request carrying
+  // three pictures runs for a minute and looks like a hang.
+  const [drawing, setDrawing] = useState<{ done: number; total: number } | null>(null);
+
+  /** The scene to draw: the question's own words, which is what it is about. */
+  const sceneOf = (q: BankQuestion) =>
+    q.kind === "scenario" ? q.situation : q.kind === "choice" ? q.prompt : "";
+
+  /**
+   * Draw what is missing for these skills, and hand back the questions with
+   * their pictures on. Reports progress as each one lands so a minute of
+   * work never looks like a stuck screen.
+   */
+  async function drawMissing(
+    questions: BankQuestion[],
+    skillIds: string[],
+  ): Promise<BankQuestion[]> {
+    const { data } = await supabaseBrowser().auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) return questions;
+
+    const wanted = skillIds.flatMap((skillId) => {
+      const mine = questions.filter((q) => q.forSkillId === skillId);
+      const have = mine.filter((q) => canHavePicture(q) && q.picture?.url).length;
+      return mine
+        .filter((q) => canHavePicture(q) && !q.picture?.url)
+        .slice(0, Math.max(0, PICTURES_PER_SKILL - have));
+    });
+    if (wanted.length === 0) return questions;
+
+    setDrawing({ done: 0, total: wanted.length });
+    const drawn = new Map<string, string>();
+    const failures: string[] = [];
+
+    // Three at a time. More than that and OpenAI starts rate limiting us,
+    // which costs more time than it saves.
+    for (let i = 0; i < wanted.length; i += 3) {
+      const batch = wanted.slice(i, i + 3);
+      const results = await Promise.all(
+        batch.map((q) =>
+          adminGenerateDiscoveryPictures(token, [{ id: q.id, scene: sceneOf(q) }]),
+        ),
+      );
+      results.forEach((result) => {
+        if (!result.ok) {
+          failures.push(result.error);
+          return;
+        }
+        result.images.forEach((image) => {
+          if (image.imageUrl) drawn.set(image.id, image.imageUrl);
+          else if (image.error) failures.push(image.error);
+        });
+      });
+      setDrawing({ done: Math.min(i + batch.length, wanted.length), total: wanted.length });
+    }
+    setDrawing(null);
+
+    if (failures.length > 0) {
+      setNote(
+        `${drawn.size} of ${wanted.length} pictures drawn. ${failures[0]} You can draw the rest from the skill below.`,
+      );
+    }
+    return questions.map((q) =>
+      drawn.has(q.id)
+        ? { ...q, picture: { url: drawn.get(q.id)!, alt: sceneOf(q).slice(0, 160) } }
+        : q,
+    );
+  }
+
   const countKind = (skillId: string, kind: BankQuestion["kind"]) =>
     bank.questions.filter((q) => q.forSkillId === skillId && q.kind === kind).length;
 
@@ -194,17 +280,30 @@ export function QuestionBankEditor({
       return id === q.id ? q : { ...q, id };
     });
     const replaced = bank.questions.length - kept.length;
-    onChange({ questions: [...kept, ...fresh] });
+    const written = [...kept, ...fresh];
+    onChange({ questions: written });
     setNote(
       `${
         replaced > 0
           ? `Replaced ${replaced} with ${fresh.length} fresh questions`
           : `Added ${fresh.length} ${fresh.length === 1 ? "question" : "questions"}`
-      }. Check them, then save the draft.${
+      }. Drawing their pictures now.${
         result.usedStub ? " (No API key yet — these are placeholders.)" : ""
       }`,
     );
+    const skillsWritten = [...new Set(fresh.map((q) => q.forSkillId))];
     setPicked([]);
+
+    // The pictures come with the questions. Nobody has to remember a second
+    // errand, and a bank cannot end up half illustrated because somebody
+    // saved and left.
+    if (!result.usedStub && skillsWritten.length > 0) {
+      const drawnQuestions = await drawMissing(written, skillsWritten);
+      onChange({ questions: drawnQuestions });
+      setNote(
+        `${fresh.length} ${fresh.length === 1 ? "question" : "questions"} written, with ${PICTURES_PER_SKILL} pictures per skill. Check them, then save the draft.`,
+      );
+    }
   }
 
   const patch = (id: string, next: Record<string, unknown>) =>
@@ -320,10 +419,41 @@ export function QuestionBankEditor({
                 >
                   {rows.length} of {TARGET_PER_SKILL} questions
                 </span>
+                <span
+                  className={`text-[0.75rem] tabular-nums ${
+                    picturesFor(skill.id) >= PICTURES_PER_SKILL
+                      ? "text-slate-400"
+                      : "text-amber-700"
+                  }`}
+                >
+                  · {picturesFor(skill.id)} of {PICTURES_PER_SKILL} pictures
+                </span>
               </span>
             }
           >
             <div className="-mx-4 -my-3">
+              {rows.length > 0 && picturesFor(skill.id) < PICTURES_PER_SKILL && (
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-slate-100 px-4 py-2.5">
+                  <button
+                    type="button"
+                    disabled={drawing !== null}
+                    onClick={() =>
+                      void drawMissing(bank.questions, [skill.id]).then((questions) =>
+                        onChange({ questions }),
+                      )
+                    }
+                    className="inline-flex min-h-9 cursor-pointer items-center rounded-lg border border-slate-300 px-3 text-[0.78rem] font-semibold text-slate-700 transition-colors hover:border-slate-400 disabled:opacity-50"
+                  >
+                    {drawing
+                      ? `Drawing ${drawing.done} of ${drawing.total}…`
+                      : `Draw the ${PICTURES_PER_SKILL - picturesFor(skill.id)} missing ${PICTURES_PER_SKILL - picturesFor(skill.id) === 1 ? "picture" : "pictures"}`}
+                  </button>
+                  <span className="text-[0.72rem] leading-snug text-slate-400">
+                    New questions are drawn as they are written - this is for
+                    the ones written before. Save the draft to keep them.
+                  </span>
+                </div>
+              )}
               {rows.length === 0 && (
                 <p className="px-4 py-3 text-[0.8rem] text-slate-400">
                   No questions yet — tick {skill.name} above and generate.
@@ -371,6 +501,31 @@ export function QuestionBankEditor({
                         <p className="text-[0.92rem] font-semibold leading-snug text-slate-900">
                           {q.kind === "scenario" ? q.situation : q.prompt}
                         </p>
+                        {q.kind !== "explanation" && q.picture?.url && (
+                          <div className="mt-2.5 flex flex-col items-start gap-2">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={q.picture.url}
+                              alt={q.picture.alt || "The scene this question describes"}
+                              className="aspect-[16/9] w-full max-w-md rounded-xl border border-slate-200 object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onChange({
+                                  questions: bank.questions.map((other) =>
+                                    other.id === q.id
+                                      ? { ...other, picture: undefined }
+                                      : other,
+                                  ),
+                                })
+                              }
+                              className="min-h-9 cursor-pointer text-[0.75rem] font-semibold text-slate-500 underline underline-offset-2 hover:text-slate-800"
+                            >
+                              Remove picture
+                            </button>
+                          </div>
+                        )}
                         {q.kind === "choice" && (
                           <div className="mt-2 grid gap-2 sm:grid-cols-2">
                             {([["a", q.a], ["b", q.b]] as const).map(([side, option]) => (

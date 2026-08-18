@@ -15,14 +15,10 @@ import {
   type SkillModel,
   type SkillModelReview,
 } from "@/lib/api";
-import {
-  adminAssessmentContent,
-  type AssessmentBank,
-} from "@/lib/assessment-api";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { SkillModelEditor } from "./skill-model-editor";
 import { QuestionBankEditor, type QuestionBank } from "./question-bank";
-import { AssessmentBankEditor } from "./assessment-bank";
+import { VideoUploadsEditor } from "./videos";
 import { Collapsible } from "@/components/collapsible";
 
 // The admin console: edit the Discovery questions and the role catalogue, then
@@ -333,7 +329,7 @@ export function AdminConsole({
   // Roles first, then the skills they need, then the questions that measure
   // them — the order the work is actually done in.
   const [tab, setTab] = useState<
-    "roles" | "skills" | "questions" | "assessments" | "legacy"
+    "roles" | "skills" | "questions" | "videos" | "legacy"
   >("roles");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -377,11 +373,6 @@ export function AdminConsole({
   const [bank, setBank] = useState<QuestionBank>({
     questions: startingBank.questions ?? [],
   });
-  // The assessment bank loads client-side on mount: it is a newer kind the
-  // server page does not fetch, and the tab must not be empty when opened.
-  const [assessmentBank, setAssessmentBank] = useState<AssessmentBank>({
-    questions: [],
-  });
   // One review for the whole console; each tab shows the findings it owns.
   const [review, setReview] = useState<SkillModelReview | null>(null);
   const [checking, setChecking] = useState(false);
@@ -414,26 +405,11 @@ export function AdminConsole({
     roles: Boolean(roles?.draft),
     skills: Boolean(skillModel?.draft),
     questions: Boolean(questionBank?.draft),
-    assessments: false,
+    videos: false,
   });
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const { data } = await supabaseBrowser().auth.getSession();
-      const t = data.session?.access_token;
-      if (!t) return;
-      const doc = await adminAssessmentContent(t);
-      if (cancelled || !doc) return;
-      const stored = (doc.draft?.data ?? doc.published?.data ?? {}) as {
-        questions?: AssessmentBank["questions"];
-      };
-      setAssessmentBank({ questions: stored.questions ?? [] });
-      if (doc.draft) setHasDraft((h) => ({ ...h, assessments: true }));
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // Bumped on every publish, so a tab that fetched for itself refetches.
+  const [publishedAt, setPublishedAt] = useState(0);
+  
 
   async function token() {
     const { data } = await supabaseBrowser().auth.getSession();
@@ -445,7 +421,7 @@ export function AdminConsole({
     | "role_catalogue"
     | "skill_model"
     | "question_bank"
-    | "assessment_bank";
+    | "video_uploads";
   const slotFor = (kind: Kind) =>
     kind === "discovery_content"
       ? "discovery"
@@ -453,8 +429,8 @@ export function AdminConsole({
         ? "roles"
         : kind === "skill_model"
           ? "skills"
-          : kind === "assessment_bank"
-            ? "assessments"
+          : kind === "video_uploads"
+            ? "videos"
             : "questions";
 
   async function save(kind: Kind) {
@@ -466,6 +442,14 @@ export function AdminConsole({
       setStatus("Your session expired. Reload the page and sign in again.");
       return;
     }
+    // Video uploads save themselves the moment a file lands, and this
+    // function has no idea what is on that shelf. Writing anything here
+    // would overwrite the films.
+    if (kind === "video_uploads") {
+      setBusy(false);
+      setStatus("Videos save as you upload them. Publish when they are right.");
+      return;
+    }
     const data =
       kind === "discovery_content"
         ? { worlds: (discovery?.published?.data as { worlds?: unknown })?.worlds, choices, scenarios }
@@ -473,9 +457,7 @@ export function AdminConsole({
           ? { roles: roleSummaries, details }
           : kind === "skill_model"
             ? model
-            : kind === "assessment_bank"
-              ? assessmentBank
-              : bank;
+            : bank;
     const saved = await adminSaveDraft(t, kind, data);
     // Skill requirements are edited on the role card but belong to the skill
     // model, so saving roles saves both.
@@ -517,6 +499,9 @@ export function AdminConsole({
     setStatus(published ? null : "Nothing to publish — save a draft first.");
     if (published) {
       setHasDraft((h) => ({ ...h, [slotFor(kind)]: false }));
+      // Tabs that hold their own copy of the content have to hear about a
+      // publish, or they keep showing what was true before it.
+      setPublishedAt(Date.now());
     }
   }
 
@@ -704,8 +689,8 @@ export function AdminConsole({
         ? "skill_model"
         : tab === "questions"
           ? "question_bank"
-          : tab === "assessments"
-            ? "assessment_bank"
+          : tab === "videos"
+            ? "video_uploads"
             : "discovery_content";
   const doc =
     tab === "roles"
@@ -714,7 +699,7 @@ export function AdminConsole({
         ? skillModel
         : tab === "questions"
           ? questionBank
-          : tab === "assessments"
+          : tab === "videos"
             ? null
             : discovery;
   const draftPending =
@@ -724,8 +709,8 @@ export function AdminConsole({
         ? hasDraft.skills
         : tab === "questions"
           ? hasDraft.questions
-          : tab === "assessments"
-            ? hasDraft.assessments
+          : tab === "videos"
+            ? hasDraft.videos
             : hasDraft.discovery;
 
   return (
@@ -770,7 +755,7 @@ export function AdminConsole({
           { id: "roles" as const, label: "Roles" },
           { id: "skills" as const, label: "Skills & mappings" },
           { id: "questions" as const, label: "Discovery questions" },
-          { id: "assessments" as const, label: "Assessments" },
+          { id: "videos" as const, label: "Video uploads" },
           { id: "legacy" as const, label: "Role Assessment" },
         ].map((t) => (
           <button
@@ -1508,13 +1493,10 @@ export function AdminConsole({
         />
       )}
 
-      {tab === "assessments" && (
-        <AssessmentBankEditor
-          bank={assessmentBank}
-          model={model}
-          roles={roleSummaries}
-          aiConfigured={aiConfigured}
-          onChange={setAssessmentBank}
+      {tab === "videos" && (
+        <VideoUploadsEditor
+          refreshKey={publishedAt}
+          onSaved={() => setHasDraft((h) => ({ ...h, videos: true }))}
         />
       )}
 
@@ -1544,14 +1526,16 @@ export function AdminConsole({
             Discard draft
           </button>
         )}
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void save(kind)}
-          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-400"
-        >
-          {busy ? "Working…" : "Save draft"}
-        </button>
+        {tab !== "videos" && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void save(kind)}
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-400"
+          >
+            {busy ? "Working…" : "Save draft"}
+          </button>
+        )}
         <button
           type="button"
           disabled={busy || !draftPending}

@@ -63,6 +63,63 @@ const ROUNDS: Array<{ id: InterviewRound; title: string; line: string }> = [
   },
 ];
 
+// The read-out takes the best part of ten seconds to write, and three dots
+// for ten seconds reads as a page that has stopped. These are the passes it
+// actually makes, in the order it makes them, so the wait shows work rather
+// than just time.
+const READOUT_STEPS = [
+  "Reading back everything you said…",
+  "Checking each answer against what the question was really asking…",
+  "Looking for what landed, and where you talked around it…",
+  "Comparing this with your last interview…",
+  "Writing your read-out…",
+];
+
+function ReadOutProgress() {
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    const id = setInterval(
+      () => setStep((s) => Math.min(s + 1, READOUT_STEPS.length - 1)),
+      2200,
+    );
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div className="mt-5 w-full max-w-sm">
+      <ul aria-hidden className="grid gap-2.5 text-left">
+        {READOUT_STEPS.map((label, i) => {
+          const done = i < step;
+          const now = i === step;
+          return (
+            <li key={label} className="flex items-start gap-2.5">
+              <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center">
+                {done ? (
+                  <span className="text-[0.9rem] font-bold text-teal-700">✓</span>
+                ) : now ? (
+                  <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-brand-teal-deep motion-reduce:animate-none" />
+                ) : (
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                )}
+              </span>
+              <span
+                className={`text-[0.85rem] leading-relaxed ${
+                  now ? "font-semibold text-brand-ink" : "text-slate-400"
+                }`}
+              >
+                {label}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      <p role="status" className="sr-only">
+        {READOUT_STEPS[step]}
+      </p>
+    </div>
+  );
+}
+
 // Why rehearse here rather than off a list of questions, or with a friend.
 // Three claims, each of which the room actually keeps.
 const WHY_REHEARSE = [
@@ -206,7 +263,6 @@ function Waveform({ heights }: { heights: number[] }) {
 }
 
 const QUESTION_WAVE = [4, 9, 6, 12, 8, 5, 11, 7];
-const ANSWER_WAVE = [5, 10, 7, 13, 9, 5, 12, 8, 14, 6, 10, 7];
 
 // The green room's mic check: ten bars that light up with how loudly the
 // person is actually speaking, so the microphone question is settled before
@@ -768,7 +824,14 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream, { mimeType: format.mime });
+      // Voice, not music: 32kbps is plenty for speech and about a quarter
+      // the bytes of the browser default. On a phone on 4G that is the
+      // difference between a two-second upload and a five-second one, and
+      // the transcription reads it exactly the same.
+      const recorder = new MediaRecorder(stream, {
+        mimeType: format.mime,
+        audioBitsPerSecond: 32000,
+      });
       chunksRef.current = [];
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
@@ -958,26 +1021,10 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
           <>
             <p className="mt-2 max-w-sm text-sm leading-relaxed text-slate-600">
               Your interviewer is writing up how it went - what you did well,
-              what to sharpen, and the one thing to work on next. It usually
-              takes a few seconds, and it opens here on its own.
+              what to sharpen, and the one thing to work on next. It opens here
+              on its own.
             </p>
-            <p
-              role="status"
-              className="mt-5 inline-flex items-center gap-2.5 rounded-full border border-brand-teal/30 bg-teal-50 px-4 py-2.5 text-sm font-semibold text-teal-700"
-            >
-              <span aria-hidden className="flex gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-teal-700 motion-safe:animate-pulse" />
-                <span
-                  className="h-1.5 w-1.5 rounded-full bg-teal-700 motion-safe:animate-pulse"
-                  style={{ animationDelay: "150ms" }}
-                />
-                <span
-                  className="h-1.5 w-1.5 rounded-full bg-teal-700 motion-safe:animate-pulse"
-                  style={{ animationDelay: "300ms" }}
-                />
-              </span>
-              Writing your read-out…
-            </p>
+            <ReadOutProgress />
             <button
               type="button"
               onClick={() => setView("setup")}
@@ -1090,63 +1137,87 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
           {/* The whole conversation, as the thread it is: interviewer on the
               left, you on the right, newest at the bottom. */}
           <div aria-live="polite">
-            <ol className="mt-5 space-y-4" aria-label="Interview conversation">
+            <ol className="mt-4 space-y-3" aria-label="Interview conversation">
               {session.turns
                 .filter((turn) => turn.index <= revealed)
-                .map((turn) => {
+                .map((turn, position, shown) => {
                 const isOpen = turn.answer === null;
                 const hasAudio = audioUrl !== null && audioTurn === turn.index;
+                // A new stage gets a divider across the thread, the way a chat
+                // marks a new day - it tells you where you are without
+                // labelling every message.
+                const newStage =
+                  position === 0 || shown[position - 1]!.stage !== turn.stage;
                 return (
-                  <li key={turn.index} className="space-y-2">
-                    <div className="flex items-end gap-2">
-                      <InterviewerAvatar />
-                      <div className="min-w-0 max-w-[85%] rounded-2xl rounded-bl-md border border-slate-200 bg-surface px-4 py-3">
-                        <p className="text-[0.68rem] font-bold uppercase tracking-wide text-slate-400">
-                          {STAGE_LABEL[turn.stage]} · Question {turn.index + 1}
+                  <li key={turn.index}>
+                    {newStage && (
+                      <div className="my-4 flex items-center gap-3" aria-hidden>
+                        <span className="h-px flex-1 bg-slate-200" />
+                        <span className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                          {STAGE_LABEL[turn.stage]}
+                        </span>
+                        <span className="h-px flex-1 bg-slate-200" />
+                      </div>
+                    )}
+
+                    {/* The interviewer speaks: avatar, name, then the message.
+                        Sized to what was said rather than stretched across the
+                        column, so the thread reads as a conversation. */}
+                    <div className="flex items-start gap-2.5">
+                      <span className="mt-5 shrink-0">
+                        <InterviewerAvatar />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-[0.72rem] font-semibold text-slate-500">
+                          {session.interviewer ?? "Your interviewer"}
+                          <span className="ml-2 font-normal text-slate-400">
+                            Question {turn.index + 1}
+                          </span>
                         </p>
-                        <p
-                          className={
-                            isOpen
-                              ? "mt-1 text-base font-semibold leading-snug text-brand-ink"
-                              : "mt-1 text-sm leading-relaxed text-slate-600"
-                          }
-                        >
-                          {turn.question}
-                        </p>
-                        {voiceOn ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              hasAudio
-                                ? void audioRef.current?.play()
-                                : void speakTurn(turn.index)
-                            }
-                            className="mt-2 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-teal-50 px-3.5 text-xs font-semibold text-teal-700 transition-colors hover:bg-brand-teal-deep/15 motion-reduce:transition-none"
+                        <div className="mt-1 w-fit max-w-[38rem] rounded-2xl rounded-tl-sm border border-slate-200 bg-surface px-3.5 py-2.5">
+                          <p
+                            className={`text-[0.95rem] leading-relaxed ${
+                              isOpen ? "text-brand-ink" : "text-slate-600"
+                            }`}
                           >
-                            <PlayIcon className="h-3.5 w-3.5" />
-                            <Waveform heights={QUESTION_WAVE} />
-                            {hasAudio || !isOpen ? "Hear it again" : "Hear the question"}
-                          </button>
-                        ) : null}
+                            {turn.question}
+                          </p>
+                          {voiceOn ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                hasAudio
+                                  ? void audioRef.current?.play()
+                                  : void speakTurn(turn.index)
+                              }
+                              className="mt-1.5 inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-full px-2 text-xs font-semibold text-teal-700 transition-colors hover:bg-teal-50 motion-reduce:transition-none"
+                            >
+                              <PlayIcon className="h-3.5 w-3.5" />
+                              <Waveform heights={QUESTION_WAVE} />
+                              {hasAudio || !isOpen ? "Hear it again" : "Hear the question"}
+                            </button>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
+
+                    {/* Your answer, on your side of the thread. */}
                     {turn.answer ? (
-                      <div className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-teal-50 px-4 py-3">
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="text-[0.68rem] font-bold uppercase tracking-wide text-teal-700">
-                            You
-                          </p>
+                      <div className="mt-2 flex flex-col items-end">
+                        <p className="mr-1 text-[0.72rem] font-semibold text-teal-700">
+                          You
                           {voiceTurns.has(turn.index) ? (
-                            <span className="flex items-center gap-1.5 text-teal-700">
+                            <span className="ml-1.5 inline-flex translate-y-0.5 items-center gap-1">
                               <MicIcon className="h-3 w-3" />
-                              <Waveform heights={ANSWER_WAVE} />
                               <span className="sr-only">Answered by voice</span>
                             </span>
                           ) : null}
-                        </div>
-                        <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
-                          {turn.answer}
                         </p>
+                        <div className="mt-1 w-fit max-w-[34rem] rounded-2xl rounded-tr-sm bg-teal-50 px-3.5 py-2.5">
+                          <p className="whitespace-pre-wrap text-[0.95rem] leading-relaxed text-slate-700">
+                            {turn.answer}
+                          </p>
+                        </div>
                       </div>
                     ) : null}
                   </li>
@@ -1156,9 +1227,9 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
 
             {/* The interviewer thinking, as a typing-indicator bubble. */}
             {preparingVoice ? (
-              <div className="mt-4 flex items-end gap-2">
+              <div className="mt-3 flex items-start gap-2.5">
                 <InterviewerAvatar />
-                <div className="flex w-fit items-center gap-2.5 rounded-2xl rounded-bl-md border border-slate-200 bg-surface px-4 py-3 text-sm text-slate-500">
+                <div className="flex w-fit items-center gap-2.5 rounded-2xl rounded-tl-sm border border-slate-200 bg-surface px-3.5 py-2.5 text-sm text-slate-500">
                   <span aria-hidden className="flex gap-1">
                     <span className="h-1.5 w-1.5 rounded-full bg-slate-400 motion-safe:animate-pulse" />
                     <span
@@ -1174,9 +1245,9 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
                 </div>
               </div>
             ) : busy === "thinking" ? (
-              <div className="mt-4 flex items-end gap-2">
+              <div className="mt-3 flex items-start gap-2.5">
                 <InterviewerAvatar />
-                <div className="flex w-fit items-center gap-2.5 rounded-2xl rounded-bl-md border border-slate-200 bg-surface px-4 py-3 text-sm text-slate-500">
+                <div className="flex w-fit items-center gap-2.5 rounded-2xl rounded-tl-sm border border-slate-200 bg-surface px-3.5 py-2.5 text-sm text-slate-500">
                   <span aria-hidden className="flex gap-1">
                     <span className="h-1.5 w-1.5 rounded-full bg-slate-400 motion-safe:animate-pulse" />
                     <span
@@ -1196,9 +1267,9 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
             {/* Ending early: the interviewer signs off before the read-out. */}
             {endingEarly ? (
               <div className="mt-4 space-y-4">
-                <div className="flex items-end gap-2">
+                <div className="flex items-start gap-2.5">
                   <InterviewerAvatar />
-                  <div className="min-w-0 max-w-[85%] rounded-2xl rounded-bl-md border border-slate-200 bg-surface px-4 py-3">
+                  <div className="min-w-0 max-w-[38rem] rounded-2xl rounded-tl-sm border border-slate-200 bg-surface px-3.5 py-2.5">
                     <p className="text-[0.68rem] font-bold uppercase tracking-wide text-slate-400">
                       Interviewer
                     </p>

@@ -260,8 +260,20 @@ export const selectDiscoveryRole = (
 // ---- Adaptive Discovery (the published question bank) ----
 
 export type AskedQuestion =
-  | { kind: "choice"; id: string; prompt: string; options: Array<{ id: string; label: string }> }
-  | { kind: "scenario"; id: string; situation: string; options: Array<{ id: string; label: string }> }
+  | {
+      kind: "choice";
+      id: string;
+      prompt: string;
+      picture?: QuestionPicture;
+      options: Array<{ id: string; label: string }>;
+    }
+  | {
+      kind: "scenario";
+      id: string;
+      situation: string;
+      picture?: QuestionPicture;
+      options: Array<{ id: string; label: string }>;
+    }
   | { kind: "explanation"; id: string; prompt: string };
 
 export type AdaptiveState = {
@@ -451,12 +463,16 @@ export type SkillWeight = { skillId: string; level: 1 | 2 | 3 };
 
 // Three shapes, per the Blueprint: paired work choices, micro-scenarios and one
 // optional open question per skill.
+/** The scene a question is set in, drawn. Stored on the question itself. */
+export type QuestionPicture = { url: string; alt: string };
+
 export type GeneratedQuestion =
   | {
       kind: "choice";
       id: string;
       forSkillId: string;
       prompt: string;
+      picture?: QuestionPicture;
       a: { label: string; weights: SkillWeight[] };
       b: { label: string; weights: SkillWeight[] };
     }
@@ -465,9 +481,45 @@ export type GeneratedQuestion =
       id: string;
       forSkillId: string;
       situation: string;
+      picture?: QuestionPicture;
       options: Array<{ id: string; label: string; weights: SkillWeight[] }>;
     }
   | { kind: "explanation"; id: string; forSkillId: string; prompt: string };
+
+/**
+ * Draw the scene for a question. One picture each, generated only when an
+ * admin asks - never as a side effect of writing questions - and stored in
+ * our own bucket so the URL keeps working.
+ */
+export async function adminGenerateDiscoveryPictures(
+  token: string,
+  questions: Array<{ id: string; scene: string }>,
+): Promise<
+  | { ok: true; images: Array<{ id: string; imageUrl?: string; error?: string }> }
+  | { ok: false; error: string }
+> {
+  try {
+    const res = await fetch(`${API_URL}/v1/admin/discovery/images`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "X-Request-Id": crypto.randomUUID(),
+      },
+      body: JSON.stringify({ questions }),
+    });
+    const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!res.ok) {
+      return { ok: false, error: String(body.error ?? "The pictures could not be drawn.") };
+    }
+    return {
+      ok: true,
+      images: (body.images ?? []) as Array<{ id: string; imageUrl?: string; error?: string }>,
+    };
+  } catch {
+    return { ok: false, error: "Could not reach the server." };
+  }
+}
 
 // Unlike apiCall, failures here carry the server's own explanation - an
 // admin staring at "could not generate" needs the why.

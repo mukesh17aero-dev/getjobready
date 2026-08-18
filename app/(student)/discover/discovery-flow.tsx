@@ -742,6 +742,19 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
             {prompt}
           </h1>
 
+          {/* The scene, drawn. It carries the situation rather than decorating
+              it, which is why it sits under the question and above the
+              options - read the moment, then choose. */}
+          {question.picture?.url && (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={question.picture.url}
+              alt={question.picture.alt || ""}
+              loading="eager"
+              className="mt-4 aspect-[16/9] w-full animate-fade-up rounded-2xl border border-slate-200 object-cover"
+            />
+          )}
+
           {/* One option per row. Two long labels side by side turn a choice
               into a reading comprehension test; stacked, each one is read on
               its own and the eye travels down the same line every time. */}
