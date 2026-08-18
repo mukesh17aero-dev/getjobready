@@ -1361,8 +1361,8 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
         </p>
         <h1 className="mt-1 text-[1.6rem] font-bold leading-tight text-brand-ink">
           {first
-            ? `${first}, the first time you answer these should not be the real one`
-            : "The first time you answer these should not be the real one"}
+            ? `${first}, do not let the real interview be your first try`
+            : "Do not let the real interview be your first try"}
         </h1>
         <p className="mt-1.5 max-w-prose text-[0.85rem] leading-relaxed text-slate-600">
           Ten minutes with an interviewer who has read your record and asks
