@@ -20,6 +20,8 @@ export type InterviewSessionView = {
   id: string;
   /** The interviewer's name, so the room can say who is speaking. */
   interviewer?: string;
+  /** Lets the audio element stream the voice straight from the server. */
+  speechTicket?: string;
   roleTitle: string;
   round: InterviewRound;
   status: "in_progress" | "completed";
@@ -184,6 +186,15 @@ export async function answerWithAudio(
   } catch {
     return { ok: false, error: "Could not reach the server. Try typing your answer." };
   }
+}
+
+/**
+ * Where the audio element can stream a question from. Handing the element a
+ * URL rather than a finished file is the whole point: it starts playing on
+ * the first chunk instead of after the last one.
+ */
+export function questionAudioUrl(ticket: string, turnIndex: number): string {
+  return `${API_URL}/v1/interview/sessions/current/speech/${turnIndex}?t=${encodeURIComponent(ticket)}`;
 }
 
 /** The question read aloud, as a playable object URL. Null when speech is off. */

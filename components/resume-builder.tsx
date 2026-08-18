@@ -14,6 +14,7 @@ import {
   readResumeUpload,
   refineResume,
   resumeCompleteness,
+  type AtsCheck,
   resumeGapCheck,
   reviewResume,
   saveResumeProfile,
@@ -612,7 +613,8 @@ const SAMPLE_RESUME: ResumeData = {
       items: ["Shift work", "Counter ownership", "Working to daily targets"],
     },
   ],
-  experienceHeading: "Experience",
+  experienceHeading: "Work experience",
+  summaryHeading: "Summary",
   experience: [
     {
       title: "Store assistant",
@@ -1108,7 +1110,7 @@ function ResumeSheet({
 
   // The sections, built once and arranged differently per layout.
   const profile = resume.summary ? (
-    <Section title="Profile" styles={t}>
+    <Section title={resume.summaryHeading || "Summary"} styles={t}>
       <p className={`whitespace-pre-line ${t.body}`}>{resume.summary}</p>
     </Section>
   ) : null;
@@ -1383,6 +1385,15 @@ export function ResumeBuilder({
   // How many A4 pages the built resume actually comes to, measured from the
   // page itself rather than guessed from the word count.
   const [sheetPages, setSheetPages] = useState(1);
+  // What a parser found in the file we would hand over, checked on every
+  // build and every rewrite.
+  const [ats, setAts] = useState<AtsCheck | null>(null);
+  // "student" or "early_career", from the profile when it knows.
+  const savedTrack = (() => {
+    const value = profile?.preferences?.["track"];
+    return value === "student" || value === "early_career" ? value : null;
+  })();
+  const [track, setTrack] = useState<"student" | "early_career" | null>(savedTrack);
   const [revising, setRevising] = useState(false);
   const [revisions, setRevisions] = useState<Revision[]>([]);
   const [exampleIndex, setExampleIndex] = useState(0);
@@ -1426,10 +1437,12 @@ export function ResumeBuilder({
 
   // A general resume has no role to name, so the button cannot wait for one -
   // but a ticked box with an empty field is a question still open.
+  // A resume cannot be written until we know which kind of person it is for.
   const readyToBuild =
-    making === "general" ||
+    Boolean(track) &&
+    (making === "general" ||
     (making === "role" && Boolean(roleInput.trim())) ||
-    (making === "improve" && upload !== null);
+    (making === "improve" && upload !== null));
 
   const asText = (key: string) => {
     const value = profile?.preferences?.[key];
@@ -1570,6 +1583,18 @@ export function ResumeBuilder({
     setBusy("checking");
     const token = await withToken();
     if (!token) return;
+    // Where they are is a fact about their life, not a setting for this
+    // build - so it goes into the record the profile page reads.
+    if (track && track !== savedTrack) {
+      const saved = await saveResumeProfile(token, {
+        education: profile?.education ?? [],
+        experience: profile?.experience ?? [],
+        projects: profile?.projects ?? [],
+        achievements: profile?.achievements ?? [],
+        preferences: { ...(profile?.preferences ?? {}), track },
+      });
+      if (saved) setProfile(saved);
+    }
     const body = buildBody();
     const check = await resumeGapCheck(token, body);
     if (!check) {
@@ -1618,6 +1643,7 @@ export function ResumeBuilder({
       return;
     }
     setResult({ resume: generated.resume, targetRole: generated.targetRole });
+    setAts(generated.ats ?? null);
     setShowFeedback(false);
     trackEvent({
       family: "engagement",
@@ -2366,6 +2392,47 @@ export function ResumeBuilder({
                   ))}
                 </select>
 
+                {/* Always shown, already answered when the profile knows -
+                    a choice they can see and change beats a sentence about a
+                    setting made somewhere else. */}
+                <fieldset className="mt-3">
+                  <legend className="text-[0.8rem] font-semibold text-brand-ink">
+                    Where are you right now?
+                  </legend>
+                  <p className="mt-0.5 text-[0.72rem] leading-relaxed text-slate-500">
+                    A student&rsquo;s resume leads with education and projects; a
+                    working person&rsquo;s leads with the job.
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {[
+                      { id: "student" as const, label: "Still studying" },
+                      { id: "early_career" as const, label: "Working, or have worked" },
+                    ].map((option) => {
+                      const on = track === option.id;
+                      return (
+                        <label
+                          key={option.id}
+                          className={`inline-flex min-h-11 cursor-pointer items-center rounded-lg border-2 px-4 text-[0.82rem] font-bold transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-teal/40 ${
+                            on
+                              ? "border-brand-teal-deep bg-brand-teal-deep text-white"
+                              : "border-slate-200 text-slate-600 hover:border-slate-300"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="resume-track"
+                            value={option.id}
+                            checked={on}
+                            onChange={() => setTrack(option.id)}
+                            className="sr-only"
+                          />
+                          {option.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+
                 {making === "general" && (
                   <p className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-[0.76rem] leading-relaxed text-slate-600">
                     We lead with your strongest evidence rather than a
@@ -2772,6 +2839,39 @@ export function ResumeBuilder({
                     ))}
                   </ul>
                 )}
+                {ats && !ats.readable && (
+                  <ul className="mt-3 grid gap-2">
+                    {ats.problems.map((problem) => (
+                      <li
+                        key={problem.what}
+                        className="flex gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5"
+                      >
+                        <span aria-hidden className="mt-0.5 text-[0.9rem] font-bold text-amber-700">
+                          !
+                        </span>
+                        <span>
+                          <span className="block text-[0.82rem] font-semibold text-amber-900">
+                            {problem.what}
+                          </span>
+                          <span className="mt-0.5 block text-[0.8rem] leading-relaxed text-amber-800">
+                            {problem.why}
+                          </span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {ats?.readable && completeness.ready && (
+                  <p className="mt-2.5 flex items-start gap-2 text-[0.8rem] leading-relaxed text-teal-800">
+                    <span aria-hidden className="mt-0.5 font-bold">✓</span>
+                    <span>
+                      We opened your download and read it back the way screening
+                      software does. Every section, date and number came through.
+                    </span>
+                  </p>
+                )}
+
                 {!completeness.ready && (
                   <p className="mt-3 text-[0.82rem] leading-relaxed text-slate-600">
                     Tell Scribe above what is missing and it goes straight in -

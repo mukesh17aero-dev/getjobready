@@ -69,6 +69,27 @@ export const EMPTY_PROFILE: ProfileFields = {
   reasonForChange: "",
 };
 
+/**
+ * Where somebody actually is, worked out from what is on their page rather
+ * than from what they ticked. The entries are the evidence: a course in
+ * progress, a job that exists.
+ *
+ * Only the two certain cases are decided here. Somebody with no course in
+ * progress and no work added is a fresher by default, but if they have said
+ * otherwise that stands - they may simply not have typed the job in yet, and
+ * overruling a person about their own life on missing evidence is worse than
+ * leaving their answer alone.
+ */
+export function trackFromRecord(args: {
+  studyingNow: boolean;
+  hasWork: boolean;
+  chosen?: Track | "" | null;
+}): Track {
+  if (args.studyingNow) return "student";
+  if (args.hasWork) return "early_career";
+  return args.chosen === "early_career" ? "early_career" : "student";
+}
+
 export const TRACKS: Array<{
   id: Track;
   title: string;

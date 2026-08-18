@@ -60,6 +60,8 @@ export type ResumeData = {
   summary: string;
   skills: Array<{ group: string; items: string[] }>;
   experienceHeading: string;
+  /** "Summary" for someone with work behind them, "Career objective" for a student. */
+  summaryHeading?: string;
   experience: Array<{
     title: string;
     organisation: string;
@@ -77,7 +79,16 @@ export type ResumeData = {
   keywordsUsed: string[];
 };
 
+/** What a parser found - and could not find - in the file we would hand over. */
+export type AtsCheck = {
+  readable: boolean;
+  problems: Array<{ what: string; why: string }>;
+  found: string[];
+};
+
 export type GenerateResult = {
+  /** The parse-back of the real Word file, run on every build. */
+  ats?: AtsCheck;
   resume: ResumeData;
   targetRole: string;
   keywords: string[];
@@ -325,4 +336,6 @@ export const refineResume = (
     /** One question that would make the change stronger, if there is one. */
     followUp?: string;
     declined: string | null;
+    /** The rewritten file, read back the way a screening system reads it. */
+    ats?: AtsCheck;
   }>(token, "/v1/resume/refine", { method: "POST", body });

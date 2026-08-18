@@ -25,6 +25,7 @@ import {
   marksFromEducation,
   emptyExperience,
   hasSubstance,
+  trackFromRecord,
   missingEssentials,
   missingForCompletion,
   WORK_KINDS,
@@ -581,6 +582,8 @@ export function ProfileForm({
 
   function chooseTrack(id: Track) {
     setFields((f) => ({ ...f, track: id }));
+    setTrackError(null);
+    setTrackNote(null);
     setSaved(false);
     trackEvent({
       family: "decision",
@@ -677,6 +680,10 @@ export function ProfileForm({
   const percent = completeness(fields);
 
   const [finishError, setFinishError] = useState<string | null>(null);
+  // Said against the choice itself, where the two cards are.
+  const [trackError, setTrackError] = useState<string | null>(null);
+  // What the page worked out about them, said once, where the cards are.
+  const [trackNote, setTrackNote] = useState<string | null>(null);
   // Said next to the button that did nothing, because an error attached to a
   // box far up the page - or to one that is not on screen at all - is an
   // error nobody sees.
@@ -693,6 +700,8 @@ export function ProfileForm({
   const lastReflected = useRef(JSON.stringify(reflectionAnswers(initial)));
   const storyRef = useRef<HTMLDivElement>(null);
   const [reflecting, setReflecting] = useState(false);
+  // True when the story on screen describes who they were before this save.
+  const [storyStale, setStoryStale] = useState(false);
 
   // The open text boxes, and what a bad answer should hear.
   // Only what this form actually asks. Institution, course, current role,
@@ -748,6 +757,39 @@ export function ProfileForm({
         finishProblem = `That year looks off - expected between ${now - 1} and ${now + 8}.`;
       }
     }
+    // Where they are is settled by what is on the page, not by which card
+    // was tapped first. A course in progress means studying, whatever else
+    // is going on; no course and a real job means working. Both are read
+    // from the entries themselves, so a record cannot save a contradiction
+    // of itself - and a student who takes a job stops being filed as a
+    // student the moment they add it.
+    const studyingNow = education.filter(hasSubstance).some((entry) => Boolean(entry.current));
+    const hasWork = experience.some(hasSubstance);
+    const settled = trackFromRecord({ studyingNow, hasWork, chosen: fields.track });
+
+    if (settled !== fields.track) {
+      // Say what changed and why, in one line, rather than moving it
+      // silently under them.
+      setFields((f) => ({ ...f, track: settled }));
+      // The stored story describes a student or a working person, and it has
+      // just stopped being true. It is marked stale rather than wiped: the
+      // rewrite takes a second or two, and clearing it outright leaves the
+      // person staring at the space where their story used to be.
+      setStoryStale(true);
+      lastReflected.current = "";
+      setTrackNote(
+        settled === "student"
+          ? studyingNow
+            ? "Marked as studying - you have an active course in progress."
+            : "Marked as studying - no work experience is listed yet. Add a job or internship and this updates."
+          : "Marked as working or job-hunting - you are working currently and have no active course in progress.",
+      );
+    } else {
+      setTrackNote(null);
+    }
+    setTrackError(null);
+    const settledFields = { ...fields, track: settled };
+
     setFinishError(finishProblem);
     setErrors(found);
 
@@ -786,7 +828,7 @@ export function ProfileForm({
       projects: profile?.projects ?? [],
       achievements: profile?.achievements ?? [],
       preferences: {
-        ...fields,
+        ...settledFields,
         // Marks are typed once, against the qualification they belong to.
         ...marksFromEducation(education),
         ...(summary ? { storySummary: summary } : {}),
@@ -799,7 +841,10 @@ export function ProfileForm({
     setFormError(
       result ? null : "That didn't save. Check your connection and try again.",
     );
-    const snapshot = JSON.stringify(reflectionAnswers(fields));
+    // Built from the settled answer: a story written about a student, for
+    // somebody we have just marked as working, is worse than no story.
+    const snapshot = JSON.stringify(reflectionAnswers(settledFields));
+    if (!result) setStoryStale(false);
     if (result && !isWelcome && snapshot !== lastReflected.current) {
       lastReflected.current = snapshot;
       setReflecting(true);
@@ -815,11 +860,19 @@ export function ProfileForm({
       // Advisory, after the fact: the model double-checks the answers and
       // reflects the story back. Slow or absent, the save stands either way.
       void Promise.race([
-        reflectCareerProfile(token, reflectionAnswers(fields)),
+        reflectCareerProfile(token, reflectionAnswers(settledFields)),
         new Promise<null>((r) => setTimeout(() => r(null), 8000)),
       ]).then((reflection) => {
         setReflecting(false);
-        if (!reflection) return;
+        if (!reflection) {
+          // No new story came back. A story that has been contradicted must
+          // not stay on the screen as though it were still true.
+          if (storyStale) {
+            setSummary(null);
+            setStoryStale(false);
+          }
+          return;
+        }
         if (reflection.issues.length > 0) {
           setErrors((e) => {
             const next = { ...e };
@@ -831,13 +884,14 @@ export function ProfileForm({
         }
         if (reflection.summary) {
           setSummary(reflection.summary);
+          setStoryStale(false);
           // Persist the story with the profile so the next visit shows it.
           void saveCareerProfile(token, {
             education: profile?.education ?? [],
             experience: profile?.experience ?? [],
             projects: profile?.projects ?? [],
             achievements: profile?.achievements ?? [],
-            preferences: { ...fields, storySummary: reflection.summary },
+            preferences: { ...settledFields, storySummary: reflection.summary },
           });
         }
       });
@@ -846,7 +900,7 @@ export function ProfileForm({
       family: "decision",
       event: "profile_saved",
       module: "career_record",
-      target: fields.track || "unset",
+      target: settled,
       meta: { completeness: percent },
     });
     if (result && isWelcome) router.push("/start");
@@ -879,19 +933,23 @@ export function ProfileForm({
         </span>
       </div>
 
-      {(summary || reflecting) && (
+      {(summary || reflecting || storyStale) && (
         <div ref={storyRef} className="mt-4 scroll-mt-20 rounded-2xl border border-teal-700/30 bg-teal-50 p-4">
           <p className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-teal-700">
             Your story so far
           </p>
-          {reflecting && !summary && (
-            <p className="mt-1.5 animate-pulse text-[0.92rem] leading-relaxed text-slate-600">
-              Understanding you better&hellip;
+          {reflecting && (
+            <p className="mt-1.5 animate-pulse text-[0.85rem] font-semibold text-teal-700">
+              {summary ? "Rewriting your story\u2026" : "Understanding you better\u2026"}
             </p>
           )}
           {summary && (
           <>
-          <p className="mt-1.5 text-[0.92rem] leading-relaxed text-slate-800">
+          <p
+            className={`mt-1.5 text-[0.92rem] leading-relaxed text-slate-800 ${
+              storyStale ? "opacity-50" : ""
+            }`}
+          >
             {(() => {
               // The greeting is added here, not by the model - the name
               // never leaves the browser for the reflection call.
@@ -1024,7 +1082,10 @@ export function ProfileForm({
         <h2 className="text-[0.8rem] font-semibold text-slate-800">
           Which describes you right now?
         </h2>
-        <div className="mt-2 grid gap-3 sm:grid-cols-2">
+        <div
+          className="mt-2 grid gap-3 sm:grid-cols-2"
+          aria-invalid={trackError ? true : undefined}
+        >
           {TRACKS.map((option) => {
             const active = fields.track === option.id;
             return (
@@ -1052,6 +1113,14 @@ export function ProfileForm({
             );
           })}
         </div>
+        {trackError && (
+          <p role="alert" className="mt-2 text-[0.8rem] leading-relaxed text-rose-700">
+            {trackError}
+          </p>
+        )}
+        {trackNote && !trackError && (
+          <p className="mt-2 text-[0.8rem] leading-relaxed text-teal-700">{trackNote}</p>
+        )}
       </section>
 
       {fields.track && (

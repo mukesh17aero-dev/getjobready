@@ -19,6 +19,7 @@ import {
   answerWithAudio,
   answerWithText,
   fetchQuestionAudio,
+  questionAudioUrl,
   finishInterview,
   requestNextTurn,
   startInterview,
@@ -487,6 +488,8 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
   const recordingCapRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Resolved by the audio element the moment sound actually starts.
+  const playingRef = useRef<(() => void) | null>(null);
   const threadEndRef = useRef<HTMLDivElement | null>(null);
 
   const openTurn = session?.turns[session.turns.length - 1];
@@ -512,16 +515,28 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
   }, [view, session]);
 
   // Fetch and play the interviewer's voice for the newest question.
+  // Two ways to get the voice. The first hands the audio element a URL and
+  // lets it play the mp3 while it is still arriving - about a second to the
+  // first word instead of four. The second downloads the whole file first,
+  // and is what happens when the server did not issue a ticket.
   const speakTurn = useCallback(
-    async (turnIndex: number): Promise<boolean> => {
+    async (turnIndex: number, ticket?: string): Promise<boolean> => {
       if (!voiceOn) return false;
+      if (ticket) {
+        setAudioTurn(turnIndex);
+        setAudioUrl((old) => {
+          if (old?.startsWith("blob:")) URL.revokeObjectURL(old);
+          return questionAudioUrl(ticket, turnIndex);
+        });
+        return true;
+      }
       const t = await token();
       if (!t) return false;
       const url = await fetchQuestionAudio(t, turnIndex);
       if (!url) return false;
       setAudioTurn(turnIndex);
       setAudioUrl((old) => {
-        if (old) URL.revokeObjectURL(old);
+        if (old?.startsWith("blob:")) URL.revokeObjectURL(old);
         return url;
       });
       return true;
@@ -544,10 +559,24 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
         return;
       }
       setPreparingVoice(true);
-      await Promise.race([
-        speakTurn(newest.index),
-        new Promise((resolve) => setTimeout(resolve, VOICE_WAIT_MS)),
-      ]);
+      // With a ticket the wait is for the first sound, not the whole file:
+      // the audio element tells us when it starts playing, and the question
+      // appears then. Without one we fall back to fetching it whole.
+      if (next.speechTicket) {
+        await speakTurn(newest.index, next.speechTicket);
+        await Promise.race([
+          new Promise((resolve) => {
+            playingRef.current = () => resolve(null);
+          }),
+          new Promise((resolve) => setTimeout(resolve, VOICE_WAIT_MS)),
+        ]);
+        playingRef.current = null;
+      } else {
+        await Promise.race([
+          speakTurn(newest.index),
+          new Promise((resolve) => setTimeout(resolve, VOICE_WAIT_MS)),
+        ]);
+      }
       setPreparingVoice(false);
       setRevealed(newest.index);
     },
@@ -677,11 +706,20 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
 
   const advance = useCallback(
     async (afterAnswer: InterviewSessionView) => {
+      if (afterAnswer.done) {
+        setSession(afterAnswer);
+        return;
+      }
+      // The answer usually comes home with the next question already on it.
+      const newest = afterAnswer.turns[afterAnswer.turns.length - 1];
+      if (newest && newest.answer === null) {
+        await deliverTurn(afterAnswer);
+        return;
+      }
       setSession(afterAnswer);
-      if (afterAnswer.done) return;
       await fetchNextTurn();
     },
-    [fetchNextTurn],
+    [deliverTurn, fetchNextTurn],
   );
 
   const submitText = async () => {
@@ -1194,7 +1232,13 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
             ) : null}
           </div>
 
-          {audioUrl ? <audio ref={audioRef} src={audioUrl} /> : null}
+          {audioUrl ? (
+            <audio
+              ref={audioRef}
+              src={audioUrl}
+              onPlaying={() => playingRef.current?.()}
+            />
+          ) : null}
 
           {error ? (
             <p
