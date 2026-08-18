@@ -62,6 +62,23 @@ const ROUNDS: Array<{ id: InterviewRound; title: string; line: string }> = [
   },
 ];
 
+// Why rehearse here rather than off a list of questions, or with a friend.
+// Three claims, each of which the room actually keeps.
+const WHY_REHEARSE = [
+  {
+    head: "You find out what went wrong",
+    body: "Question by question: what you did well, and what would have been better. A real interviewer never tells you - which is how people repeat the same mistake for years without knowing.",
+  },
+  {
+    head: "The feedback is specific enough to act on",
+    body: 'Not "be more confident". More like: you told the story but never said how it ended, and one sentence on the outcome turns it into evidence.',
+  },
+  {
+    head: "It follows what you are working on",
+    body: "What you were told to improve is what the next interviewer checks on, with different questions - so each rehearsal builds on the last instead of starting over.",
+  },
+];
+
 // Two interviewers, so nobody rehearses against the same voice every time -
 // and so anyone who finds one harder to follow has the other.
 const INTERVIEWERS: Array<{ id: "asha" | "ravi"; title: string }> = [
@@ -1343,12 +1360,28 @@ export function InterviewFlow({ initial }: { initial: InterviewHome }) {
           Interview practice
         </p>
         <h1 className="mt-1 text-[1.6rem] font-bold leading-tight text-brand-ink">
-          {first ? `${first}, rehearse it before it counts` : "Rehearse it before it counts"}
+          {first
+            ? `${first}, the first time you answer these should not be the real one`
+            : "The first time you answer these should not be the real one"}
         </h1>
         <p className="mt-1.5 max-w-prose text-[0.85rem] leading-relaxed text-slate-600">
-          A 10-minute mock interview with an interviewer who asks about the role you
-          chose, listens to your answers, and tells you honestly how you did.
+          Ten minutes with an interviewer who has read your record and asks
+          about the role you chose. You answer out loud, the clock runs, and it
+          ends on time - the way it will on the day. Then comes the part nobody
+          else gives you: an honest read of how it went, answer by answer, and
+          what to change before it counts.
         </p>
+
+        {/* Why here rather than a free list of questions, or a friend. Three
+            things this does that neither can. */}
+        <ul className="mt-3.5 grid gap-2.5 sm:grid-cols-3">
+          {WHY_REHEARSE.map((proof) => (
+            <li key={proof.head} className="rounded-xl border border-slate-200 bg-surface p-3.5">
+              <p className="text-[0.85rem] font-bold text-brand-ink">{proof.head}</p>
+              <p className="mt-1 text-[0.75rem] leading-relaxed text-slate-600">{proof.body}</p>
+            </li>
+          ))}
+        </ul>
       </header>
 
       {/* The interview you just finished, still being written up. It sits at

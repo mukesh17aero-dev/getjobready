@@ -100,6 +100,12 @@ type TargetBody = {
   jobDescription?: string;
   /** Which look to record with the build; the backend defaults to classic. */
   template?: ResumeTemplate;
+  /** Aimed at no particular role - the Discovery role is set aside too. */
+  general?: boolean;
+  /** The text of a resume they already have, from readResumeUpload. */
+  existingResume?: string;
+  /** The same upload as our parser read it - see readResumeUpload. */
+  existingParsed?: Record<string, unknown>;
 };
 
 // ---- Calls ----
@@ -115,6 +121,57 @@ export const resumeGapCheck = (token: string, body: TargetBody) =>
 
 export const generateResume = (token: string, body: TargetBody) =>
   call<GenerateResult>(token, "/v1/resume/generate", { method: "POST", body });
+
+/**
+ * A resume they already have, read into text. Nothing is stored server-side:
+ * the text comes back here and goes up again with the build, so an upload
+ * they think better of leaves nothing behind.
+ */
+export type ReadUpload = {
+  filename: string;
+  text: string;
+  /** Counts of what the parser found, for telling them what we read. */
+  read: { experience: number; education: number; skills: number };
+  /** The document as fields, from the same parser the profile import uses. */
+  parsed: Record<string, unknown> | null;
+};
+
+export async function readResumeUpload(
+  token: string,
+  file: File,
+): Promise<({ ok: true } & ReadUpload) | { ok: false; error: string }> {
+  try {
+    const form = new FormData();
+    form.append("file", file, file.name);
+    const res = await fetch(`${API_URL}/v1/resume/read-upload`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "X-Request-Id": crypto.randomUUID() },
+      body: form,
+    });
+    const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!res.ok) {
+      return {
+        ok: false,
+        error: String(body.error ?? "We could not read that file. Try a PDF or Word file."),
+      };
+    }
+    const read = (body.read ?? {}) as Record<string, unknown>;
+    const count = (key: string) => (typeof read[key] === "number" ? (read[key] as number) : 0);
+    return {
+      ok: true,
+      filename: String(body.filename ?? file.name),
+      text: String(body.text ?? ""),
+      read: {
+        experience: count("experience"),
+        education: count("education"),
+        skills: count("skills"),
+      },
+      parsed: (body.parsed as Record<string, unknown> | null) ?? null,
+    };
+  } catch {
+    return { ok: false, error: "Could not reach the server. Try again in a moment." };
+  }
+}
 
 export const getResumeRecord = (token: string) =>
   call<{ profile: ResumeCareerProfile | null }>(token, "/v1/career-record");
@@ -217,6 +274,11 @@ export type ResumeReview = {
     route: "readiness" | "practice" | "interview" | "profile";
     why: string;
   };
+  /**
+   * Only on a resume aimed at no role: directions their own record points
+   * at, from our catalogue. Doors, never verdicts.
+   */
+  roleIdeas?: Array<{ role: string; why: string }>;
   coverage: { covered: string[]; missing: string[] };
   /** True when the model was unavailable and the read came from the text. */
   fromRules: boolean;
@@ -225,7 +287,12 @@ export type ResumeReview = {
 /** An honest read of the built resume against the bar for its role. */
 export const reviewResume = (
   token: string,
-  body: { resume: ResumeData; targetRole?: string; jobDescription?: string },
+  body: {
+    resume: ResumeData;
+    targetRole?: string;
+    jobDescription?: string;
+    general?: boolean;
+  },
 ) =>
   call<{ review: ResumeReview; targetRole: string; keywords: string[] }>(
     token,

@@ -11,6 +11,7 @@ import { whenLabel } from "@/lib/when";
 import {
   downloadResumeDocx,
   generateResume,
+  readResumeUpload,
   refineResume,
   resumeCompleteness,
   resumeGapCheck,
@@ -234,11 +235,51 @@ function GapModal({
 
 // How the review's verdict reads on screen, and where its one next step
 // leads. Plain words, no score - a resume is not a number.
-const STANDING_LABEL: Record<"early" | "competitive" | "strong", string> = {
+type Standing = "early" | "competitive" | "strong";
+
+const STANDING_LABEL: Record<Standing, string> = {
   early: "This is an honest start, and thin for the bar this role sets.",
   competitive: "This holds up against what this role usually asks for.",
   strong: "This is strong for the role - it carries real evidence.",
 };
+
+// A resume aimed at no role has no role's bar to be measured against, and
+// saying "this role" over a resume they deliberately left open is us
+// forgetting what they asked for.
+const STANDING_LABEL_GENERAL: Record<Standing, string> = {
+  early: "This is an honest start, and thin for what most hiring reads like.",
+  competitive: "This holds up in front of most people who would read it.",
+  strong: "This is strong - it carries real evidence, whoever reads it.",
+};
+
+const standingLabel = (level: Standing, targetRole: string): string =>
+  targetRole ? STANDING_LABEL[level] : STANDING_LABEL_GENERAL[level];
+
+// Why this rather than the free builder everyone else uses. Three claims,
+// each of which the product actually keeps.
+/** The three ways this builder is used, said out loud as equals. */
+type Making = "role" | "general" | "improve";
+
+const MAKING_OPTIONS: Array<{ id: Making; label: string }> = [
+  { id: "general", label: "A general resume - no particular role" },
+  { id: "role", label: "A resume for a particular role" },
+  { id: "improve", label: "Improve a resume I already have" },
+];
+
+const WHY_THIS_ONE = [
+  {
+    head: "Every word on it is yours",
+    body: "We write only what you have told us and done - no borrowed numbers, no employer you never worked for. Nothing on this page can catch you out in an interview, because all of it is true.",
+  },
+  {
+    head: "We tell you the truth about it",
+    body: "Most builders hand you a file and wish you luck. We read yours back the way a recruiter would: what it already does well, what is still thin, and the one thing worth doing about it.",
+  },
+  {
+    head: "We stay with you until it is ready",
+    body: "The job you want may be a few steps away. Everything you do here - a practice interview, an assessment, real work - goes into your record, so your next resume is stronger and closer to that job.",
+  },
+];
 
 const NEXT_STEP_HREF: Record<string, string> = {
   readiness: "/readiness",
@@ -551,13 +592,25 @@ const SAMPLE_RESUME: ResumeData = {
     email: "aarav.sharma@example.com",
   },
   summary:
-    "Customer-focused commerce graduate with hands-on practice in order handling, billing queries and everyday problem solving. Comfortable working shifts, quick to pick up new tools, and calm with difficult customers.",
+    "Customer-focused commerce graduate with hands-on practice in order handling, billing queries and everyday problem solving. Comfortable working shifts, quick to pick up new tools, and calm with difficult customers. Looking for work where the day is measured in problems closed rather than hours sat.",
   skills: [
     {
       group: "Customer service",
-      items: ["Clear phone manner", "Patient listening", "Complaint handling"],
+      items: [
+        "Clear phone manner",
+        "Patient listening",
+        "Complaint handling",
+        "Escalation judgement",
+      ],
     },
-    { group: "Tools", items: ["Google Sheets", "Billing systems", "Hindi typing"] },
+    {
+      group: "Tools",
+      items: ["Google Sheets", "Billing systems", "Tally", "Hindi typing"],
+    },
+    {
+      group: "Ways of working",
+      items: ["Shift work", "Counter ownership", "Working to daily targets"],
+    },
   ],
   experienceHeading: "Experience",
   experience: [
@@ -566,15 +619,28 @@ const SAMPLE_RESUME: ResumeData = {
       organisation: "Sharma General Stores",
       period: "2023 - 2024",
       bullets: [
-        "Handled daily billing and customer questions at the counter",
-        "Kept stock lists up to date in Google Sheets",
+        "Handled daily billing and customer questions at the counter, about 60 customers a day",
+        "Kept stock lists up to date in Google Sheets so reorders went out before shelves emptied",
+        "Settled billing disputes at the counter without calling the owner in",
+      ],
+    },
+    {
+      title: "Customer support intern",
+      organisation: "Zippy Logistics",
+      period: "Jun 2023 - Dec 2023",
+      bullets: [
+        "Answered 40 delivery queries a day across calls and email",
+        "Logged repeat complaints in a shared tracker so the team could see which routes caused them",
+        "Covered evening shifts through the festive peak without a missed handover",
       ],
     },
     {
       title: "Volunteer, registration desk",
       organisation: "College fest",
       period: "2023",
-      bullets: ["Managed sign-ins and sorted out schedule clashes on the day"],
+      bullets: [
+        "Managed sign-ins for 200 students and sorted out schedule clashes on the day",
+      ],
     },
   ],
   education: [
@@ -582,16 +648,226 @@ const SAMPLE_RESUME: ResumeData = {
       qualification: "B.Com",
       institution: "Osmania University",
       period: "2021 - 2024",
-      detail: "",
+      detail: "72%, specialised in accounting and taxation",
+    },
+    {
+      qualification: "Class XII, Commerce",
+      institution: "Kendriya Vidyalaya, Hyderabad",
+      period: "2021",
+      detail: "78%",
     },
   ],
   languages: ["English", "Hindi", "Telugu"],
-  activities: ["College cricket team", "Peer study group"],
+  activities: [
+    "College cricket team, two seasons",
+    "Peer study group - ran weekly accounts revision for eight classmates",
+    "NSS volunteer at two blood donation drives",
+  ],
   keywordsUsed: [],
 };
 
 // An A4-proportioned thumbnail: the container crops a full page's worth of
 // the one-third-scale sheet, so each card reads as a complete resume page.
+/**
+ * What the parser found in the file they handed over, said plainly. Somebody
+ * who uploads a resume and is told only "uploaded" has no way of knowing
+ * whether we could read it at all - and a resume nobody could read is worth
+ * saying out loud before they build on it.
+ */
+function uploadRead(read: { experience: number; education: number; skills: number }): string {
+  const parts: string[] = [];
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+  if (read.experience) parts.push(plural(read.experience, "role", "roles"));
+  if (read.education) parts.push(plural(read.education, "qualification", "qualifications"));
+  if (read.skills) parts.push(plural(read.skills, "skill", "skills"));
+  if (parts.length === 0) {
+    return "We read the file but could not pick out sections from it - we will work from its words as they are.";
+  }
+  const last = parts.pop() as string;
+  return `We read ${parts.length ? `${parts.join(", ")} and ${last}` : last} from it.`;
+}
+
+// A4 at 96dpi: 210mm x 297mm. Everything on the page is laid out in these
+// units, so what is on the screen is the page that comes out of the printer.
+const A4_WIDTH = "210mm";
+const A4_PX = 794; // 210mm at 96dpi, for working out how far to scale it
+const A4_PAGE_PX = 297 * (96 / 25.4); // one page, top to bottom
+const PAGE_GUTTER_PX = 24; // the gap between two sheets on a desk
+
+/**
+ * Holds an A4 page inside whatever space is going, scaled to fit the width.
+ * The page keeps its real dimensions - only the viewing scale changes - so
+ * line breaks and page breaks are the ones the paper will have.
+ */
+function Page({
+  id,
+  className,
+  inner,
+  children,
+  onPages,
+  watermark,
+}: {
+  id?: string;
+  className: string;
+  /** Padding and font for the content inside the margins. */
+  inner: string;
+  children: React.ReactNode;
+  /** Told how many whole A4 pages this came to. */
+  onPages?: (pages: number) => void;
+  /** A word stamped across the middle of every sheet - "Draft", "Example". */
+  watermark?: string;
+}) {
+  const content = useRef<HTMLDivElement | null>(null);
+  const [pages, setPages] = useState(1);
+  // Held in a ref so a new callback identity cannot restart the observer.
+  const onPagesRef = useRef(onPages);
+  useEffect(() => {
+    onPagesRef.current = onPages;
+  }, [onPages]);
+
+  useEffect(() => {
+    const el = content.current;
+    if (!el) return;
+
+    // Sheets of paper, not a roll. Each section is measured against the foot
+    // of the page it lands on, and anything that would straddle the fold is
+    // pushed down to the top of the next sheet - which is what a printer
+    // does, and what a person looking at their own resume expects to see.
+    const fit = () => {
+      const unit = A4_PAGE_PX + PAGE_GUTTER_PX;
+      const pad = parseFloat(getComputedStyle(el).paddingTop) || 0;
+      const flows = el.querySelectorAll<HTMLElement>("[data-flow]");
+      const columns: HTMLElement[] = flows.length ? [...flows] : [el];
+
+      for (const pushed of el.querySelectorAll<HTMLElement>("[data-pushed]")) {
+        pushed.style.paddingTop = "";
+        delete pushed.dataset.pushed;
+      }
+
+      // The preview shows the page zoomed to fit, and a zoomed element
+      // reports zoomed rectangles - so every measurement is converted back
+      // to the page's own units first. Comparing visual pixels against a
+      // page height in layout pixels is how a fold ends up in the wrong
+      // place, or nowhere at all.
+      const zoom = el.getBoundingClientRect().width / el.offsetWidth || 1;
+      const top = el.getBoundingClientRect().top / zoom;
+      const room = A4_PAGE_PX - pad * 2;
+
+      // Walk down until something small enough to move is found. A whole
+      // section is moved when it fits on a page; when it does not - a long
+      // employment history always outgrows one - the entries inside it are
+      // moved instead, so the fold falls between two jobs rather than
+      // through the middle of one.
+      const clear = (parent: HTMLElement, depth: number): void => {
+        for (const child of [...parent.children] as HTMLElement[]) {
+          const rect = child.getBoundingClientRect();
+          const box = {
+            top: rect.top / zoom,
+            bottom: rect.bottom / zoom,
+            height: rect.height / zoom,
+          };
+          const from = box.top - top;
+          const page = Math.floor(from / unit);
+          const foot = page * unit + A4_PAGE_PX - pad;
+          if (box.bottom - top <= foot) continue;
+          // Small enough to move whole - a heading with two lines under it,
+          // one job, the languages block - so move it. Anything bigger gets
+          // broken inside instead: pushing a whole employment history to the
+          // next page would leave half of this one blank, which is not what
+          // a printer does and not what anyone wants to look at.
+          const movable = box.height <= Math.min(room, A4_PAGE_PX * 0.35);
+          if (movable || child.children.length === 0 || depth >= 3) {
+            if (box.height > room) continue;
+            child.style.paddingTop = `${(page + 1) * unit + pad - from}px`;
+            child.dataset.pushed = "true";
+          } else {
+            clear(child, depth + 1);
+          }
+        }
+      };
+
+      for (const column of columns) clear(column, 0);
+
+      const deepest = el.getBoundingClientRect().bottom / zoom - top;
+      const count = Math.max(1, Math.ceil((deepest + pad) / unit - 0.01));
+      setPages(count);
+      onPagesRef.current?.(count);
+    };
+
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      id={id}
+      className="relative print:block"
+      style={{
+        width: A4_WIDTH,
+        height: `${pages * A4_PAGE_PX + (pages - 1) * PAGE_GUTTER_PX}px`,
+      }}
+    >
+      {/* One white rectangle per sheet, with real space between them, so two
+          pages read as two pages. Print drops them: the paper is the paper. */}
+      <div aria-hidden className="absolute inset-0 print:hidden">
+        {Array.from({ length: pages }, (_, i) => (
+          <div
+            key={i}
+            className={`${className} grid place-items-center overflow-hidden`}
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: `${i * (A4_PAGE_PX + PAGE_GUTTER_PX)}px`,
+              height: `${A4_PAGE_PX}px`,
+            }}
+          >
+            {watermark ? (
+              <span className="select-none text-[6rem] font-bold uppercase tracking-[0.3em] text-[#111827]/[0.06]">
+                {watermark}
+              </span>
+            ) : null}
+          </div>
+        ))}
+      </div>
+      <div ref={content} className={`relative ${inner}`}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function A4Frame({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const box = useRef<HTMLDivElement | null>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const fit = () => setScale(Math.min(1, el.clientWidth / A4_PX));
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={box} className={className}>
+      {/* zoom rather than transform: a transform leaves the layout at full
+          size, and there is then nothing sane to scroll. */}
+      <div style={{ zoom: scale }}>{children}</div>
+    </div>
+  );
+}
+
 function MiniPreview({
   id,
   resume,
@@ -606,9 +882,9 @@ function MiniPreview({
       aria-hidden="true"
       className="pointer-events-none aspect-[1/1.414] select-none overflow-hidden rounded-md border border-[#cbd2da] bg-white shadow-sm"
     >
-      <div className="w-[300%] origin-top-left scale-[0.3334]">
+      <A4Frame>
         <ResumeSheet resume={resume} template={id} roleLine={roleLine} mini />
-      </div>
+      </A4Frame>
     </div>
   );
 }
@@ -702,48 +978,53 @@ type SheetStyles = {
 };
 
 const SHEET_STYLES: Record<ResumeTemplate, SheetStyles> = {
+  // Sizes are in points, because the page is now a real A4 page and points
+  // are what a printed resume is set in. They are also what makes an
+  // ordinary record fill the sheet: type meant for a fluid column left a
+  // third of the paper white, and white space at the foot of a resume reads
+  // as a person with little to say.
   classic: {
-    pad: "p-6 sm:p-10",
+    pad: "p-[15mm]",
     font: "font-serif",
     headerLayout: "split",
-    name: "text-[1.65rem] font-bold tracking-tight text-[#111827]",
-    contact: "text-[0.78rem] leading-relaxed",
-    section: "mt-5",
-    heading: "border-b-2 border-[#111827] pb-1 text-[0.95rem] font-bold",
-    body: "text-[0.88rem] leading-relaxed",
-    item: "text-[0.86rem] leading-relaxed",
-    itemTitle: "text-[0.9rem] font-semibold",
-    stack: "grid gap-3",
+    name: "text-[24pt] font-bold tracking-tight text-[#111827]",
+    contact: "text-[9.5pt] leading-relaxed",
+    section: "mt-[6mm]",
+    heading: "border-b-2 border-[#111827] pb-1 text-[12pt] font-bold",
+    body: "text-[10.5pt] leading-[1.45]",
+    item: "text-[10.5pt] leading-[1.45]",
+    itemTitle: "text-[11pt] font-semibold",
+    stack: "grid gap-[4mm]",
     dateRight: true,
   },
   compact: {
-    pad: "p-5 sm:p-8",
+    pad: "p-[14mm]",
     font: "font-sans",
     headerLayout: "stack",
-    name: "text-2xl font-bold tracking-tight text-[#111827]",
-    contact: "mt-0.5 text-[0.75rem]",
-    section: "mt-3.5",
+    name: "text-[23pt] font-bold tracking-tight text-[#111827]",
+    contact: "mt-1 text-[9.5pt]",
+    section: "mt-[6mm]",
     heading:
-      "border-b border-[#9ca3af] pb-0.5 text-[0.66rem] font-bold uppercase tracking-[0.14em]",
-    body: "text-[0.82rem] leading-snug",
-    item: "text-[0.8rem] leading-snug",
-    itemTitle: "text-[0.84rem] font-semibold",
-    stack: "grid gap-2",
+      "border-b border-[#9ca3af] pb-0.5 text-[9pt] font-bold uppercase tracking-[0.14em]",
+    body: "text-[10.5pt] leading-[1.45]",
+    item: "text-[10.5pt] leading-[1.45]",
+    itemTitle: "text-[11pt] font-semibold",
+    stack: "grid gap-[3.5mm]",
     dateRight: false,
   },
   sidebar: {
-    pad: "p-6 sm:p-9",
+    pad: "p-[15mm]",
     font: "font-sans",
     headerLayout: "stack",
-    name: "text-[1.9rem] font-bold uppercase leading-[1.1] tracking-[0.02em] text-[#111827]",
-    contact: "mt-1 text-[0.8rem]",
-    section: "mt-5",
+    name: "text-[26pt] font-bold uppercase leading-[1.1] tracking-[0.02em] text-[#111827]",
+    contact: "mt-1 text-[10pt]",
+    section: "mt-[6.5mm]",
     heading:
-      "text-[0.86rem] font-bold uppercase tracking-[0.1em] after:mt-1 after:block after:h-[3px] after:w-8 after:bg-[#111827]",
-    body: "text-[0.84rem] leading-relaxed",
-    item: "text-[0.82rem] leading-relaxed",
-    itemTitle: "text-[0.88rem] font-semibold",
-    stack: "grid gap-3.5",
+      "text-[11pt] font-bold uppercase tracking-[0.1em] after:mt-1 after:block after:h-[3px] after:w-8 after:bg-[#111827]",
+    body: "text-[10.5pt] leading-[1.5]",
+    item: "text-[10.5pt] leading-[1.5]",
+    itemTitle: "text-[11pt] font-semibold",
+    stack: "grid gap-[4mm]",
     dateRight: true,
   },
 };
@@ -809,6 +1090,8 @@ function ResumeSheet({
   template,
   roleLine,
   mini = false,
+  onPages,
+  watermark,
 }: {
   resume: ResumeData;
   template: ResumeTemplate;
@@ -816,6 +1099,10 @@ function ResumeSheet({
   roleLine?: string;
   /** Scaled-down picker preview: no print id, the card supplies the frame. */
   mini?: boolean;
+  /** Told how many A4 pages the finished sheet came to. */
+  onPages?: (pages: number) => void;
+  /** Stamped across the middle of every sheet; never printed. */
+  watermark?: string;
 }) {
   const t = SHEET_STYLES[template];
 
@@ -904,9 +1191,14 @@ function ResumeSheet({
     </Section>
   );
 
-  const sheetClass = `break-words bg-white text-[#111827] ${t.font} ${
+  // A4, in millimetres, because that is what it is. The page is 210mm wide
+  // and at least one 297mm page tall; content longer than that rolls onto a
+  // second page rather than stretching the first, and a hairline is drawn
+  // where each page ends so nobody is surprised by page two at the printer.
+  const paperClass = `bg-white ${
     mini ? "" : "rounded-xl border border-slate-200 shadow-sm"
-  } ${t.pad}`;
+  }`;
+  const inkClass = `break-words text-[#111827] ${t.font} ${t.pad}`;
 
   if (template === "sidebar") {
     const info = (resume.header.city || resume.header.email) && (
@@ -922,7 +1214,13 @@ function ResumeSheet({
       </Section>
     );
     return (
-      <div id={mini ? undefined : "resume-sheet"} className={sheetClass}>
+      <Page
+        id={mini ? undefined : "resume-sheet"}
+        className={paperClass}
+        inner={inkClass}
+        onPages={onPages}
+        watermark={watermark}
+      >
         <h2 className={t.name}>{resume.header.name}</h2>
         {roleLine && (
           <p className={`${t.contact} text-[#6b7280]`}>{roleLine}</p>
@@ -932,26 +1230,38 @@ function ResumeSheet({
         {/* min-w-0 lets the narrow column shrink, and overflow-wrap breaks a
             long email or link instead of letting it cross the divider. */}
         <div className="mt-5 grid gap-x-6 gap-y-1 border-t border-[#d1d5db] pt-4 sm:grid-cols-[10rem_1fr]">
-          <div className="min-w-0 border-[#e5e7eb] [overflow-wrap:anywhere] sm:border-r sm:pr-5">
+          <div
+            data-flow
+            className="min-w-0 border-[#e5e7eb] [overflow-wrap:anywhere] sm:border-r sm:pr-5"
+          >
             {info}
             {skills}
             {languages}
           </div>
           {/* A hairline between sections, as the reference layout has - the
               first section needs none, so only later siblings carry it. */}
-          <div className="min-w-0 [&>section+section]:border-t [&>section+section]:border-[#e5e7eb] [&>section+section]:pt-4">
+          <div
+            data-flow
+            className="min-w-0 [&>section+section]:border-t [&>section+section]:border-[#e5e7eb] [&>section+section]:pt-4"
+          >
             {profile}
             {experience}
             {education}
             {activities}
           </div>
         </div>
-      </div>
+      </Page>
     );
   }
 
   return (
-    <div id={mini ? undefined : "resume-sheet"} className={sheetClass}>
+    <Page
+      id={mini ? undefined : "resume-sheet"}
+      className={paperClass}
+      inner={inkClass}
+      onPages={onPages}
+      watermark={watermark}
+    >
       {t.headerLayout === "split" ? (
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-1 border-b border-[#d1d5db] pb-3">
           <h2 className={t.name}>{resume.header.name}</h2>
@@ -981,7 +1291,7 @@ function ResumeSheet({
       {education}
       {languages}
       {activities}
-    </div>
+    </Page>
   );
 }
 
@@ -1013,9 +1323,44 @@ export function ResumeBuilder({
   })();
   const lockedRole = target?.role ?? null;
 
-  const [customMode, setCustomMode] = useState(!lockedRole);
-  const [roleInput, setRoleInput] = useState("");
+  // Somebody who chose a direction in Discovery has already told us they
+  // are aiming at a role, so theirs opens on that.
+  const [making, setMaking] = useState<Making>(lockedRole ? "role" : "general");
+  const [showJd, setShowJd] = useState(false);
+  const [roleInput, setRoleInput] = useState(lockedRole?.title ?? "");
   const [jdInput, setJdInput] = useState("");
+  // Aimed only when they picked a role and actually named one - an improved
+  // resume may carry a role too, which is why this reads the field and not
+  // just the dropdown.
+  const targeted = making === "role" || (making === "improve" && Boolean(roleInput.trim()));
+  const general = !targeted;
+  const fileRef = useRef<HTMLInputElement | null>(null);
+
+  // Changing what we are making clears what belonged to the old answer, so
+  // an abandoned upload cannot ride along with a build that never asked for
+  // it.
+  function chooseMaking(next: Making) {
+    setMaking(next);
+    setError(null);
+    if (next !== "improve") setUpload(null);
+    if (next === "general") {
+      setRoleInput("");
+      setJdInput("");
+      setShowJd(false);
+    }
+    if (next === "role" && !roleInput.trim() && lockedRole) setRoleInput(lockedRole.title);
+  }
+
+  const [upload, setUpload] = useState<
+    | {
+        filename: string;
+        text: string;
+        read: { experience: number; education: number; skills: number };
+        parsed: Record<string, unknown> | null;
+      }
+    | null
+  >(null);
+  const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState<null | "checking" | "building">(null);
   const [error, setError] = useState<string | null>(null);
   const [gap, setGap] = useState<GapCheckResult | null>(null);
@@ -1034,6 +1379,9 @@ export function ResumeBuilder({
   // The revision loop: each instruction, what came back, and the resume it
   // replaced - so any change can be put back.
   const [comment, setComment] = useState("");
+  // How many A4 pages the built resume actually comes to, measured from the
+  // page itself rather than guessed from the word count.
+  const [sheetPages, setSheetPages] = useState(1);
   const [revising, setRevising] = useState(false);
   const [revisions, setRevisions] = useState<Revision[]>([]);
   const [exampleIndex, setExampleIndex] = useState(0);
@@ -1073,8 +1421,14 @@ export function ResumeBuilder({
     return token;
   }
 
-  const chosenRole = () =>
-    customMode ? roleInput.trim() : (lockedRole?.title ?? "");
+  const chosenRole = () => (targeted ? roleInput.trim() : "");
+
+  // A general resume has no role to name, so the button cannot wait for one -
+  // but a ticked box with an empty field is a question still open.
+  const readyToBuild =
+    making === "general" ||
+    (making === "role" && Boolean(roleInput.trim())) ||
+    (making === "improve" && upload !== null);
 
   const asText = (key: string) => {
     const value = profile?.preferences?.[key];
@@ -1124,12 +1478,63 @@ export function ResumeBuilder({
   }
 
   // The role line on the preview follows whatever they are aiming at now.
-  const previewRole =
-    (customMode || !lockedRole ? roleInput.trim() : lockedRole.title) ||
-    "The role you are aiming at";
+  // The posting, offered wherever a role has been named. Behind a line of
+  // its own: most people do not have one to hand, and an empty three-row box
+  // on every visit pushes the build button off a laptop screen.
+  const jobPostingField = showJd || jdInput ? (
+    <label className="block">
+      <span className="text-[0.78rem] font-semibold text-slate-800">
+        Job posting
+      </span>
+      <span className="block text-[0.7rem] text-slate-400">
+        Paste it and the resume speaks its language.
+      </span>
+      <textarea
+        rows={3}
+        value={jdInput}
+        onChange={(e) => setJdInput(e.target.value)}
+        autoFocus
+        className="mt-1 w-full resize-y rounded-lg border border-slate-300 bg-surface px-3 py-2 text-[0.85rem] outline-none focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/20"
+      />
+    </label>
+  ) : (
+    <button
+      type="button"
+      onClick={() => setShowJd(true)}
+      className="inline-flex min-h-11 cursor-pointer items-center text-[0.78rem] font-semibold text-slate-600 underline underline-offset-2 transition-colors hover:text-brand-ink"
+    >
+      Paste the job posting (optional)
+    </button>
+  );
+
+  const previewRole = targeted
+    ? roleInput.trim() || "The role you are aiming at"
+    : "Written for whoever reads it";
+
+  async function readExisting(file: File) {
+    setError(null);
+    setUploading(true);
+    const token = await withToken();
+    if (!token) {
+      setUploading(false);
+      return;
+    }
+    const read = await readResumeUpload(token, file);
+    setUploading(false);
+    if (!read.ok) {
+      setError(read.error);
+      return;
+    }
+    setUpload({
+      filename: read.filename,
+      text: read.text,
+      read: read.read,
+      parsed: read.parsed,
+    });
+  }
 
   function begin() {
-    if (!chosenRole()) return;
+    if (!readyToBuild) return;
     setError(null);
     // The record has to hold something true before a resume can be written -
     // but that ask belongs here, at the moment of building, not as a gate on
@@ -1141,17 +1546,30 @@ export function ResumeBuilder({
     void runBuild();
   }
 
+  /**
+   * What this build is, in one place. Every path that builds - straight
+   * through, after the essentials, after the gap questions - sends this.
+   * Assembling it twice is how a general resume once arrived at the server
+   * as a resume with no role and no explanation, and was refused.
+   */
+  function buildBody() {
+    return {
+      targetRole: chosenRole(),
+      ...(general ? { general: true } : {}),
+      ...(upload ? { existingResume: upload.text } : {}),
+      ...(upload?.parsed ? { existingParsed: upload.parsed } : {}),
+      ...(targeted && jdInput.trim() ? { jobDescription: jdInput.trim() } : {}),
+    };
+  }
+
   async function runBuild() {
     const targetRole = chosenRole();
-    if (!targetRole) return;
+    if (!targetRole && !general) return;
     setError(null);
     setBusy("checking");
     const token = await withToken();
     if (!token) return;
-    const body = {
-      targetRole,
-      ...(customMode && jdInput.trim() ? { jobDescription: jdInput.trim() } : {}),
-    };
+    const body = buildBody();
     const check = await resumeGapCheck(token, body);
     if (!check) {
       setBusy(null);
@@ -1162,8 +1580,13 @@ export function ResumeBuilder({
       family: "decision",
       event: "resume_target_confirmed",
       module: "resume",
-      target: targetRole,
-      meta: { locked: !customMode, gaps: check.missing.length },
+      target: targetRole || "no particular role",
+      meta: {
+        locked: targeted && roleInput.trim() === lockedRole?.title,
+        gaps: check.missing.length,
+        general,
+        fromUpload: Boolean(upload),
+      },
     });
     if (check.missing.length > 0) {
       setBusy(null);
@@ -1175,7 +1598,12 @@ export function ResumeBuilder({
 
   async function build(
     token: string,
-    body: { targetRole: string; jobDescription?: string },
+    body: {
+      targetRole: string;
+      jobDescription?: string;
+      general?: boolean;
+      existingResume?: string;
+    },
   ) {
     setBusy("building");
     // The chosen template rides along so the ledger entry remembers the look
@@ -1332,7 +1760,8 @@ export function ResumeBuilder({
     const read = await reviewResume(token, {
       resume,
       targetRole,
-      ...(customMode && jdInput.trim() ? { jobDescription: jdInput.trim() } : {}),
+      ...(general ? { general: true } : {}),
+      ...(targeted && jdInput.trim() ? { jobDescription: jdInput.trim() } : {}),
     });
     setReviewing(false);
     if (!read) return null;
@@ -1381,10 +1810,7 @@ export function ResumeBuilder({
       return;
     }
     setGap(null);
-    await build(token, {
-      targetRole: gap.targetRole,
-      ...(customMode && jdInput.trim() ? { jobDescription: jdInput.trim() } : {}),
-    });
+    await build(token, buildBody());
   }
 
   async function downloadWord() {
@@ -1538,7 +1964,7 @@ export function ResumeBuilder({
                     </summary>
                     <div className="mt-2 grid gap-2">
                       <p className="text-[0.82rem] font-semibold text-brand-ink">
-                        {STANDING_LABEL[entry.review.standing.level]}
+                        {standingLabel(entry.review.standing.level, entry.role === "No particular role" ? "" : entry.role)}
                       </p>
                       <p className="text-[0.8rem] leading-relaxed text-slate-600">
                         {entry.review.standing.why}
@@ -1591,6 +2017,9 @@ export function ResumeBuilder({
   // worth doing next.
   if (result && showFeedback) {
     const step = review?.nextStep;
+    // The nearest published role to what this person has actually done. Only
+    // ever present on a resume with no role of its own.
+    const closestRole = review?.roleIdeas?.[0] ?? null;
     return (
       <main className="mx-auto w-full max-w-2xl px-4 pb-16 pt-6 sm:px-6">
         <header>
@@ -1598,12 +2027,16 @@ export function ResumeBuilder({
             Honest feedback
           </p>
           <h1 className="mt-1 text-2xl font-bold text-brand-ink">
-            Your {result.targetRole} resume is downloaded
+            {result.targetRole
+              ? `Your ${result.targetRole} resume is downloaded`
+              : "Your resume is downloaded"}
           </h1>
           <p className="mt-2 text-[0.88rem] leading-relaxed text-slate-600">
             {reviewing
               ? "Someone is reading it now, the way a recruiter would - one moment."
-              : "Here is how it reads against what this role usually asks for - said plainly, because you can still do something about it."}
+              : result.targetRole
+                ? "Here is how it reads against what this role usually asks for - said plainly, because you can still do something about it."
+                : "Here is how it reads to someone hiring - said plainly, because you can still do something about it."}
           </p>
         </header>
 
@@ -1631,7 +2064,7 @@ export function ResumeBuilder({
           ) : (
             <>
               <p className="text-[1rem] font-semibold leading-relaxed text-brand-ink">
-                {STANDING_LABEL[review.standing.level]}
+                {standingLabel(review.standing.level, result.targetRole)}
               </p>
               <p className="mt-1.5 text-[0.88rem] leading-relaxed text-slate-600">
                 {review.standing.why}
@@ -1683,21 +2116,133 @@ export function ResumeBuilder({
           )}
         </section>
 
+        {/* No role was named, so the read looked at what they have actually
+            done and names a couple of directions it points at. Curiosity, not
+            a verdict: a resume is not enough to recommend a career on, and
+            saying so is what makes the rest of this worth trusting. */}
+        {review && (review.roleIdeas?.length ?? 0) > 0 && (
+          <section className="mt-4 rounded-2xl border border-slate-200 bg-surface p-5">
+            <p className="text-[0.7rem] font-bold uppercase tracking-wide text-brand-violet-deep">
+              Where this record points
+            </p>
+            <p className="mt-1.5 text-[0.85rem] leading-relaxed text-slate-600">
+              You did not aim this at a role, so we read what you have already
+              done. These are the directions it leans towards - not a verdict
+              on you.
+            </p>
+            <ul className="mt-3 grid gap-2.5">
+              {review.roleIdeas?.map((idea) => (
+                <li key={idea.role} className="text-[0.86rem] leading-relaxed">
+                  <span className="font-semibold text-brand-ink">{idea.role}</span>{" "}
+                  <span className="text-slate-600">{idea.why}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-[0.82rem] leading-relaxed text-slate-500">
+              A real recommendation comes from what you choose, not from what a
+              document happens to mention -{" "}
+              <Link
+                href="/discover"
+                className="font-semibold text-brand-violet-deep underline underline-offset-2"
+              >
+                that is what Discovery is for
+              </Link>
+              .
+            </p>
+          </section>
+        )}
+
         {review && (
           <section className="mt-4 rounded-2xl border border-brand-violet/30 bg-violet-50 p-5">
             <p className="text-[0.7rem] font-bold uppercase tracking-wide text-brand-violet-deep">
               What would move it most
             </p>
-            <p className="mt-1.5 text-[0.88rem] leading-relaxed text-slate-700">
-              {step?.why ??
-                "The surest way to strengthen this resume is to prove the skills on it."}
-            </p>
-            <Link
-              href={NEXT_STEP_HREF[step?.route ?? "readiness"] ?? "/readiness"}
-              className="mt-3 inline-flex min-h-12 items-center rounded-full bg-brand-teal-deep px-6 text-sm font-bold text-white transition-colors hover:bg-brand-teal"
-            >
-              {NEXT_STEP_LABEL[step?.route ?? "readiness"] ?? "Prove these skills →"}
-            </Link>
+            {/* A resume with no role has a different best next thing: not a
+                generic "prove your skills", but the role their own record
+                already leans towards, and the check that would let their
+                next resume say they were scored on it rather than that they
+                can do it. */}
+            {!result.targetRole && closestRole ? (
+              <>
+                <p className="mt-1.5 text-[0.88rem] leading-relaxed text-slate-700">
+                  Of the roles we publish,{" "}
+                  <strong className="font-semibold text-brand-ink">{closestRole.role}</strong>{" "}
+                  is the closest to what you have already done. {closestRole.why}
+                </p>
+                <p className="mt-2 text-[0.88rem] leading-relaxed text-slate-700">
+                  A readiness check shows where you actually stand against what
+                  that role asks for, and names what to work on. Nothing goes on
+                  the resume - it tells you what would make the next version of
+                  it stronger.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2.5">
+                  <Link
+                    href="/readiness"
+                    className="inline-flex min-h-12 items-center rounded-full bg-brand-teal-deep px-6 text-sm font-bold text-white transition-colors hover:bg-brand-teal"
+                  >
+                    Check my readiness for {closestRole.role} →
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMaking("role");
+                      setRoleInput(closestRole.role);
+                      setShowFeedback(false);
+                      setResult(null);
+                      setReview(null);
+                      window.scrollTo({ top: 0 });
+                    }}
+                    className="inline-flex min-h-12 cursor-pointer items-center rounded-full border border-slate-300 px-5 text-sm font-bold text-slate-700 transition-colors hover:border-slate-400 hover:text-brand-ink"
+                  >
+                    Or build this one for {closestRole.role}
+                  </button>
+                </div>
+              </>
+            ) : !result.targetRole ? (
+              // No role named, and nothing we publish is close to what they
+              // have done. Naming one anyway would be the invented match this
+              // whole product refuses to make.
+              <>
+                <p className="mt-1.5 text-[0.88rem] leading-relaxed text-slate-700">
+                  {step?.why ??
+                    "The surest way to strengthen this resume is to make what you have already done more specific."}
+                </p>
+                <p className="mt-2 text-[0.88rem] leading-relaxed text-slate-700">
+                  We could not match this to one of the roles we publish today -
+                  what you have done sits outside them, and pointing you at a
+                  near-enough role would help nobody. Discovery works from what
+                  you choose rather than from what a document mentions, and it
+                  is where a direction worth aiming at comes from.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2.5">
+                  <Link
+                    href="/discover"
+                    className="inline-flex min-h-12 items-center rounded-full bg-brand-teal-deep px-6 text-sm font-bold text-white transition-colors hover:bg-brand-teal"
+                  >
+                    Find the role that fits →
+                  </Link>
+                  <Link
+                    href={NEXT_STEP_HREF[step?.route ?? "practice"] ?? "/practice"}
+                    className="inline-flex min-h-12 items-center rounded-full border border-slate-300 px-5 text-sm font-bold text-slate-700 transition-colors hover:border-slate-400 hover:text-brand-ink"
+                  >
+                    {NEXT_STEP_LABEL[step?.route ?? "practice"] ?? "Do the real work →"}
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="mt-1.5 text-[0.88rem] leading-relaxed text-slate-700">
+                  {step?.why ??
+                    "The surest way to strengthen this resume is to prove the skills on it."}
+                </p>
+                <Link
+                  href={NEXT_STEP_HREF[step?.route ?? "readiness"] ?? "/readiness"}
+                  className="mt-3 inline-flex min-h-12 items-center rounded-full bg-brand-teal-deep px-6 text-sm font-bold text-white transition-colors hover:bg-brand-teal"
+                >
+                  {NEXT_STEP_LABEL[step?.route ?? "readiness"] ?? "Prove these skills →"}
+                </Link>
+              </>
+            )}
           </section>
         )}
 
@@ -1718,14 +2263,27 @@ export function ResumeBuilder({
         // The workbench holds itself to one screen on a laptop - the rail
         // scrolls inside rather than the whole page growing. The finished
         // resume is a document, so it reads in a single narrow column.
-        result ? "max-w-5xl pb-16" : "max-w-[56rem] pb-10"
+        result ? "max-w-5xl pb-16" : "max-w-[72rem] pb-10"
       }`}
     >
       {/* Print shows the resume sheet alone: no app chrome, no controls. */}
-      <style>{`@media print {
+      <style>{`@page { size: A4; margin: 0; }
+      @media print {
         body * { visibility: hidden; }
         #resume-sheet, #resume-sheet * { visibility: visible; }
-        #resume-sheet { position: absolute; inset: 0; border: 0; box-shadow: none; border-radius: 0; padding: 0; }
+        #resume-sheet {
+          position: absolute; inset: 0; margin: 0;
+          width: 210mm; min-height: 297mm; height: auto;
+          background: #ffffff; color: #111827;
+          border: 0; box-shadow: none; border-radius: 0;
+        }
+        /* A heading marooned at the foot of a page, or two lines of a job
+           split across the fold, is how a good resume reads badly. */
+        #resume-sheet section { break-inside: avoid; }
+        #resume-sheet h3 { break-after: avoid; }
+        /* The screen pushes blocks clear of the fold itself; on paper the
+           printer does it, and the pushes would only leave gaps. */
+        #resume-sheet [data-pushed] { padding-top: 0 !important; }
       }`}</style>
 
       <div className="pt-4 print:hidden">
@@ -1739,13 +2297,35 @@ export function ResumeBuilder({
               Build your resume
             </h1>
             <p className="mt-1.5 max-w-prose text-[0.88rem] leading-relaxed text-slate-600">
-              A resume built to get through the screening software and hold a
-              recruiter&rsquo;s attention - and honest enough that you can
-              stand behind every line of it in the interview.
+              Software reads your resume before a person does, and the person
+              then gives it seconds. We write yours for both: the words the job
+              is screened on, evidence in place of adjectives, and a real number
+              on every line your record can back. What makes it stand out is
+              that all of it is true - and true is what holds up when a
+              recruiter starts asking. We stay with you until it is ready for
+              the job you are aiming at, not just finished.
               {needsEssentials
-                ? " Have a look at the three looks first. We ask about you when you are ready to build."
+                ? " Have a look at the three looks first - we ask about you when you are ready to build."
                 : ""}
             </p>
+
+            {/* The argument, made once. A person who has never written a
+                resume cannot tell a good one from a bad one, so saying what
+                is different here is not marketing - it is the only way they
+                can judge what they are about to spend time on. */}
+            <ul className="mt-3.5 grid gap-2.5 sm:grid-cols-3">
+              {WHY_THIS_ONE.map((proof) => (
+                <li
+                  key={proof.head}
+                  className="rounded-xl border border-slate-200 bg-surface p-3.5"
+                >
+                  <p className="text-[0.85rem] font-bold text-brand-ink">{proof.head}</p>
+                  <p className="mt-1 text-[0.75rem] leading-relaxed text-slate-600">
+                    {proof.body}
+                  </p>
+                </li>
+              ))}
+            </ul>
           </header>
 
           {/* The workbench: everything you can change on the left, the page
@@ -1762,39 +2342,114 @@ export function ResumeBuilder({
                 record above it, the one action stays on screen. */}
             <div className="grid gap-3 lg:min-h-0 lg:grid-rows-[minmax(0,1fr)_auto]">
               <div className="grid content-start gap-3 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
-              {lockedRole && !customMode ? (
-                <section className="rounded-2xl border border-teal-700/30 bg-teal-50 p-4">
-                  <p className="text-[0.66rem] font-bold uppercase tracking-[0.14em] text-teal-700">
-                    From your Discovery
+              {/* One question, in the order most people actually stand in:
+                  a resume by default, aimed at a role only if they say so.
+                  Somebody who chose a direction in Discovery has already
+                  said so, which is why theirs opens ticked. */}
+              <section className="rounded-2xl border border-slate-200 bg-surface p-4">
+                <h2 className="text-[0.95rem] font-semibold text-brand-ink">
+                  What are we building?
+                </h2>
+
+                {/* One question, one control. The three ways to use this are
+                    equals and are named as such - a general resume was the
+                    absence of a tick before, and the upload hid inside a link
+                    doing a second job. */}
+                <select
+                  aria-label="What are we building?"
+                  value={making}
+                  onChange={(e) => chooseMaking(e.target.value as Making)}
+                  className="mt-2.5 min-h-12 w-full cursor-pointer rounded-xl border border-slate-300 bg-surface px-3 text-[0.88rem] font-semibold text-brand-ink outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/30"
+                >
+                  {MAKING_OPTIONS.map((option: { id: Making; label: string }) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+
+                {making === "general" && (
+                  <p className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-[0.76rem] leading-relaxed text-slate-600">
+                    We lead with your strongest evidence rather than a
+                    role&rsquo;s words. Aimed at a role it will always land
+                    harder - and you can build that version from the same
+                    record in two minutes.
                   </p>
-                  <h2 className="mt-1 text-[1.05rem] font-semibold text-brand-ink">
-                    {lockedRole.title}
-                  </h2>
-                  <p className="mt-1 text-[0.8rem] leading-relaxed text-slate-600">
-                    Written in the words employers use for this role, and in
-                    yours.
-                  </p>
-                  {(target?.keywords.length ?? 0) > 0 && (
-                    <p className="mt-2 text-[0.74rem] leading-relaxed text-slate-500">
-                      Words we&rsquo;ll weave in:{" "}
-                      {target?.keywords.slice(0, 4).join(", ")}
-                      {(target?.keywords.length ?? 0) > 4 &&
-                        ` and ${(target?.keywords.length ?? 0) - 4} more`}
-                    </p>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setCustomMode(true)}
-                    className="mt-2 min-h-11 text-[0.78rem] font-semibold text-slate-500 underline underline-offset-2 transition-colors hover:text-slate-800"
-                  >
-                    I&rsquo;m aiming at something else
-                  </button>
-                </section>
-              ) : (
-                <section className="rounded-2xl border border-slate-200 bg-surface p-4">
-                  <h2 className="text-[0.95rem] font-semibold text-brand-ink">
-                    What role is this resume for?
-                  </h2>
+                )}
+
+                {making === "improve" && (
+                  <div className="mt-3">
+                    {upload ? (
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="min-w-0 text-[0.8rem] text-slate-600">
+                            Working from{" "}
+                            <span className="font-semibold text-brand-ink">
+                              {upload.filename}
+                            </span>
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setUpload(null)}
+                            className="min-h-11 cursor-pointer text-[0.78rem] font-semibold text-slate-500 underline underline-offset-2 transition-colors hover:text-slate-800"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        <p className="mt-1 text-[0.72rem] leading-relaxed text-slate-500">
+                          {uploadRead(upload.read)} We keep what you wrote and
+                          work on how it reads - nothing is added that your
+                          resume and your record do not already hold.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <input
+                          ref={fileRef}
+                          type="file"
+                          accept=".pdf,.docx,.doc,.txt,.md"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            e.target.value = "";
+                            if (file) void readExisting(file);
+                          }}
+                        />
+                        <button
+                          type="button"
+                          disabled={uploading}
+                          onClick={() => fileRef.current?.click()}
+                          className="w-full cursor-pointer rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-center transition-colors hover:border-slate-400 disabled:opacity-60"
+                        >
+                          <span className="block text-[0.84rem] font-semibold text-brand-ink">
+                            {uploading
+                              ? "Reading your resume…"
+                              : "Choose your resume or LinkedIn PDF"}
+                          </span>
+                          <span className="mt-1 block text-[0.72rem] text-slate-500">
+                            We read it, keep what you wrote, and say what is missing.
+                          </span>
+                        </button>
+                      </>
+                    )}
+                    {/* An uploaded resume can still be aimed, without a
+                        second trip through the dropdown. */}
+                    <label className="mt-3 block">
+                      <span className="text-[0.78rem] font-semibold text-slate-800">
+                        Aim it at a role (optional)
+                      </span>
+                      <input
+                        value={roleInput}
+                        onChange={(e) => setRoleInput(e.target.value)}
+                        placeholder="Customer Support Executive"
+                        className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-surface px-3 text-[0.86rem] outline-none focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/20"
+                      />
+                    </label>
+                    {roleInput.trim() ? <div className="mt-3">{jobPostingField}</div> : null}
+                  </div>
+                )}
+
+                {making === "role" && (
                   <div className="mt-3 grid gap-3">
                     <label className="block">
                       <span className="text-[0.78rem] font-semibold text-slate-800">
@@ -1812,33 +2467,31 @@ export function ResumeBuilder({
                         placeholder="Customer Support Executive"
                         className="mt-1 w-full rounded-lg border border-slate-300 bg-surface px-3 py-2 text-[0.88rem] outline-none focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/20"
                       />
+                      {lockedRole && roleInput.trim() !== lockedRole.title && (
+                        <button
+                          type="button"
+                          onClick={() => setRoleInput(lockedRole.title)}
+                          className="mt-1.5 min-h-11 cursor-pointer text-[0.74rem] font-semibold text-slate-500 underline underline-offset-2 transition-colors hover:text-slate-800"
+                        >
+                          Use {lockedRole.title}, from your Discovery
+                        </button>
+                      )}
+                      {lockedRole &&
+                        roleInput.trim() === lockedRole.title &&
+                        (target?.keywords.length ?? 0) > 0 && (
+                          <span className="mt-1.5 block text-[0.72rem] leading-relaxed text-slate-500">
+                            Words we&rsquo;ll weave in:{" "}
+                            {target?.keywords.slice(0, 4).join(", ")}
+                            {(target?.keywords.length ?? 0) > 4 &&
+                              ` and ${(target?.keywords.length ?? 0) - 4} more`}
+                          </span>
+                        )}
                     </label>
-                    <label className="block">
-                      <span className="text-[0.78rem] font-semibold text-slate-800">
-                        Job posting (optional)
-                      </span>
-                      <span className="block text-[0.7rem] text-slate-400">
-                        Paste it and the resume speaks its language.
-                      </span>
-                      <textarea
-                        rows={4}
-                        value={jdInput}
-                        onChange={(e) => setJdInput(e.target.value)}
-                        className="mt-1 w-full resize-y rounded-lg border border-slate-300 bg-surface px-3 py-2 text-[0.85rem] outline-none focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/20"
-                      />
-                    </label>
+                    {jobPostingField}
                   </div>
-                  {lockedRole && (
-                    <button
-                      type="button"
-                      onClick={() => setCustomMode(false)}
-                      className="mt-2 min-h-11 text-[0.78rem] font-semibold text-slate-500 underline underline-offset-2 transition-colors hover:text-slate-800"
-                    >
-                      Back to {lockedRole.title}
-                    </button>
-                  )}
-                </section>
-              )}
+                )}
+
+              </section>
 
                 <section className="rounded-2xl border border-slate-200 bg-surface p-4">
                   <TemplatePicker
@@ -1850,13 +2503,21 @@ export function ResumeBuilder({
                 </section>
               </div>
 
-              {/* The one primary action, held at the foot of the rail. */}
+              {/* The one primary action, held at the foot of the rail - with
+                  anything that went wrong right above it, where the person is
+                  already looking. */}
+              <div>
+                {error && (
+                  <p
+                    role="alert"
+                    className="mb-2 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2 text-[0.85rem] leading-relaxed text-rose-700"
+                  >
+                    {error}
+                  </p>
+                )}
               <button
                 type="button"
-                disabled={
-                  busy !== null || (customMode && !roleInput.trim()) ||
-                  (!lockedRole && !roleInput.trim())
-                }
+                disabled={busy !== null || !readyToBuild}
                 onClick={() => void begin()}
                 className="inline-flex min-h-12 w-full max-w-sm items-center justify-center rounded-full bg-brand-teal-deep px-5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-brand-teal disabled:opacity-50"
               >
@@ -1864,8 +2525,11 @@ export function ResumeBuilder({
                   ? "Getting your details together…"
                   : busy === "building"
                     ? "Building…"
-                    : "Build my resume"}
+                    : making === "improve"
+                      ? "Work on my resume"
+                      : "Build my resume"}
               </button>
+              </div>
             </div>
 
             {/* The paper, always in view. The panel hugs the page rather than
@@ -1894,14 +2558,14 @@ export function ResumeBuilder({
                   >
                     Example
                   </span>
-                  <div className="-mt-[2.6rem]" style={{ zoom: 0.6667 }}>
+                  <A4Frame className="-mt-[2.6rem]">
                     <ResumeSheet
                       resume={previewResume}
                       template={template}
                       roleLine={previewRole}
                       mini
                     />
-                  </div>
+                  </A4Frame>
                 </div>
               </div>
             </div>
@@ -1912,7 +2576,7 @@ export function ResumeBuilder({
         </>
       )}
 
-      {error && (
+      {error && result && (
         <p
           role="alert"
           className="mt-4 rounded-lg bg-rose-50 px-3.5 py-2 text-[0.85rem] text-rose-700 print:hidden"
@@ -1941,18 +2605,24 @@ export function ResumeBuilder({
                   stylesheet shows the sheet alone, and the Word export is
                   rendered server-side from the data, so neither carries it. */}
               <div className="relative">
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 z-10 flex select-none items-center justify-center text-[clamp(3rem,12vw,6rem)] font-bold uppercase tracking-[0.3em] text-[#111827]/[0.06] print:hidden"
-                >
-                  Draft
-                </span>
-                <ResumeSheet
-                  resume={result.resume}
-                  template={template}
-                  roleLine={result.targetRole}
-                />
+                <A4Frame>
+                  <ResumeSheet
+                    resume={result.resume}
+                    template={template}
+                    roleLine={result.targetRole}
+                    onPages={setSheetPages}
+                    watermark="Draft"
+                  />
+                </A4Frame>
               </div>
+
+              {/* Said plainly, because two pages is a decision a recruiter
+                  notices and nobody should learn about it at the printer. */}
+              <p className="mt-2 text-[0.76rem] text-slate-500 print:hidden">
+                {sheetPages === 1
+                  ? "One A4 page."
+                  : `${sheetPages} A4 pages - the second is part empty. Ask Scribe to tighten it if you would rather it fit one.`}
+              </p>
 
               {/* The draft desk: the page above, then the conversation that
                   shapes it. Scribe - the resume writer - answers every
