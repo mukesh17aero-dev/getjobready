@@ -1323,9 +1323,10 @@ export function ResumeBuilder({
   })();
   const lockedRole = target?.role ?? null;
 
-  // Somebody who chose a direction in Discovery has already told us they
-  // are aiming at a role, so theirs opens on that.
-  const [making, setMaking] = useState<Making>(lockedRole ? "role" : "general");
+  // General for everyone, including somebody who chose a direction in
+  // Discovery - choosing a direction is not the same as applying for it
+  // today, and the role is one line away when they are.
+  const [making, setMaking] = useState<Making>("general");
   const [showJd, setShowJd] = useState(false);
   const [roleInput, setRoleInput] = useState(lockedRole?.title ?? "");
   const [jdInput, setJdInput] = useState("");
