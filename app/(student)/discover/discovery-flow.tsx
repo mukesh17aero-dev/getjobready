@@ -1155,25 +1155,27 @@ export function DiscoveryFlow({ initial }: { initial: DiscoveryState | null }) {
               >
                 Start my readiness check {"\u2192"}
               </Link>
-              <Link
-                href="/start"
-                className="hidden text-[0.78rem] font-semibold text-teal-700 underline underline-offset-2 sm:block"
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void begin(true)}
+                className="hidden shrink-0 cursor-pointer text-[0.78rem] font-semibold text-teal-700 underline underline-offset-2 disabled:opacity-50 sm:block"
               >
-                revisit path
-              </Link>
+                Answer Discovery again
+              </button>
             </div>
           </div>
         </section>
       )}
 
-      <div className="mt-2.5 flex flex-wrap items-center gap-4">
+      <div className="mt-2.5 flex flex-wrap items-center gap-4 sm:hidden">
         <button
           type="button"
           disabled={busy}
           onClick={() => void begin(true)}
           className="text-sm text-slate-500 hover:text-slate-900"
         >
-          Retake Discovery
+          Answer Discovery again
         </button>
       </div>
       {error && <p className="mt-3 text-sm text-rose-600">{error}</p>}
