@@ -2298,13 +2298,10 @@ export function ResumeBuilder({
               Build your resume
             </h1>
             <p className="mt-1.5 max-w-prose text-[0.88rem] leading-relaxed text-slate-600">
-              Software reads your resume before a person does, and the person
-              then gives it seconds. We write yours for both: the words the job
-              is screened on, evidence in place of adjectives, and a real number
-              on every line your record can back. What makes it stand out is
-              that all of it is true - and true is what holds up when a
-              recruiter starts asking. We stay with you until it is ready for
-              the job you are aiming at, not just finished.
+              Software reads your resume first; a person then gives it
+              seconds. We write yours for both - in the words the job is
+              screened on, from what you have actually done - so it holds up
+              when a recruiter starts looking.
               {needsEssentials
                 ? " Have a look at the three looks first - we ask about you when you are ready to build."
                 : ""}
