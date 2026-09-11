@@ -1,5 +1,5 @@
 -- Test Supabase project: polkexjgphmwtpwhmspk
--- Adds the missing assessment schema only. Existing Discovery choices and
+-- Adds the content-table prerequisite and missing assessment schema. Discovery choices and
 -- published question banks are not changed. Runs as one transaction.
 -- Run in the Supabase SQL editor as the database owner.
 begin;
@@ -8,6 +8,47 @@ create table if not exists public.schema_migrations (
   applied_at timestamptz not null default now()
 );
 alter table public.schema_migrations enable row level security;
+
+-- Content is a prerequisite of migration 0029 and the question-bank import.
+-- IF NOT EXISTS preserves any existing admin content; RLS remains enabled.
+-- 0011_content_documents.sql
+-- Owner: content module (src/modules/content).
+--
+-- Everything a student reads that is not their own data — the Discovery
+-- questions and their scoring weights, the role catalogue and role detail —
+-- lives here so an admin can change it without a deploy.
+--
+-- Versioning follows the same rule as the rest of the product: a published
+-- version is immutable. Editing produces a draft; publishing inserts the next
+-- published version. Nothing is ever updated in place except the single draft
+-- row per kind, and attempts keep recording which version scored them.
+
+create table if not exists public.content_documents (
+  id uuid primary key default gen_random_uuid(),
+  kind text not null check (kind in ('discovery_content', 'role_catalogue')),
+  version integer not null,
+  status text not null check (status in ('draft', 'published')),
+  data jsonb not null,
+  note text,
+  updated_by uuid,
+  updated_at timestamptz not null default now(),
+  published_at timestamptz
+);
+
+-- one draft per kind; published versions accumulate
+create unique index if not exists content_documents_one_draft
+  on public.content_documents (kind) where status = 'draft';
+create unique index if not exists content_documents_version
+  on public.content_documents (kind, version) where status = 'published';
+create index if not exists content_documents_published
+  on public.content_documents (kind, published_at desc) where status = 'published';
+
+alter table public.content_documents enable row level security;
+-- Backend-only: students read content through the API, admins through the
+-- admin API. No direct client access.
+
+insert into public.schema_migrations(name) values ('0011_content_documents.sql')
+on conflict (name) do nothing;
 
 do $apply$
 begin
@@ -199,6 +240,16 @@ $migration$;
 end
 $apply$;
 
+-- These older migrations ONLY widened the same kind constraint. Migration
+-- 0029 above includes every one of their values. Record them as superseded so
+-- a later full backend migration run cannot replace it with a narrower list.
+insert into public.schema_migrations(name) values
+  ('0012_skill_model_content.sql'),
+  ('0014_question_bank.sql'),
+  ('0017_assessment_bank.sql'),
+  ('0019_video_uploads_content.sql')
+on conflict (name) do nothing;
+
 do $apply$
 begin
   if not exists (select 1 from public.schema_migrations where name = '0030_assessment_help_log.sql') then
@@ -305,6 +356,7 @@ commit;
 select table_name, column_name, column_default
 from information_schema.columns
 where table_schema = 'public' and
-  ((table_name = 'assessment_runs' and column_name in ('question_limit','review','arc_snapshot','deadline_at'))
+  ((table_name = 'content_documents' and column_name in ('kind','data','status'))
+   or (table_name = 'assessment_runs' and column_name in ('question_limit','review','arc_snapshot','deadline_at'))
    or (table_name = 'assessment_answers' and column_name in ('integrity','interaction_response','is_partial')))
 order by table_name, column_name;
