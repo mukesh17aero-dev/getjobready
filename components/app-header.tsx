@@ -1,9 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
+import { AdminViewAs } from "@/components/admin-view-as";
+import { adminAccess } from "@/lib/api";
+import { getResumeRecord } from "@/lib/resume-api";
+import { PLAN_KEY, isPlan, planById, type Plan } from "@/lib/plans";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase-browser";
+import { Avatar } from "@/components/avatar";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { AuthModal } from "@/components/auth-modal";
@@ -16,33 +22,42 @@ import type { AuthMode } from "@/components/auth-form";
 const DESTINATIONS = [
   { label: "Home", href: "/", match: ["/", "/start", "/resume", "/journey"] },
   { label: "Discover", href: "/discover", match: ["/discover"] },
-  { label: "Practice", href: "/practice", match: ["/practice", "/readiness", "/interview"] },
-  { label: "Passport", href: "/passport", match: ["/passport"] },
+  { label: "Practice", href: "/practice", match: ["/practice", "/interview"] },
   { label: "Opportunities", href: "/opportunities", match: ["/opportunities"] },
 ];
 
 function isActive(pathname: string, match: string[]): boolean {
   return match.some((m) =>
-    m === "/" ? pathname === "/" : pathname === m || pathname.startsWith(`${m}/`),
+    m === "/"
+      ? pathname === "/"
+      : pathname === m || pathname.startsWith(`${m}/`),
   );
 }
 
-type Account = { email: string; name: string };
+type Account = { email: string; name: string; photo: string | null };
 
 // The display name comes from the identity provider (Google gives a full
 // name) and falls back to the part of the email before the @, so the menu
 // always greets a person rather than an address.
-function toAccount(user: { email?: string; user_metadata?: Record<string, unknown> } | undefined):
-  Account | null {
+function toAccount(
+  user: { email?: string; user_metadata?: Record<string, unknown> } | undefined,
+): Account | null {
   if (!user?.email) return null;
   const meta = user.user_metadata ?? {};
   const named = [meta.full_name, meta.name, meta.user_name].find(
     (v): v is string => typeof v === "string" && v.trim().length > 0,
   );
   const fallback = user.email.split("@")[0]!.replace(/[._-]+/g, " ");
+  // Written by the profile builder when somebody uploads a picture, and by
+  // Google when they sign in with it. One field, so the header does not care
+  // which of the two it was.
+  const photo = [meta.avatar_url, meta.picture].find(
+    (v): v is string => typeof v === "string" && v.startsWith("http"),
+  );
   return {
     email: user.email,
     name: (named ?? fallback).replace(/\b\w/g, (c) => c.toUpperCase()),
+    photo: photo ?? null,
   };
 }
 
@@ -59,13 +74,88 @@ function useResolvedDark(): boolean {
     calc();
     mq.addEventListener("change", calc);
     const mo = new MutationObserver(calc);
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    mo.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
     return () => {
       mq.removeEventListener("change", calc);
       mo.disconnect();
     };
   }, []);
   return dark;
+}
+
+// Whether this person may look at the other audiences' screens.
+//
+// Asked for on the client rather than in the layout on purpose: a layout that
+// calls getServerSession on every route would make every static page dynamic,
+// and this is an affordance for a handful of people. It runs once per full
+// page load, not per client-side navigation.
+function useIsAdmin(account: Account | null | undefined): boolean {
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    if (!account) return;
+    let live = true;
+    void supabaseBrowser()
+      .auth.getSession()
+      .then(({ data }) => {
+        const token = data.session?.access_token;
+        if (!token) return null;
+        return adminAccess(token);
+      })
+      .then((access) => {
+        if (live) setIsAdmin(access?.isAdmin ?? false);
+      });
+    return () => {
+      live = false;
+    };
+  }, [account]);
+  // Derived rather than reset in the effect: signing out is answered here
+  // instead of by a second setState, which the compiler rightly rejects.
+  return account ? isAdmin : false;
+}
+
+// The Resume Studio plan this person chose. Their record is the authority
+// once they are signed in; the browser's copy answers first so the menu does
+// not flicker, and is all there is before an account exists. Null means no
+// plan has been chosen yet - which is a real state, and said as one.
+function usePlan(account: Account | null | undefined): Plan | null {
+  const [plan, setPlan] = useState<Plan | null>(null);
+  useEffect(() => {
+    let live = true;
+    // After the first paint, so the server-rendered menu and the browser
+    // agree on what they showed first.
+    const local = setTimeout(() => {
+      try {
+        const stored = localStorage.getItem(PLAN_KEY);
+        if (live && isPlan(stored)) setPlan(planById(stored));
+      } catch {
+        // Storage unavailable: the record still answers below.
+      }
+    }, 0);
+    if (!account) {
+      return () => {
+        live = false;
+        clearTimeout(local);
+      };
+    }
+    void supabaseBrowser()
+      .auth.getSession()
+      .then(({ data }) => {
+        const token = data.session?.access_token;
+        return token ? getResumeRecord(token) : null;
+      })
+      .then((record) => {
+        const chosen = record?.profile?.preferences?.resumePlan;
+        if (live && isPlan(chosen)) setPlan(planById(chosen));
+      });
+    return () => {
+      live = false;
+      clearTimeout(local);
+    };
+  }, [account]);
+  return plan;
 }
 
 // undefined = still checking, null = signed out.
@@ -123,50 +213,33 @@ function AuthControls({
   const [mode, setMode] = useState<AuthMode | null>(null);
   if (account === undefined) return <span className="h-8 w-8" aria-hidden />;
 
+  // One door, not two. The dialog carries both directions itself - log in
+  // offers "New to Ascend? Create an account" and back again - so a second
+  // header button only asked the visitor to sort themselves into a category
+  // before they had any reason to care which one they were in.
   if (account === null) {
-    if (night) {
-      return (
-        <span className="flex items-center gap-2">
-          <ThemeQuickToggle night />
-          <button
-            type="button"
-            onClick={() => setMode("login")}
-            className="whitespace-nowrap rounded-full px-3 py-1.5 text-sm text-white/65 transition-colors hover:text-white"
-          >
-            Log in
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("signup")}
-            className="whitespace-nowrap rounded-xl bg-white px-3.5 py-1.5 text-sm font-bold text-[#16233f] transition-transform hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
-          >
-            Sign up
-          </button>
-          {mode && (
-            <AuthModal mode={mode} onClose={() => setMode(null)} onSwitchMode={setMode} />
-          )}
-        </span>
-      );
-    }
     return (
       <span className="flex items-center gap-2">
-        <ThemeQuickToggle night={false} />
+        <ThemeQuickToggle night={night} />
         <button
           type="button"
           onClick={() => setMode("login")}
-          className="whitespace-nowrap rounded-full px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900"
+          // 44px: it is the only way into the product for anyone signed out,
+          // so it is the last control in the app that should be a small tap.
+          className={`inline-flex min-h-11 items-center whitespace-nowrap rounded-xl px-4 text-sm font-bold transition-transform hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 ${
+            night
+              ? "bg-white text-[#16233f]"
+              : "bg-brand-violet text-white hover:translate-y-0 hover:bg-brand-violet-deep"
+          }`}
         >
-          Log in
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("signup")}
-          className="whitespace-nowrap rounded-xl bg-brand-violet px-3.5 py-1.5 text-sm font-bold text-white transition-colors hover:bg-brand-violet-deep"
-        >
-          Sign up
+          Log in or sign up
         </button>
         {mode && (
-          <AuthModal mode={mode} onClose={() => setMode(null)} onSwitchMode={setMode} />
+          <AuthModal
+            mode={mode}
+            onClose={() => setMode(null)}
+            onSwitchMode={setMode}
+          />
         )}
       </span>
     );
@@ -175,11 +248,20 @@ function AuthControls({
   return <AccountMenu account={account} night={night} />;
 }
 
+// Shared with the cinematic welcome header so account and theme controls
+// remain available on every entry point.
+export function WelcomeAccountControls() {
+  const account = useAccount();
+  return <AuthControls account={account} night />;
+}
+
 // Avatar opens an account menu (Blueprint header pattern) instead of showing
 // a bare "Sign out" link next to the photo.
 function AccountMenu({ account, night }: { account: Account; night: boolean }) {
   const router = useRouter();
+  const plan = usePlan(account);
   const [open, setOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<AuthMode | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -225,7 +307,12 @@ function AccountMenu({ account, night }: { account: Account; night: boolean }) {
               }`
         }`}
       >
-        {account.name[0]?.toUpperCase()}
+        <Avatar
+          src={account.photo}
+          name={account.name}
+          className="h-full w-full rounded-full"
+          fallbackClassName="grid place-items-center"
+        />
       </button>
 
       {open && (
@@ -234,13 +321,29 @@ function AccountMenu({ account, night }: { account: Account; night: boolean }) {
           aria-label="Account"
           className="absolute right-0 top-full z-20 mt-2 w-60 overflow-hidden rounded-xl border border-slate-200 bg-surface shadow-lg"
         >
-          <div className="border-b border-slate-100 px-3.5 py-2.5">
-            <p className="truncate text-[0.9rem] font-semibold text-slate-900" title={account.name}>
-              {account.name}
-            </p>
-            <p className="truncate text-[0.78rem] text-slate-500" title={account.email}>
-              {account.email}
-            </p>
+          <div className="flex items-center gap-2.5 border-b border-slate-100 px-3.5 py-2.5">
+            {account.photo && (
+              <Avatar
+                src={account.photo}
+                name={account.name}
+                className="h-9 w-9 shrink-0 rounded-full ring-1 ring-slate-200"
+                fallbackClassName="grid place-items-center bg-brand-mist text-[0.85rem] font-bold text-brand-teal-deep"
+              />
+            )}
+            <div className="min-w-0">
+              <p
+                className="truncate text-[0.9rem] font-semibold text-slate-900"
+                title={account.name}
+              >
+                {account.name}
+              </p>
+              <p
+                className="truncate text-[0.78rem] text-slate-500"
+                title={account.email}
+              >
+                {account.email}
+              </p>
+            </div>
           </div>
           <Link
             href="/profile"
@@ -249,6 +352,40 @@ function AccountMenu({ account, night }: { account: Account; night: boolean }) {
             className="block border-b border-slate-100 px-3.5 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
           >
             Your profile
+          </Link>
+          {/* The plan they chose in Resume Studio. A choice on their record,
+              not a payment - there is no billing yet, so the menu says which
+              plan and what it holds, never "paid" or "active". */}
+          <Link
+            href="/resume/build"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block border-b border-slate-100 px-3.5 py-2.5 transition-colors hover:bg-slate-50"
+          >
+            <span className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-slate-400">
+              Your plan
+            </span>
+            {plan ? (
+              <>
+                <span className="mt-0.5 flex items-baseline justify-between gap-2 text-sm text-slate-700">
+                  <span className="font-semibold text-slate-900">{plan.name}</span>
+                  <span className="text-[0.78rem] text-slate-500">₹{plan.price} · 30-day pass</span>
+                </span>
+                <span className="mt-0.5 block text-[0.75rem] leading-snug text-slate-500">
+                  {plan.features.slice(0, 2).join(" · ")}
+                </span>
+                <span className="mt-1 block text-[0.75rem] font-semibold text-teal-700">
+                  Change plan →
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="mt-0.5 block text-sm text-slate-700">No plan chosen yet</span>
+                <span className="mt-1 block text-[0.75rem] font-semibold text-teal-700">
+                  Choose one in Resume Studio →
+                </span>
+              </>
+            )}
           </Link>
           {/* Pilot: shown to every signed-in user. The API decides for real —
               set ADMIN_EMAILS and non-admins get 403 and lose this entry. */}
@@ -280,6 +417,14 @@ function AccountMenu({ account, night }: { account: Account; night: boolean }) {
           <button
             type="button"
             role="menuitem"
+            onClick={() => { setOpen(false); setAuthMode("login"); }}
+            className="block w-full border-b border-slate-100 px-3.5 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
+          >
+            Switch account
+          </button>
+          <button
+            type="button"
+            role="menuitem"
             onClick={() => {
               setOpen(false);
               // Sign out, then land on the front door - never leave someone
@@ -297,16 +442,27 @@ function AccountMenu({ account, night }: { account: Account; night: boolean }) {
           </button>
         </div>
       )}
+      {authMode && <AuthModal mode={authMode} onClose={() => setAuthMode(null)} onSwitchMode={setAuthMode} />}
     </div>
   );
 }
 
 export function AppHeader() {
   const pathname = usePathname();
+  // The pages that are not the student app: the pitch, and the college and
+  // employer homes. Discover, Practice, Passport and Opportunities are a
+  // student's destinations - offering them to a placement officer reading
+  // their own page is offering somebody else's menu.
+  const frontDoor = pathname === "/welcome" || pathname.startsWith("/for/");
   const account = useAccount();
-  // Every destination behind the logo is a login wall. Showing five of them to
-  // a visitor who has not signed up is five dead ends on the page that has to
-  // do the most work.
+  const isAdmin = useIsAdmin(account);
+  // The nav used to be hidden signed out, because every destination behind it
+  // was a login wall and five dead ends is worse than none. That is no longer
+  // true: Discover, Practice, Passport and Opportunities all open and show
+  // their real screens to a visitor, and the account is only asked for at the
+  // point something would be made for them. So the nav is shown to everybody -
+  // hiding it now would be hiding the product from the people who have not
+  // decided to trust it yet.
   const signedIn = Boolean(account);
   const darkTheme = useResolvedDark();
   // The landing wears the night header only when the resolved theme is
@@ -315,15 +471,21 @@ export function AppHeader() {
   const night =
     darkTheme && (pathname === "/welcome" || (pathname === "/" && !signedIn));
 
+  // The approved welcome has its own brand, cohort navigation and account link.
+  if (pathname === "/welcome") return null;
+
   return (
     <header
-      className={`sticky top-0 z-40 border-b backdrop-blur ${
+      className={`safe-top safe-x sticky top-0 z-40 border-b backdrop-blur ${
         night
           ? "border-white/10 bg-[#0a121a]/85"
           : "border-slate-200 bg-surface/90"
       }`}
     >
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+      {/* Narrow screens give the nav its own row rather than a 60px scrolling
+          sliver squeezed between the wordmark and the button. From 640px up
+          the three sit on one line as before. */}
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5 sm:flex-nowrap sm:py-3">
         {/* The wordmark goes to the front door, not to the signed-in home.
             "/" is the person's own journey once they are in; the brand mark
             should still reach the page that says what this is. */}
@@ -332,18 +494,31 @@ export function AppHeader() {
           className="flex shrink-0 items-center gap-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-violet"
         >
           <BrandLogo size={30} />
+          {/* Tighter at 360px so the wordmark and the auth button share the
+              first row and the nav gets the second - three stacked rows would
+              cost a fifth of a phone screen before any content. */}
           <span
-            className={`text-lg font-extrabold tracking-[0.12em] ${
+            className={`text-base font-extrabold tracking-[0.06em] sm:text-lg sm:tracking-[0.12em] ${
               night ? "text-white" : "text-brand-ink"
             }`}
           >
             ASCEND
           </span>
         </Link>
+        {/* The front door carries no app nav. Discover, Practice and the
+            rest are a signed-in student's destinations, and on /welcome they
+            are wrong for everybody: a visitor has nowhere to go with them,
+            and a college or employer reading their own pitch should not be
+            offered a student's menu. The audience switch lives in the hero
+            instead, where it has room for full labels. */}
         <nav
           aria-label="Primary"
-          className={`-mx-2 min-w-0 overflow-x-auto ${signedIn ? "flex" : "hidden"}`}
+          hidden={frontDoor}
+          className="strip-scroll order-last -mx-1 flex w-full min-w-0 overflow-x-auto sm:order-none sm:-mx-2 sm:w-auto"
         >
+          {/* Home is for everybody now. "/" used to render the pitch when
+              signed out, so a Home link led back to the page you were already
+              on; it is the router for everyone today, signed in or not. */}
           {DESTINATIONS.map(({ label, href, match }) => {
             const active = isActive(pathname, match);
             return (
@@ -351,7 +526,7 @@ export function AppHeader() {
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`whitespace-nowrap rounded-full px-3 py-1.5 text-sm transition-colors ${
+                className={`inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-2.5 text-sm transition-colors sm:min-h-0 sm:py-1.5 sm:px-3 ${
                   active
                     ? night
                       ? "font-semibold text-white"
@@ -366,6 +541,11 @@ export function AppHeader() {
             );
           })}
         </nav>
+        {isAdmin && (
+          <Suspense fallback={null}>
+            <AdminViewAs />
+          </Suspense>
+        )}
         <AuthControls account={account} night={night} />
       </div>
     </header>

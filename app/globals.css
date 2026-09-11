@@ -102,7 +102,7 @@
   /* A stack of short lines cycling through a fixed window. Four slides —
      three lines plus a duplicate of the first — each 25% of the travel, so
      the loop closes without a visible jump. */
-  --animate-words: words 11.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  --animate-words: words 16s cubic-bezier(0.22, 1, 0.36, 1) infinite;
 
   /* A deck of cards, dating-app style: the front card holds, swipes away
      right with a tilt, then rejoins the back of the stack and works its way
@@ -111,62 +111,60 @@
      so the paint order follows the choreography. */
   --animate-deck: deck 12s cubic-bezier(0.3, 0, 0.2, 1) infinite;
 
-  /* The argument deck: eight cards taking the stage one at a time. Each
-     card owns a 12.5% slice of the cycle — rise in, hold long enough to
-     read, then swipe off. Fears leave to the LEFT (dismissed), answers to
-     the RIGHT (chosen) — the dating-app grammar, spent on a career. Pair
-     with [animation-fill-mode:both] and a positive delay of
-     (index × period ÷ 8). */
-  --animate-swipe-left: swipe-card-left 48s cubic-bezier(0.45, 0, 0.25, 1)
-    infinite;
-  --animate-swipe-right: swipe-card-right 48s cubic-bezier(0.45, 0, 0.25, 1)
-    infinite;
+  /* The argument deck, one card at a time. The deck advances on a clock and
+     on a tap, so each card gets its own arrival and its own exit rather than
+     a slice of one long loop. Questions leave to the LEFT (dismissed),
+     answers to the RIGHT (chosen) - the dating-app grammar, spent on a
+     career. */
+  --animate-card-rise: card-rise 0.45s cubic-bezier(0.45, 0, 0.25, 1) both;
+  --animate-card-off-left: card-off-left 0.45s cubic-bezier(0.45, 0, 0.25, 1)
+    both;
+  --animate-card-off-right: card-off-right 0.45s cubic-bezier(0.45, 0, 0.25, 1)
+    both;
 
-  @keyframes swipe-card-left {
-    0% {
-      opacity: 0;
-      transform: translateY(1.4rem) scale(0.94);
+  /* A panel arriving from the left edge. Used by the work shelf, which is
+     out of the page's flow so it cannot disturb the layout it sits over. */
+  --animate-slide-in: slide-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes slide-in {
+    from {
+      transform: translateX(-100%);
     }
-    1.8% {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-    9.8% {
-      opacity: 1;
-      transform: translateY(0) scale(1) rotate(0deg);
-    }
-    12.4% {
-      opacity: 0;
-      transform: translateX(-130%) translateY(-2%) rotate(-16deg);
-    }
-    12.5%,
-    100% {
-      opacity: 0;
-      transform: translateY(1.4rem) scale(0.94);
+    to {
+      transform: translateX(0);
     }
   }
 
-  @keyframes swipe-card-right {
-    0% {
+  @keyframes card-rise {
+    from {
       opacity: 0;
       transform: translateY(1.4rem) scale(0.94);
     }
-    1.8% {
+    to {
       opacity: 1;
       transform: translateY(0) scale(1);
     }
-    9.8% {
+  }
+
+  @keyframes card-off-left {
+    from {
       opacity: 1;
       transform: translateY(0) scale(1) rotate(0deg);
     }
-    12.4% {
+    to {
+      opacity: 0;
+      transform: translateX(-130%) translateY(-2%) rotate(-16deg);
+    }
+  }
+
+  @keyframes card-off-right {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1) rotate(0deg);
+    }
+    to {
       opacity: 0;
       transform: translateX(130%) translateY(-2%) rotate(16deg);
-    }
-    12.5%,
-    100% {
-      opacity: 0;
-      transform: translateY(1.4rem) scale(0.94);
     }
   }
 
@@ -368,6 +366,32 @@
       transform: translate3d(2rem, -1.5rem, 0) scale(1.08);
     }
   }
+
+  /* The guide, at rest. Alive rather than attention-seeking: the light inside
+     it turns, the disc itself does not move. Anything that pulses reads as a
+     notification, and notifications get dismissed. */
+  --animate-assistant: assistant 9s linear infinite;
+
+  @keyframes assistant {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  /* Once, when it joins you. A rise and a settle, never repeated. */
+  --animate-assistant-arrive: assistant-arrive 0.7s
+    cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes assistant-arrive {
+    from {
+      opacity: 0;
+      transform: translateY(0.6rem) scale(0.85);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }
 
 /*
@@ -396,6 +420,32 @@
   :root[data-theme="dark"],
   :root:not([data-theme="light"]) {
     /* placeholder so the cascade below stays readable */
+  }
+}
+
+/*
+ * The `dark:` variant, taught the app's own rule.
+ *
+ * Tailwind's built-in one follows prefers-color-scheme alone, which is wrong
+ * here: the in-app toggle stamps data-theme and has to win in both directions,
+ * exactly as the palette below does. This mirrors those two selectors so a
+ * `dark:` utility is dark in precisely the cases the tokens are.
+ *
+ * It exists because two of the brand tokens cannot serve both jobs at once.
+ * `brand-teal-deep` is a background under white text in 159 places and a text
+ * colour in 58; on a dark ground those want opposite values, and the palette
+ * below chose the background. So text that sits on a dark surface asks for the
+ * soft variant explicitly rather than the token being changed underneath four
+ * hundred call sites.
+ */
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) & {
+      @slot;
+    }
+  }
+  :root[data-theme="dark"] & {
+    @slot;
   }
 }
 
@@ -428,13 +478,13 @@
     --color-brand-teal-deep: #0e716d;
     --color-brand-teal-soft: #1aa39c;
 
-
     --color-violet-50: #10302f;
     --color-violet-100: #143c3a;
     --color-violet-700: #6fded6;
     --color-violet-900: #b8f0ea;
     --color-teal-50: #10302f;
     --color-teal-700: #6fded6;
+    --color-teal-900: #b8f0ea;
     --color-amber-50: #2e2513;
     --color-amber-100: #3b2f15;
     --color-amber-200: #4a3a1a;
@@ -486,13 +536,13 @@
   --color-brand-teal-deep: #0e716d;
   --color-brand-teal-soft: #1aa39c;
 
-
   --color-violet-50: #10302f;
   --color-violet-100: #143c3a;
   --color-violet-700: #6fded6;
   --color-violet-900: #b8f0ea;
   --color-teal-50: #10302f;
   --color-teal-700: #6fded6;
+  --color-teal-900: #b8f0ea;
   --color-amber-50: #2e2513;
   --color-amber-100: #3b2f15;
   --color-amber-200: #4a3a1a;
@@ -537,8 +587,6 @@
   }
 }
 
-
-
 body {
   background-color: var(--color-surface);
   color: var(--color-slate-900);
@@ -565,15 +613,12 @@ body {
   animation-play-state: running;
 }
 
-
-
 /*
  * .border-glow (the landing's rotating gradient ring) lives as a raw
  * <style> block inside components/landing.tsx, NOT here: the CSS minifier
  * drops `mask-composite: exclude` and reorders the -webkit- variant, which
  * turns the ring into a flood. Raw injection bypasses the pipeline.
  */
-
 
 /*
  * Below-the-fold entrances, driven by scroll rather than by mount. Pure CSS
@@ -599,23 +644,6 @@ body {
     animation-timeline: view();
     animation-range: entry 5% entry 45%;
   }
-
-  /* A chapter being covered by the next one recedes: slightly smaller,
-     slightly darker, as if pushed back into the night. Drives the landing's
-     sticky-stacked sheets; without scroll timelines the sheets simply stack
-     with no recession, which still reads correctly. */
-  @keyframes panel-recede {
-    to {
-      transform: scale(0.94);
-      filter: brightness(0.5);
-    }
-  }
-
-  .stack-recede {
-    animation: panel-recede linear both;
-    animation-timeline: view();
-    animation-range: exit 0% exit 100%;
-  }
 }
 
 /*
@@ -631,24 +659,6 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-}
-
-/*
- * The landing's sheet stack snaps: a fast fling must still come to rest on
- * every sheet (scroll-snap-stop below), so no chapter can be skipped.
- * Desktop only - phones flow freely because sheets there can be taller
- * than the viewport, and mandatory snap would trap the overflow.
- */
-@media (min-width: 1024px) {
-  .snap-stack {
-    /* proximity, not mandatory: each sheet still blocks fling-past via
-       snap-stop always, but small reverse scrolls aren't yanked back -
-       mandatory made upward scrolling rubber-band. The padding keeps the
-       native snap's rest points identical to the wheel pager's: sheets pin
-       3.5rem below the viewport top, under the sticky header. */
-    scroll-snap-type: y proximity;
-    scroll-padding-top: 3.5rem;
   }
 }
 
@@ -728,5 +738,135 @@ body {
     --lp-cta-ink: #ffffff;
     --lp-wall-fade: rgba(252, 251, 248, 0.95);
     --lp-wall-bg: #ffffff;
+  }
+}
+
+/*
+ * ---------------------------------------------------------------------------
+ * Phone behaviour
+ * ---------------------------------------------------------------------------
+ * The blueprint's non-goals rule out native apps and a bottom tab bar, so
+ * "feels native" here cannot mean borrowing native furniture. What it can mean
+ * is removing the handful of browser defaults that announce, on every tap and
+ * every scroll, that this is a web page: the double-tap delay, the grey flash,
+ * the viewport that changes height when the URL bar hides, and content sliding
+ * under the notch. Each rule below removes one of those.
+ */
+
+/* iOS enlarges text on rotation to landscape unless told not to, which
+   silently breaks any layout that was measured at 360px. */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* 100vh on a phone is the viewport with the URL bar *hidden* — so a
+   `min-h-screen` page is taller than the screen on load and the bottom of it
+   sits under the browser chrome. `dvh` is the height actually available now.
+   Both are set so a browser without dvh keeps the old behaviour. */
+.min-h-dvh-safe {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Touch targets and the delay. `touch-action: manipulation` drops the ~300ms
+   wait for a possible double-tap-to-zoom — the single largest reason taps feel
+   laggy on the web compared with an app. The tap highlight is the grey box iOS
+   and Android paint over a link on touch; it is removed only because the rules
+   below give a deliberate pressed state in its place. Removing it without a
+   replacement makes an interface feel *less* responsive, not more. */
+a,
+button,
+[role="button"],
+label,
+summary,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The replacement: a fast, physical press. Coarse pointers only, so a mouse
+   cursor is unaffected, and skipped entirely under reduced-motion. */
+@media (hover: none) and (pointer: coarse) {
+  a:active,
+  button:not(:disabled):active,
+  [role="button"]:active {
+    transform: scale(0.97);
+    transition: transform 60ms ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    a:active,
+    button:not(:disabled):active,
+    [role="button"]:active {
+      transform: none;
+    }
+  }
+}
+
+/* Safari on iOS zooms the whole page in when a focused field's text is under
+   16px, then leaves it zoomed. Enforced on touch devices only: the desktop
+   layout is free to use smaller field text. */
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: max(1rem, 100%);
+  }
+}
+
+/* Safe areas. With viewport-fit=cover the page owns the notch and the
+   home-indicator strip, so anything that would otherwise sit at a screen edge
+   has to add the inset back itself. */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-x {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* A horizontally scrolling strip (the header nav) that behaves like a native
+   one: momentum, snap to whole items, no chaining to the page behind it, and
+   no scrollbar gutter eating the row's height. */
+.strip-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.strip-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.strip-scroll > * {
+  scroll-snap-align: start;
+}
+
+/* Stops a scroll that reaches the end of a panel from grabbing the page
+   underneath it — the effect that makes nested scrolling feel unglued. */
+.scroll-isolate {
+  overscroll-behavior: contain;
+}
+
+/*
+ * A guarded sitting does not print. Screenshots cannot be blocked from a web
+ * page, but printing and "save as PDF" genuinely can be, and they are the
+ * quietest way to walk out with a clean copy of every scene.
+ */
+@media print {
+  .screen-guard > *:not(.screen-guard-print) {
+    display: none !important;
+  }
+
+  .screen-guard-print {
+    display: block !important;
   }
 }

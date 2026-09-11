@@ -1,0 +1,678 @@
+[
+  {
+    "id": "overview",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "welcome",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "auth",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "home",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "profile",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "discovery",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "tour",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "practice",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "assessment",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "result",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "history",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "interviews",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "interview",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "questions",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "stories",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "missions",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "presence",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "resume",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "linkedin",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "jobfit",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "journey",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "passport",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "opportunities",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "settings",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "college",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "employer",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "admin",
+    "width": 1440,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "overview",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "welcome",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "auth",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "home",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "profile",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "discovery",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "tour",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "practice",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "assessment",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "result",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "history",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "interviews",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "interview",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "questions",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "stories",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "missions",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "presence",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "resume",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "linkedin",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "jobfit",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "journey",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "passport",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "opportunities",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "settings",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "college",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "employer",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "admin",
+    "width": 1440,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "overview",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "welcome",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "auth",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "home",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "profile",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "discovery",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "tour",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "practice",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "assessment",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "result",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "history",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "interviews",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "interview",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "questions",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "stories",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "missions",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "presence",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "resume",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "linkedin",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "jobfit",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "journey",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "passport",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "opportunities",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "settings",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "college",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "employer",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "admin",
+    "width": 360,
+    "theme": "dark",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "overview",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "welcome",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "auth",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "home",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "profile",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "discovery",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "tour",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "practice",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "assessment",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "result",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "history",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "interviews",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "interview",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "questions",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "stories",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "missions",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "presence",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "resume",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "linkedin",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "jobfit",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "journey",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "passport",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "opportunities",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "settings",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "college",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "employer",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "id": "admin",
+    "width": 360,
+    "theme": "light",
+    "status": "rendered without horizontal overflow"
+  },
+  {
+    "interaction": "Discovery comparison",
+    "status": "passed"
+  },
+  {
+    "interaction": "Profile section persistence",
+    "status": "passed"
+  },
+  {
+    "interaction": "Four-format assessment rehearsal",
+    "status": "passed"
+  },
+  {
+    "interaction": "Question feedback and next-question progression",
+    "status": "passed"
+  },
+  {
+    "interaction": "Job-fit input to illustrative result",
+    "status": "passed"
+  },
+  {
+    "interaction": "Admin draft and student preview navigation",
+    "status": "passed"
+  },
+  {
+    "interaction": "Access request builds local draft without sending",
+    "status": "passed"
+  }
+]

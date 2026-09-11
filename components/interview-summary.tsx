@@ -7,7 +7,16 @@
 // the question-by-question detail folds away behind native accordions.
 
 import Link from "next/link";
-import type { InterviewSummaryView } from "@/lib/interview-api";
+import type { InterviewSummaryView, MarkCriterion } from "@/lib/interview-api";
+
+// The five things the mark is made of, in the order an answer is heard.
+const CRITERIA: Array<{ id: MarkCriterion; label: string }> = [
+  { id: "situation", label: "A real situation" },
+  { id: "ownAction", label: "What you did" },
+  { id: "outcome", label: "The result" },
+  { id: "relevance", label: "Answered the question" },
+  { id: "clarity", label: "Easy to follow" },
+];
 
 export function InterviewSummary({
   summary,
@@ -28,6 +37,10 @@ export function InterviewSummary({
     typeof index === "number"
       ? turns?.find((turn) => turn.index === index)?.question
       : undefined;
+  const mark = summary.mark ?? null;
+  const markFor = (index: number | undefined) =>
+    typeof index === "number" ? mark?.perQuestion.find((q) => q.index === index) : undefined;
+  const cleared = mark ? mark.overall >= mark.bar : false;
   return (
     <div className="space-y-6">
       <header>
@@ -41,6 +54,38 @@ export function InterviewSummary({
           Everything below comes from what you actually said in this interview - nothing else.
         </p>
       </header>
+
+      {mark ? (
+        <section
+          aria-label="Your mark"
+          className={`rounded-2xl border p-5 sm:flex sm:items-center sm:gap-6 ${cleared ? "border-brand-teal/40 bg-teal-50" : "border-amber-200 bg-amber-50"}`}
+        >
+          <p className="flex shrink-0 items-baseline gap-1">
+            <span className={`text-5xl font-bold tracking-tight ${cleared ? "text-teal-700" : "text-amber-800"}`}>
+              {mark.overall}
+            </span>
+            <span className="text-sm font-semibold text-slate-500">/ 100</span>
+          </p>
+          <div className="mt-3 sm:mt-0">
+            <h2 className="text-[0.72rem] font-bold uppercase tracking-wide text-slate-600">
+              Your mark for this rehearsal
+            </h2>
+            <p className="mt-1 text-sm leading-relaxed text-slate-700">
+              The mark an answer needs to hold up in a real {roleTitle} interview is{" "}
+              <strong className="text-brand-ink">{mark.bar}</strong>: a real situation, what you did
+              and the result, all mostly there.{" "}
+              {cleared
+                ? "You cleared it this time."
+                : `You are ${mark.bar - mark.overall} under it this time, and each question below says where.`}
+            </p>
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+              Marked on {mark.basis.marked} of {mark.basis.asked} interview questions by a
+              fixed rule from the read-out&apos;s ratings. A mark for this rehearsal, not a
+              hiring decision.
+            </p>
+          </div>
+        </section>
+      ) : null}
 
       {summary.progressNote ? (
         <div className="rounded-2xl border border-brand-teal/40 bg-teal-50 p-4">
@@ -99,14 +144,21 @@ export function InterviewSummary({
         <section>
           <h2 className="text-sm font-bold text-brand-ink">Question by question</h2>
           <ol className="mt-3 space-y-2">
-            {summary.perQuestion.map((entry, i) => (
+            {summary.perQuestion.map((entry, i) => {
+              const q = markFor(entry.index);
+              const held = q ? q.mark >= (mark?.bar ?? 0) : false;
+              return (
               <li key={`${entry.index ?? "x"}-${i}`}>
                 <details className="group rounded-2xl border border-slate-200 bg-surface">
                   <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
                     <span className="min-w-0">
-                      <span className="block text-xs font-semibold text-slate-500">
-                        Question {i + 1}
-                      </span>
+                      {q ? (
+                        <span
+                          className={`inline-block rounded-md border px-1.5 py-0.5 text-[0.68rem] font-bold ${held ? "border-teal-200 bg-teal-50 text-teal-700" : "border-amber-200 bg-amber-50 text-amber-800"}`}
+                        >
+                          {q.mark} / 100 · bar {mark?.bar}
+                        </span>
+                      ) : null}
                       <span className="mt-0.5 block text-sm font-semibold text-brand-ink">
                         {askedQuestion(entry.index) ?? entry.question}
                       </span>
@@ -133,10 +185,23 @@ export function InterviewSummary({
                       <span className="font-semibold text-brand-ink">Try:</span>{" "}
                       {entry.improvement}
                     </p>
+                    {q ? (
+                      <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="How this mark was made">
+                        {CRITERIA.map((c) => (
+                          <li
+                            key={c.id}
+                            className={`rounded-md border px-2 py-1 text-[0.68rem] font-semibold ${q.ratings[c.id] >= 2 ? "border-teal-200 text-teal-700" : "border-amber-200 text-amber-800"}`}
+                          >
+                            {c.label} {q.ratings[c.id]}/3
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </div>
                 </details>
               </li>
-            ))}
+              );
+            })}
           </ol>
         </section>
       ) : null}

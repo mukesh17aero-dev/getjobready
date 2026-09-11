@@ -1,0 +1,45 @@
+# Role assessment update
+
+Published assessment_arc v7 through the authenticated admin console. All 460 questions across six roles were converted to a question plus context cards. Scenario identities, numeric facts, workplaces and role skill lists were retained. Three tasks that required live AI output now request the candidate's own response; the matching authoring checks and dependent variants were updated. Supplied AI drafts remain reading material for critical evaluation.
+
+The admin editor separates the question, card titles and card text. The backend generation prompt uses this format for future questions. The bulk conversion is idempotent and edits a draft before publication.
+
+The backend determines assistance from the persisted question position: AI on questions 1 and 2 only. Buddy requests and later AI requests are refused server-side. The existing limit of three AI requests per supported question remains.
+
+Answer fields block copy, cut, paste and text drops. Browser visibility and window focus changes produce warnings. Captured observations include event timestamps, time away and blocked-action counts; no clipboard contents, external window titles or destination URLs are collected. These observations do not automatically change readiness scores or establish cheating.
+
+Integrity details autosave with the answer draft and persist with submitted/partial answers. Unanswered final-draft activity is retained in the finish audit. Detailed events are capped at 100 per question, with aggregate counts and an omitted-event count. First-party assessment activity footprints provide an additional event trail. Browser observations are client-reported and transport remains dependent on connectivity.
+
+Backend migration `0032_assessment_integrity.sql` was applied to the configured database. No unrelated pending migrations were applied. Backend files are in the adjacent `ascend-backend` repository and must accompany frontend deployment.
+
+Validation: frontend typecheck, lint (five existing unrelated warnings), 55 tests and production build pass. Backend typecheck, 259 tests and build pass; 41 integration tests remain skipped. In Chrome's guest preview, paste was blocked, typing worked, cut left the answer intact, and returning from a tab displayed the elapsed time away. Dark and light layouts were inspected, including stacked cards and the corrected header at 360px. No test answer was saved into the user's assessment history.
+
+An optional full-bank AI rewrite was rejected by automatic approval review before transmission. Bank edits were prepared locally instead.
+
+Follow-up: student question text, context cards, titles and response choices now prevent native text selection/copying. A document-level copy/cut guard also handles page-wide selections containing assessment content, and blocks dragging text out. Answer text remains selectable for editing. Admin authoring fields remain editable. Copy attempts use the existing recorded activity counters.
+
+Tab/window departures now open a native modal acknowledgement prompt, visible regardless of page scroll. Escape and backdrop clicks do not dismiss it; the acknowledgement button does. The popup no longer shows the timer/cheating sentence. Automatic ending after another switch is awaiting the founder's policy choice; no automatic ending rule has been added in this follow-up.
+
+## Student introduction and wording update
+
+- Published assessment_arc v8 through the signed-in admin UI. All 460 briefs match the reviewed local import. Eighteen introductory examples (first three in each role's first workplace) were individually rewritten, usually from 150–230 words to 90–130. The other 442 received conservative wording/layout edits; they were not comprehensively rewritten. Original numeric values, scoring criteria, measures, response formats and bank metadata were checked and preserved. Local source: `/tmp/assessment-student-wording.json`; private editing script `/tmp/edit-assessment-wording.py`. Neither is publicly served or sent to an AI provider.
+- New `AssessmentIntroduction` puts a visible video player first with a large Play introduction button. Start is enabled when the video ends or the student acknowledges the equivalent transcript. Video/audio errors offer the text route. No autoplay. Decorative introduction numbering removed.
+- The video is now narrated (Mac Samantha voice), 51 seconds, approximately 740 KB, with English captions and matching text. The first silent version was replaced following founder feedback. Assets: `public/assessment/`; renderer `/tmp/render-assessment-intro.py` uses a temporary Pillow environment and ffmpeg. Mac speech synthesis requires the approved unsandboxed run; sandboxed `say` produced empty audio. Final audio verified: mean -16.2 dB, peak -1.3 dB.
+- `assessment-glossary.ts` provides relevant plain-language definitions beside every question, including support tickets, dashboards, CRM, stock, escalation and common abbreviations. Definitions do not expose the answer or scoring criteria.
+- Admin local JSON wording import changes only briefs, requires exact original-text matches, rejects duplicate/missing/conflicting questions atomically, then follows the usual Save draft / Publish workflow.
+- Assessment authoring prompt v6-student-friendly: short actual task, 2–3 context cards, plain definitions, no unnecessary first-day story, preserve necessary facts/tables, check arithmetic, no buddy assistance, AI only on delivered questions 1 and 2. Generated questions outside the reading-length guide trigger an admin review warning. Team prompt v2-student-context and AI assist prompt v5-student-friendly use the same audience assumptions.
+- Fixed start/resume opening an expired, empty attempt as a zero-answer report: the backend now starts a fresh run after closing that empty expired attempt. Historical records are kept. Regression test `assessment-empty-resume.test.ts` verifies a fresh question is returned. Empty-result UI has a fresh-start action and no fake readiness metrics. Report labels now say Questions answered instead of Days you worked; the outdated Twenty minutes explanation is removed.
+
+### Confirmed and implemented: 12 questions, no timer
+
+Founder explicitly chose “use 12 questions”. Migration 0033 adds a pinned question limit; new runs default to 12. Unfinished legacy runs adopt 12 questions and clear deadlines under their row lock with an audit event, keeping answers, drafts, path and begin marker. Completed historical runs remain unchanged. Both existing unfinished runs were verified at questionLimit=12, deadlineAt=null, finishedAt=null.
+
+The adaptive selector uses question count, with AI on the first two delivered questions only. Question twelve completes the run; the backend refuses early report requests and extra answers. New runs select only workplaces with at least 12 questions. Hub Supervisor t1 has eight, so new runs use its other eligible workplaces. No current unfinished run uses that short pool. UI shows Question N of 12, question progress, no countdown, and Submit & see my report on the last question. Prompts and admin authoring warnings now use the count requirement. Existing narrated media contains no time-limit claim and remains valid.
+
+Discovery guest follow-up: Customer Success Associate is the single free role from the canonical catalogue. It is pinned first for unsigned users; the other cards are blurred and inert with sign-in links returning to the requested role. Direct role pages also enforce the same presentation gate. Signed-in ordering and cards are unchanged. Chrome verified the free role first, five locked cards, and opening the free role. The public catalogue remains a public API; this is a UI gate.
+
+Current validation: frontend typecheck, lint (five pre-existing warnings), 63 tests pass; production build passes outside the sandbox (sandboxed Turbopack stalled at compile). Backend typecheck, 277 tests and build pass, 41 opt-in integration tests skipped. Regression coverage includes twelve unique questions despite elapsed time, first-two AI support, resuming question twelve, preventing early finish, completion at twelve, audited legacy adoption and preserving completed records.
+
+### Earlier validation
+
+Validation at handoff: frontend typecheck, lint (five pre-existing warnings, no errors), 63 tests and production build pass; backend typecheck, 267 tests (41 opt-in integration tests skipped) and build pass. Chrome screenshot verified the prominent narrated player in dark mode and an unsigned preview showing the newly published Operations Executive question plus vocabulary help. Video started with volume at 100%; its file has non-silent speech and a 51-second duration. Exact caption/transcript parity checked. Browser interaction is frequently interrupted by the user; no mobile screenshot was completed in this pass. An Incognito readiness preview window was created for testing and the user subsequently interacted with it; do not close it blindly. The separate signed-in Admin console tab remains open.

@@ -1,0 +1,47 @@
+{
+  "status": "superseded-by-animation-kit-video-provider-not-selected",
+  "currentPlan": "/welcome/animation-kit/prompts.json",
+  "currentPreview": "/previews/ascend-animation-kit.html",
+  "handoff": "Three standalone cohort reference images and provider-neutral motion prompts prepared using the built-in image generator. No Higgsfield calls or paid video submissions for this handoff. Employer mug and lanyard corrected to unbranded. The historical quote and shots below are retained only as history; use currentPlan for production.",
+  "source": "/welcome/ascend-ai-feedback-scenes-preview.png",
+  "productCorrection": "Ascend is the AI-native coach. The app identifies role-specific gaps and supplies constructive feedback. No human mentor or AI personification. College supports students and monitors readiness; it is not the source of the app feedback.",
+  "filmSeparation": "Welcome uses brief silent activity moments. The one-minute film uses distinct shots and a narrated product journey. Do not reuse welcome clips as film scenes except when the actual welcome page briefly appears on a device.",
+  "sourceCaveat": "The revised middle panel is a student feedback scene, not a separate college scene. Laptop UI is illustrative and must be replaced with actual approved Ascend UI. Do not animate its generated Product Marketing Manager label or present it as the current app.",
+  "theme": "From knowing to doing",
+  "durationSeconds": 12,
+  "shots": [
+    {
+      "audience": "student",
+      "seconds": 4,
+      "action": "Student writes a brief note, looks from notebook to laptop and makes a small deliberate trackpad action.",
+      "camera": "Gentle forward dolly towards face and working hands. No orbit.",
+      "invariants": "Keep blue shirt, original student face and ponytail, notebook, laptop, campus setting and daylight."
+    },
+    {
+      "audience": "student-feedback",
+      "seconds": 4,
+      "action": "Student reads a specific gap identified by Ascend in the laptop interface, then uses the trackpad and keyboard to improve the response. Feedback is delivered by the app, with no human mentor.",
+      "camera": "Continue the same gentle forward movement at eye level.",
+      "invariants": "Keep the same student identity, blue shirt, ponytail, notebook, laptop and Indian campus setting. App interface is composited from actual approved UI, no generated scores or mentor avatar."
+    },
+    {
+      "audience": "employer",
+      "seconds": 4,
+      "action": "Hiring manager moves the mouse while the colleague follows one section of the work evidence on the monitor; a short thoughtful glance between them.",
+      "camera": "Slow over-shoulder approach towards the evidence display, keeping faces in frame.",
+      "invariants": "Preserve both employer identities and office, no hiring celebration, no invented scores or legible generated UI."
+    }
+  ],
+  "assembly": "Three distinct shots, short matched dissolves, silent for welcome, user-controlled playback, poster fallback for reduced motion and save-data. Actual Ascend UI may be composited only after welcome design is approved.",
+  "paidOption": {
+    "provider": "Higgsfield",
+    "model": "seedance_2_0_mini",
+    "resolution": "720p",
+    "durationPerClip": 4,
+    "audio": false,
+    "costPerClip": 10,
+    "totalCredits": 30,
+    "submitted": false
+  },
+  "freeOption": "CSS camera movement and transitions across static source panels; does not animate the people."
+}

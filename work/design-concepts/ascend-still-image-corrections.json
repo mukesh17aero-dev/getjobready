@@ -1,0 +1,18 @@
+{
+  "mode": "built-in imagegen",
+  "higgsfieldCredits": 0,
+  "corrections": [
+    {
+      "prompt": "Edit this image, preserving the three Indian people, their faces, positions, clothing, interaction, the daylight and office composition exactly. The foreground laptop is physically wrong. REMOVE the laptop entirely, including its screen, keyboard, hinge and all interface text. Replace only the space it occupied with an open paper project notebook lying FLAT on the tabletop, with a simple hand-drawn workflow of three boxes and arrows, no readable writing needed, and a plain pen alongside. Keep the young graduate explaining his work to the two colleagues, hands anatomically natural and away from other objects. The resulting image has NO laptop, NO tablet, NO monitor, NO screens, NO floating UI anywhere in the foreground. This is the human work-review moment between the two app-screen images in an Ascend employer welcome slideshow. Do not add any brand to mugs, clothing or walls. Photorealistic 16:9 single photograph. Preserve the original camera angle and all other details.",
+      "savedPath": "public/welcome/stills/employer-work-review.png",
+      "replaces": "public/welcome/stills/employer-contribution.png",
+      "reason": "Removed impossible laptop geometry; natural work discussion."
+    },
+    {
+      "prompt": "Correct the physical laptop orientation in this Ascend Indian college placement photo. Recompose as a realistic OVER-THE-SHOULDER photograph from behind the two Indian placement colleagues, with both seated SIDE BY SIDE on the SAME side of the desk, facing AWAY from the camera toward ONE open laptop. Their backs/three-quarter profiles frame the left and right edges; the camera looks BETWEEN their shoulders to see the laptop's FRONT screen. Laptop keyboard is nearest the people/camera; hinge beyond keyboard; screen beyond hinge facing back toward the people/camera, like an ordinary working laptop. Both eyelines clearly look at the visible FRONT screen. Never put anyone behind the lid looking at the backside. Preserve same woman in beige kurta, man light blue shirt, warm daylight, Indian college office, plants and teal/violet palette. Display a clean legible Ascend app: simple violet Ascend A symbol, 'ASCEND', 'Placement support', three compact cards 'Role direction', 'Practice gaps', 'Interview preparation', button 'Plan support', small 'Planned college experience'. App only on actual inward-facing laptop screen, no floating overlays, no marks on mugs or lid. Hands rest on table or use trackpad naturally, neither touches screen. Photorealistic 16:9 photograph, single coherent physically plausible scene. No unnecessary wall slogans.",
+      "savedPath": "public/welcome/stills/college-support-review.png",
+      "replaces": "public/welcome/stills/college-support.png",
+      "reason": "Both people and camera face the front of the screen from the same side."
+    }
+  ]
+}

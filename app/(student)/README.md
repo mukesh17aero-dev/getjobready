@@ -4,7 +4,7 @@ Reserved for the five persistent destinations from the Blueprint:
 
 - `home/` — adaptive home / Outcome Router surface
 - `discover/` — Career Worlds, role compare, role matches
-- `practice/` — proficiency assessment and simulation missions
+- `practice/` — role readiness assessment and simulation missions
 - `passport/` — journey snapshot and Final ASCEND Passport
 - `opportunities/` — matched interviews and interview kits
 

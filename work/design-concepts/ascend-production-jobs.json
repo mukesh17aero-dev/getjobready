@@ -1,0 +1,140 @@
+{
+  "status": "welcome-rotation-and-revised-film-complete",
+  "approvedCap": 112.55,
+  "spent": 112.55,
+  "jobs": [
+    {
+      "name": "student-first-test",
+      "jobId": "1662b425-7763-4519-9513-8eb4a43788ce",
+      "credits": 10,
+      "status": "completed",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3J5JOcYiuRjtdxzYyiTrHKAIKxi/hf_20260911_040550_1662b425-7763-4519-9513-8eb4a43788ce.mp4"
+    },
+    {
+      "name": "student",
+      "jobId": "a07133a3-578f-4c69-b8fc-fb982fec52da",
+      "credits": 10,
+      "status": "completed"
+    },
+    {
+      "name": "college",
+      "jobId": "f5540838-0801-4033-b00f-9486aba1678f",
+      "credits": 10,
+      "status": "completed"
+    },
+    {
+      "name": "employer",
+      "jobId": "bb61407c-297a-40ce-a5a4-05d0f7fb2cbc",
+      "credits": 10,
+      "status": "completed"
+    },
+    {
+      "name": "film-opening",
+      "jobId": "2b2f06ed-ab30-4d90-ae76-1d3c8d3189f4",
+      "credits": 10,
+      "status": "completed"
+    },
+    {
+      "name": "film-practice",
+      "jobId": "46f2ebe3-ba82-43bc-a8ca-03b0359f7579",
+      "credits": 10,
+      "status": "completed"
+    },
+    {
+      "name": "film-interview",
+      "jobId": "c8633426-e8a0-4871-9db5-7a21d043f0dc",
+      "credits": 10,
+      "status": "completed"
+    },
+    {
+      "name": "film-recruiter",
+      "jobId": "55f7cd2f-a404-409f-83f4-e256b55c91b4",
+      "credits": 10,
+      "status": "completed"
+    },
+    {
+      "name": "film-evidence",
+      "jobId": "f24cc076-bf67-4afc-aace-185e7ac15a30",
+      "credits": 10,
+      "status": "completed"
+    },
+    {
+      "name": "film-contribution",
+      "jobId": "5d20eccf-b326-420c-9146-a9042dc9d57e",
+      "credits": 10,
+      "status": "completed"
+    }
+  ],
+  "references": [
+    {
+      "name": "student",
+      "mediaId": "1529b08c-f2f9-4751-b246-a3f5e2a0b0f0",
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3J5JOcYiuRjtdxzYyiTrHKAIKxi/1529b08c-f2f9-4751-b246-a3f5e2a0b0f0.png"
+    },
+    {
+      "name": "college",
+      "mediaId": "cbcd95b5-81e2-4623-b4ba-74ec31387285",
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3J5JOcYiuRjtdxzYyiTrHKAIKxi/cbcd95b5-81e2-4623-b4ba-74ec31387285.png"
+    },
+    {
+      "name": "employer",
+      "mediaId": "be1a53b6-598f-431e-94f6-249846bcbe39",
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3J5JOcYiuRjtdxzYyiTrHKAIKxi/be1a53b6-598f-431e-94f6-249846bcbe39.png"
+    },
+    {
+      "name": "film-opening",
+      "mediaId": "d6a18f4e-0a4c-44cd-89fb-24b7a801afd3",
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3J5JOcYiuRjtdxzYyiTrHKAIKxi/d6a18f4e-0a4c-44cd-89fb-24b7a801afd3.png"
+    },
+    {
+      "name": "film-practice",
+      "mediaId": "8eeeeb3a-69c9-4e3d-8953-2a6f42cd5178",
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3J5JOcYiuRjtdxzYyiTrHKAIKxi/8eeeeb3a-69c9-4e3d-8953-2a6f42cd5178.png"
+    },
+    {
+      "name": "film-interview",
+      "mediaId": "28ebbf53-a734-4c00-9f7f-27d332a45832",
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3J5JOcYiuRjtdxzYyiTrHKAIKxi/28ebbf53-a734-4c00-9f7f-27d332a45832.png"
+    },
+    {
+      "name": "film-recruiter",
+      "mediaId": "fe81996c-f5e3-41d7-8536-aeeba15b6edf",
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3J5JOcYiuRjtdxzYyiTrHKAIKxi/fe81996c-f5e3-41d7-8536-aeeba15b6edf.png"
+    },
+    {
+      "name": "film-evidence",
+      "mediaId": "7ef42d76-ddb1-47f4-ad0c-e5ca9af48b26",
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3J5JOcYiuRjtdxzYyiTrHKAIKxi/7ef42d76-ddb1-47f4-ad0c-e5ca9af48b26.png"
+    },
+    {
+      "name": "film-contribution",
+      "mediaId": "f4ed8985-66f7-4206-bf67-7eb2da8d6729",
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_3J5JOcYiuRjtdxzYyiTrHKAIKxi/f4ed8985-66f7-4206-bf67-7eb2da8d6729.png"
+    }
+  ],
+  "phone": {
+    "jobId": "86fed5b0-242a-4855-b82a-9996e44671fd",
+    "credits": 7,
+    "status": "completed"
+  },
+  "narrationRevision": {
+    "jobId": "d666a6fa-9f11-4aaa-b74d-4e5bc912b3a7",
+    "credits": 2.85,
+    "status": "completed",
+    "approved": true
+  },
+  "welcomeEdit": {
+    "path": "/welcome/ambient/",
+    "credits": 0,
+    "duration": 8,
+    "method": "stable device screens and eased selective motion loops",
+    "playback": "All three scenes rotate every 5.2 seconds, with a one-second crossfade. Tab selection shows its scene then resumes rotation. Only forward clip motion is used."
+  },
+  "film": {
+    "path": "/welcome/ascend-one-minute.mp4",
+    "duration": 60,
+    "captions": "/welcome/ascend-one-minute.vtt",
+    "narration": "/welcome/ascend-film-narration-final.mp3",
+    "voiceEdit": "Long pauses shortened; pitch-preserving tempo 1.0706765 to fit 60 seconds."
+  }
+}

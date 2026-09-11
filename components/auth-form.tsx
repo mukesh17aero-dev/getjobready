@@ -28,11 +28,33 @@ export type AuthMode = keyof typeof COPY;
 // through the backend API. The "page" variant wears the app's light theme;
 // the "modal" variant wears the landing's night theme and swaps modes in
 // place via onSwitchMode instead of navigating.
-// Where to land after a successful sign-in: an in-app ?next=/path if present
-// (same-origin paths only), the homepage otherwise.
+// Where to land after a successful sign-in.
+//
+// An in-app ?next=/path when one was passed (same-origin paths only), and
+// otherwise wherever the person already was. Signing in is nearly always
+// something somebody does in the middle of doing something else - throwing
+// them to the homepage afterwards makes them navigate back, which is the
+// friction the account was supposed to remove.
+//
+// The three auth pages are the exception: staying on the sign-in screen after
+// signing in is not "where they were", it is a dead end.
+const AUTH_PAGES = ["/welcome", "/login", "/signup"];
+
 function nextPath(): string {
-  const next = new URLSearchParams(window.location.search).get("next");
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+  const params = new URLSearchParams(window.location.search);
+  const next = params.get("next");
+  if (next && next.startsWith("/") && !next.startsWith("//")) return next;
+
+  const here = window.location.pathname;
+  if (AUTH_PAGES.includes(here)) return "/";
+
+  // Carry the rest of the query, minus the parameters that only existed to
+  // open the dialog - coming back with ?auth=signup still in the URL would
+  // reopen it on arrival.
+  params.delete("auth");
+  params.delete("next");
+  const rest = params.toString();
+  return rest ? `${here}?${rest}` : here;
 }
 
 export function AuthForm({
@@ -62,6 +84,7 @@ export function AuthForm({
     const { error: oauthError } = await supabaseBrowser().auth.signInWithOAuth({
       provider: "google",
       options: {
+        queryParams: { prompt: "select_account" },
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath())}`,
       },
     });

@@ -10,6 +10,8 @@ export function Dialog({
   onClose,
   children,
   footer,
+  assistant,
+  bodyRef,
   wide = false,
 }: {
   title: string;
@@ -17,6 +19,10 @@ export function Dialog({
   onClose: () => void;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  /** Sits between the scrolling body and the footer, always reachable. */
+  assistant?: React.ReactNode;
+  /** Lets a child read how the body is being scrolled. */
+  bodyRef?: React.RefObject<HTMLElement | null>;
   wide?: boolean;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -75,7 +81,14 @@ export function Dialog({
           </button>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
+        <div
+          ref={bodyRef as React.RefObject<HTMLDivElement> | undefined}
+          className="min-h-0 flex-1 overflow-y-auto px-5 py-4"
+        >
+          {children}
+        </div>
+
+        {assistant}
 
         {footer && (
           <footer className="flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-3">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   adminDiscardDraft,
@@ -8,7 +8,13 @@ import {
   adminPublish,
   adminReviewSkillModel,
   adminRoleTemplate,
+  adminGenerateRoleContext,
+  adminGenerateRoleDetail,
+  type RoleDetailDraft,
+  adminRoleContextPrompt,
+  adminRoleDetailPrompt,
   adminSaveDraft,
+  adminSaveDraftDetailed,
   adminSuggestSkills,
   type AdminContent,
   type CatalogueImportResult,
@@ -17,25 +23,17 @@ import {
 } from "@/lib/api";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { SkillModelEditor } from "./skill-model-editor";
-import { QuestionBankEditor, type QuestionBank } from "./question-bank";
+import { AssessmentArcEditor } from "./assessment-arc";
+import { InterviewBankEditor } from "./interview-bank";
+import { RoleBatch, type BatchOutcome } from "./role-batch";
+import type { ArcBank, InterviewBank } from "@/lib/api";
 import { VideoUploadsEditor } from "./videos";
 import { Collapsible } from "@/components/collapsible";
 
-// The admin console: edit the Discovery questions and the role catalogue, then
-// publish. Editing writes a draft — students keep seeing the published version
+// The admin console: edit the role catalogue, the skills behind it, the
+// assessment arc and the interview questions, then publish. Editing writes a draft — students keep seeing the published version
 // until someone presses Publish.
 
-type Choice = {
-  id: string;
-  prompt: string;
-  a: { label: string; weights: Record<string, number> };
-  b: { label: string; weights: Record<string, number> };
-};
-type Scenario = {
-  id: string;
-  situation: string;
-  options: Array<{ id: string; label: string; weights: Record<string, number> }>;
-};
 // The whole of what a student sees on a role. Everything here is published
 // content, edited below — nothing about a role lives in the codebase.
 type RoleDetail = {
@@ -46,33 +44,43 @@ type RoleDetail = {
   workMix: Array<{ label: string; share: number; detail: string }>;
   responsibilities: string[];
   skills: Array<{ name: string; why: string }>;
-  workContext: { environment: string; hours: string; pace: string; team: string };
+  workContext: {
+    environment: string;
+    hours: string;
+    pace: string;
+    team: string;
+  };
   payMonthly: { min: number; max: number };
   payNote: string;
-  growth: Array<{ title: string; when: string; pay: { min: number; max: number } }>;
+  growth: Array<{
+    title: string;
+    when: string;
+    pay: { min: number; max: number };
+  }>;
   hardTruths: string[];
   suitsYouIf: string[];
-  voices: Array<{ name: string; title: string; journey: string; quote: string }>;
+  voices: Array<{
+    name: string;
+    title: string;
+    journey: string;
+    quote: string;
+  }>;
   voicesIllustrative: boolean;
+  assistantNotes?: string;
+  studentQuestions?: {
+    entry?: string;
+    where?: string;
+    transfers?: string;
+    changing?: string;
+    seen?: string;
+  };
+  acrossIndustries?: Array<{ industry: string; difference: string }>;
 };
-type RoleSummary = { id: string; title: string; world: string; summary: string };
-
-const DIMENSIONS = [
-  "people_service",
-  "structured_ops",
-  "commercial_drive",
-  "fast_execution",
-  "analytical",
-  "communication",
-] as const;
-
-const DIMENSION_LABEL: Record<string, string> = {
-  people_service: "People",
-  structured_ops: "Process",
-  commercial_drive: "Commercial",
-  fast_execution: "Pace",
-  analytical: "Analytical",
-  communication: "Comms",
+type RoleSummary = {
+  id: string;
+  title: string;
+  world: string;
+  summary: string;
 };
 
 // A trash can, drawn inline — the stack forbids icon libraries.
@@ -132,30 +140,489 @@ function Field({
   );
 }
 
-function Weights({
-  weights,
-  onChange,
+/**
+ * A draft merged over what a role already has.
+ *
+ * The rule is one line and it matters: a field the writer returned empty means
+ * "I had nothing to say about this", never "delete what you had". Shared by
+ * the single-role box and the batch so the two can never drift apart and
+ * start treating an empty return differently.
+ */
+function mergeRoleDraft(
+  existing: {
+    sector: string;
+    pitch: string;
+    description: string;
+    workMix: RoleDetail["workMix"];
+    responsibilities: string[];
+    skills: RoleDetail["skills"];
+    workContext: RoleDetail["workContext"];
+    hardTruths: string[];
+    suitsYouIf: string[];
+  },
+  draft: RoleDetailDraft,
+): Partial<RoleDetail> {
+  const text = (next: string, was: string) => (next.trim() !== "" ? next : was);
+  const list = <T,>(next: T[], was: T[]) => (next.length > 0 ? next : was);
+  return {
+    sector: text(draft.sector, existing.sector),
+    pitch: text(draft.pitch, existing.pitch),
+    description: text(draft.description, existing.description),
+    workMix: list(draft.workMix, existing.workMix),
+    responsibilities: list(draft.responsibilities, existing.responsibilities),
+    skills: list(draft.skills, existing.skills),
+    workContext: {
+      environment: text(
+        draft.workContext.environment,
+        existing.workContext.environment,
+      ),
+      hours: text(draft.workContext.hours, existing.workContext.hours),
+      pace: text(draft.workContext.pace, existing.workContext.pace),
+      team: text(draft.workContext.team, existing.workContext.team),
+    },
+    hardTruths: list(draft.hardTruths, existing.hardTruths),
+    suitsYouIf: list(draft.suitsYouIf, existing.suitsYouIf),
+  };
+}
+
+const BLANK_ROLE_BODY = {
+  sector: "",
+  pitch: "",
+  description: "",
+  workMix: [] as RoleDetail["workMix"],
+  responsibilities: [] as string[],
+  skills: [] as RoleDetail["skills"],
+  workContext: { environment: "", hours: "", pace: "", team: "" },
+  hardTruths: [] as string[],
+  suitsYouIf: [] as string[],
+};
+
+/**
+ * Write or enrich the body of a role from an instruction.
+ *
+ * It writes the parts that describe the work - pitch, description, the day,
+ * what you do, the skills, the conditions, the hard parts, who it suits - and
+ * it cannot touch pay, growth or testimonials. Those are not omissions to fix
+ * later: pay is an employer-validated estimate and testimonials are field
+ * research, and a model has no standing to write either. Whatever is on the
+ * role stays.
+ */
+function RoleWriter({
+  role,
+  detail: existing,
+  token,
+  aiConfigured,
+  onPatch,
 }: {
-  weights: Record<string, number>;
-  onChange: (w: Record<string, number>) => void;
+  role: RoleSummary;
+  // Undefined for a role that is only a title so far - which is exactly when
+  // this is most useful, so it has to work from nothing.
+  detail: RoleDetail | undefined;
+  token: () => Promise<string | null>;
+  aiConfigured: boolean;
+  onPatch: (patch: Partial<RoleDetail>) => void;
 }) {
+  const detail = useMemo(
+    () => ({
+      ...BLANK_ROLE_BODY,
+      sector: existing?.sector ?? "",
+      pitch: existing?.pitch ?? "",
+      description: existing?.description ?? "",
+      workMix: existing?.workMix ?? [],
+      responsibilities: existing?.responsibilities ?? [],
+      skills: existing?.skills ?? [],
+      workContext: existing?.workContext ?? BLANK_ROLE_BODY.workContext,
+      hardTruths: existing?.hardTruths ?? [],
+      suitsYouIf: existing?.suitsYouIf ?? [],
+    }),
+    [existing],
+  );
+  const [instruction, setInstruction] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
+  const [builtIn, setBuiltIn] = useState<string | null>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
+
+  useEffect(() => {
+    if (!showPrompt || builtIn !== null) return;
+    let cancelled = false;
+    void (async () => {
+      const t = await token();
+      if (!t) return;
+      const result = await adminRoleDetailPrompt(t);
+      if (!cancelled && result) setBuiltIn(result.prompt);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [showPrompt, builtIn, token]);
+
+  const write = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    setWarnings([]);
+    const t = await token();
+    if (!t) {
+      setBusy(false);
+      setError("Your session expired. Reload and sign in again.");
+      return;
+    }
+    const result = await adminGenerateRoleDetail(t, {
+      roleId: role.id,
+      roleTitle: role.title,
+      roleSummary: role.summary,
+      sector: detail.sector,
+      pitch: detail.pitch,
+      description: detail.description,
+      workMix: detail.workMix,
+      responsibilities: detail.responsibilities,
+      skills: detail.skills,
+      workContext: detail.workContext,
+      hardTruths: detail.hardTruths,
+      suitsYouIf: detail.suitsYouIf,
+      instruction,
+    });
+    setBusy(false);
+    if (!result) {
+      setError("Could not reach the writer. Try again in a moment.");
+      return;
+    }
+    if (!result.ok) {
+      setError(result.reason);
+      return;
+    }
+    setWarnings(result.warnings);
+    onPatch(mergeRoleDraft(detail, result.draft));
+  }, [role, detail, instruction, token, onPatch]);
+
   return (
-    <div className="mt-2 flex flex-wrap gap-2">
-      {DIMENSIONS.map((dim) => (
-        <label key={dim} className="flex items-center gap-1.5">
-          <span className="text-[0.68rem] text-slate-500">{DIMENSION_LABEL[dim]}</span>
-          <input
-            type="number"
-            min={0}
-            max={3}
-            value={weights[dim] ?? 0}
-            onChange={(e) =>
-              onChange({ ...weights, [dim]: Number(e.target.value) || 0 })
-            }
-            className="w-12 rounded-md border border-slate-300 bg-surface px-1.5 py-0.5 text-center text-[0.78rem]"
-          />
-        </label>
+    <div className="rounded-xl border border-brand-violet/30 bg-brand-violet/[0.03] p-3.5">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-brand-violet-deep">
+          Write this role with AI
+        </span>
+        <button
+          type="button"
+          onClick={() => setShowPrompt((v) => !v)}
+          className="text-[0.72rem] font-semibold text-brand-violet-deep hover:underline"
+        >
+          {showPrompt ? "Hide" : "Read"} the built-in instruction
+        </button>
+      </div>
+      <p className="mt-0.5 text-[0.75rem] leading-snug text-slate-500">
+        Say what you want written or changed. It rewrites the fields below and
+        leaves everything you have already written that you did not ask about.
+        It will not touch pay, career progression or testimonials.
+      </p>
+
+      {showPrompt && (
+        <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-surface p-3 text-[0.7rem] leading-relaxed text-slate-600">
+          {builtIn ?? "Loading…"}
+        </pre>
+      )}
+
+      <textarea
+        rows={3}
+        value={instruction}
+        onChange={(e) => setInstruction(e.target.value)}
+        placeholder="e.g. Write this role from scratch — it's a delivery hub supervisor in Bhiwandi. Or: the hard truths are too soft, the 5am starts in monsoon season are the real cost."
+        className="mt-2 w-full rounded-lg border border-slate-300 bg-surface px-3 py-2 text-[0.85rem] outline-none focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/20"
+      />
+
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          disabled={busy || !aiConfigured || instruction.trim() === ""}
+          onClick={() => void write()}
+          className="rounded-lg bg-brand-violet px-3.5 py-1.5 text-[0.8rem] font-bold text-white transition-colors hover:bg-brand-violet-deep disabled:opacity-60"
+        >
+          {busy ? "Writing…" : "Write it"}
+        </button>
+        {!aiConfigured && (
+          <span className="text-[0.75rem] text-slate-400">
+            No AI key configured — write the fields by hand.
+          </span>
+        )}
+      </div>
+
+      {error && (
+        <p className="mt-2 rounded-lg bg-rose-50 px-3 py-2 text-[0.78rem] text-rose-800">
+          {error}
+        </p>
+      )}
+      {warnings.map((warning) => (
+        <p
+          key={warning}
+          className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-[0.78rem] leading-snug text-amber-900"
+        >
+          {warning}
+        </p>
       ))}
+    </div>
+  );
+}
+
+// The five questions, in the order a student asks them. The label is the
+// question itself, because that is what a student sees - editing a field
+// called "Eligibility" invites a different answer than editing one called
+// "Would they take someone like me?".
+const STUDENT_QUESTIONS = [
+  {
+    key: "entry",
+    label: "Would they take someone like me?",
+    hint: "Education, marks, experience, English. Say plainly when a fresher stands a chance.",
+  },
+  {
+    key: "where",
+    label: "Where are these jobs - would I have to move?",
+    hint: "Needs a source. Left blank by the drafter unless your guidance covers it.",
+  },
+  {
+    key: "transfers",
+    label: "If I leave after a year, what do I take with me?",
+    hint: "The other door out. Lowers the risk of choosing at all.",
+  },
+  {
+    key: "changing",
+    label: "Will this job still exist?",
+    hint: "Needs a source. Never let this be a guess - it is the claim students act on hardest.",
+  },
+  {
+    key: "seen",
+    label: "What will people at home think?",
+    hint: "Needs a source. Name the stigma if there is one; pretending is worse.",
+  },
+] as const;
+
+/**
+ * The five student questions and the industry variations, for one role.
+ *
+ * The AI draft is a starting point and the guidance box is where the founder's
+ * sources go - it is authoritative over the model rather than subordinate to
+ * it, because three of these fields are claims about the world that only a
+ * person holding a source can settle. Any field the drafter had no grounds for
+ * comes back empty with a warning saying so, which is the point: a blank box
+ * is an honest state, a confident invented paragraph is not.
+ */
+function RoleContextEditor({
+  role,
+  detail,
+  token,
+  aiConfigured,
+  onPatch,
+}: {
+  role: RoleSummary;
+  detail: RoleDetail;
+  token: () => Promise<string | null>;
+  aiConfigured: boolean;
+  onPatch: (patch: Partial<RoleDetail>) => void;
+}) {
+  const [guidance, setGuidance] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
+  const [builtIn, setBuiltIn] = useState<string | null>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
+
+  useEffect(() => {
+    if (!showPrompt || builtIn !== null) return;
+    let cancelled = false;
+    void (async () => {
+      const t = await token();
+      if (!t) return;
+      const result = await adminRoleContextPrompt(t);
+      if (!cancelled && result) setBuiltIn(result.prompt);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [showPrompt, builtIn, token]);
+
+  // Memoised because generate() depends on it: a fresh object every render
+  // would rebuild the callback on every keystroke.
+  const questions = useMemo(
+    () => detail.studentQuestions ?? {},
+    [detail.studentQuestions],
+  );
+
+  const generate = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    setWarnings([]);
+    const t = await token();
+    if (!t) {
+      setBusy(false);
+      setError("Your session expired. Reload and sign in again.");
+      return;
+    }
+    const result = await adminGenerateRoleContext(t, {
+      roleId: role.id,
+      roleTitle: role.title,
+      sector: detail.sector,
+      description: detail.description,
+      responsibilities: detail.responsibilities,
+      skills: detail.skills,
+      workContext: detail.workContext,
+      hardTruths: detail.hardTruths,
+      guidance: guidance.trim() || undefined,
+    });
+    setBusy(false);
+    if (!result) {
+      setError("Could not reach the writer. Try again in a moment.");
+      return;
+    }
+    if (!result.ok) {
+      setError(result.reason);
+      return;
+    }
+    setWarnings(result.warnings);
+    // Never overwrite something already written with a blank the drafter
+    // declined to fill: a returning empty field means "no grounds", not
+    // "delete what you had".
+    const kept = (drafted: string, existing?: string) =>
+      drafted.trim() !== "" ? drafted : (existing ?? "");
+    onPatch({
+      studentQuestions: {
+        entry: kept(result.draft.entry, questions.entry),
+        where: kept(result.draft.where, questions.where),
+        transfers: kept(result.draft.transfers, questions.transfers),
+        changing: kept(result.draft.changing, questions.changing),
+        seen: kept(result.draft.seen, questions.seen),
+      },
+      acrossIndustries:
+        result.draft.acrossIndustries.length > 0
+          ? result.draft.acrossIndustries
+          : detail.acrossIndustries,
+    });
+  }, [role, detail, guidance, token, onPatch, questions]);
+
+  return (
+    <div className="rounded-xl border border-slate-200 p-3.5">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+          What the student is actually wondering
+        </span>
+        <button
+          type="button"
+          onClick={() => setShowPrompt((v) => !v)}
+          className="text-[0.72rem] font-semibold text-brand-violet-deep hover:underline"
+        >
+          {showPrompt ? "Hide" : "Read"} the built-in instruction
+        </button>
+      </div>
+      <p className="mt-0.5 text-[0.75rem] text-slate-400">
+        Everything else on a role describes the job. These describe the path
+        into it. Leave any of them empty and it stays off the student&apos;s
+        screen.
+      </p>
+
+      {showPrompt && (
+        <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-[0.7rem] leading-relaxed text-slate-600">
+          {builtIn ?? "Loading…"}
+        </pre>
+      )}
+
+      <label className="mt-3 block">
+        <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+          Your sources and corrections
+        </span>
+        <span className="mt-0.5 block text-[0.75rem] leading-snug text-slate-400">
+          Paste what you know and where it came from - an employer
+          conversation, a report, a correction. This overrides the drafter. The
+          three questions marked &ldquo;needs a source&rdquo; below are left
+          blank unless you supply one here.
+        </span>
+        <textarea
+          rows={4}
+          value={guidance}
+          onChange={(e) => setGuidance(e.target.value)}
+          placeholder="e.g. Hub roles exist in every district with a delivery hub, not just metros — confirmed with the Bhiwandi ops lead, Aug 2026."
+          className="mt-1.5 w-full rounded-lg border border-slate-300 bg-surface px-3 py-2 text-[0.85rem] outline-none focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/20"
+        />
+      </label>
+
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          disabled={busy || !aiConfigured}
+          onClick={() => void generate()}
+          className="rounded-lg bg-brand-violet px-3.5 py-1.5 text-[0.8rem] font-bold text-white transition-colors hover:bg-brand-violet-deep disabled:opacity-60"
+        >
+          {busy ? "Drafting…" : "Draft these six"}
+        </button>
+        {!aiConfigured && (
+          <span className="text-[0.75rem] text-slate-400">
+            No AI key configured — write them by hand below.
+          </span>
+        )}
+      </div>
+
+      {error && (
+        <p className="mt-2 rounded-lg bg-rose-50 px-3 py-2 text-[0.78rem] text-rose-800">
+          {error}
+        </p>
+      )}
+      {warnings.map((warning) => (
+        <p
+          key={warning}
+          className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-[0.78rem] leading-snug text-amber-900"
+        >
+          {warning}
+        </p>
+      ))}
+
+      <div className="mt-3 grid gap-3">
+        {STUDENT_QUESTIONS.map((q) => (
+          <label key={q.key} className="block">
+            <span className="text-[0.78rem] font-semibold text-slate-700">
+              {q.label}
+            </span>
+            <span className="mt-0.5 block text-[0.72rem] text-slate-400">
+              {q.hint}
+            </span>
+            <textarea
+              rows={2}
+              value={questions[q.key] ?? ""}
+              onChange={(e) =>
+                onPatch({
+                  studentQuestions: { ...questions, [q.key]: e.target.value },
+                })
+              }
+              className="mt-1 w-full rounded-lg border border-slate-300 bg-surface px-3 py-2 text-[0.85rem] outline-none focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/20"
+            />
+          </label>
+        ))}
+      </div>
+
+      <div className="mt-3">
+        <RowList
+          label="The same job, different industries"
+          hint="What actually changes about this job depending on where you do it."
+          rows={detail.acrossIndustries ?? []}
+          blank={() => ({ industry: "", difference: "" })}
+          onChange={(acrossIndustries) => onPatch({ acrossIndustries })}
+          render={(row, set) => (
+            <div className="grid gap-1.5">
+              <input
+                value={row.industry}
+                onChange={(e) => set({ industry: e.target.value })}
+                placeholder="Industry"
+                aria-label="Industry"
+                className={SMALL_INPUT}
+              />
+              <textarea
+                rows={2}
+                value={row.difference}
+                onChange={(e) => set({ difference: e.target.value })}
+                placeholder="What is different about doing this job there"
+                aria-label="What is different"
+                className={SMALL_INPUT}
+              />
+            </div>
+          )}
+        />
+      </div>
     </div>
   );
 }
@@ -201,17 +668,20 @@ function SkillNeeds({
             }`}
           >
             {skill.name}
-            <span aria-hidden className="ml-1.5 inline-flex gap-[2px] align-middle">
+            <span
+              aria-hidden
+              className="ml-1.5 inline-flex gap-[2px] align-middle"
+            >
               {[1, 2, 3].map((step) => (
                 <span
                   key={step}
                   className={`h-2.5 w-[3px] rounded-full ${
                     step <= level
                       ? level === 3
-                        ? "bg-white"
+                        ? "bg-surface"
                         : "bg-brand-violet"
                       : level === 3
-                        ? "bg-white/35"
+                        ? "bg-surface/35"
                         : "bg-slate-200"
                   }`}
                 />
@@ -268,7 +738,9 @@ function RowList<T>({
           >
             <div className="min-w-0 flex-1">
               {render(row, (patch) =>
-                onChange(rows.map((r, j) => (j === i ? { ...r, ...patch } : r))),
+                onChange(
+                  rows.map((r, j) => (j === i ? { ...r, ...patch } : r)),
+                ),
               )}
             </div>
             <button
@@ -317,40 +789,44 @@ export function AdminConsole({
   discovery,
   roles,
   skillModel,
-  questionBank,
+  assessmentArc,
+  interviewBank,
 }: {
   openToEveryone: boolean;
   aiConfigured: boolean;
   discovery: AdminContent | null;
   roles: AdminContent | null;
   skillModel: AdminContent | null;
-  questionBank: AdminContent | null;
+  assessmentArc: AdminContent | null;
+  interviewBank: AdminContent | null;
 }) {
   // Roles first, then the skills they need, then the questions that measure
   // them — the order the work is actually done in.
   const [tab, setTab] = useState<
-    "roles" | "skills" | "questions" | "videos" | "legacy"
+    | "roles"
+    | "skills"
+    | "assessment"
+    | "interview"
+    | "videos"
   >("roles");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  // What the last save actually did, in the server's terms. Kept because
+  // "saved" and "publish is still disabled" cannot both be true, and working
+  // out which one was lying cost several rounds of guessing.
+  const [lastSave, setLastSave] = useState<string | null>(null);
 
-  const startingDiscovery = (discovery?.draft?.data ??
-    discovery?.published?.data ??
-    discovery?.builtIn ??
-    {}) as { choices?: Choice[]; scenarios?: Scenario[] };
   const startingRoles = (roles?.draft?.data ??
     roles?.published?.data ??
     roles?.builtIn ??
     {}) as { roles?: RoleSummary[]; details?: RoleDetail[] };
 
-  const [choices, setChoices] = useState<Choice[]>(startingDiscovery.choices ?? []);
-  const [scenarios, setScenarios] = useState<Scenario[]>(
-    startingDiscovery.scenarios ?? [],
-  );
   const [roleSummaries, setRoleSummaries] = useState<RoleSummary[]>(
     startingRoles.roles ?? [],
   );
-  const [details, setDetails] = useState<RoleDetail[]>(startingRoles.details ?? []);
+  const [details, setDetails] = useState<RoleDetail[]>(
+    startingRoles.details ?? [],
+  );
   // A stored doc with no skills is a wipe, not a choice: fall back to the
   // built-in so the console never opens on an empty model.
   const storedModel = (skillModel?.draft?.data ??
@@ -368,11 +844,16 @@ export function AdminConsole({
         })
   ) as SkillModel;
   const [model, setModel] = useState<SkillModel>(startingModel);
-  const startingBank = (questionBank?.draft?.data ??
-    questionBank?.published?.data ?? { questions: [] }) as QuestionBank;
-  const [bank, setBank] = useState<QuestionBank>({
-    questions: startingBank.questions ?? [],
+  const startingArcs = (assessmentArc?.draft?.data ??
+    assessmentArc?.published?.data ?? { arcs: [] }) as ArcBank;
+  const [arcs, setArcs] = useState<ArcBank>({ arcs: startingArcs.arcs ?? [] });
+
+  const startingInterviews = (interviewBank?.draft?.data ??
+    interviewBank?.published?.data ?? { sets: [] }) as InterviewBank;
+  const [interviews, setInterviews] = useState<InterviewBank>({
+    sets: startingInterviews.sets ?? [],
   });
+
   // One review for the whole console; each tab shows the findings it owns.
   const [review, setReview] = useState<SkillModelReview | null>(null);
   const [checking, setChecking] = useState(false);
@@ -404,23 +885,26 @@ export function AdminConsole({
     discovery: Boolean(discovery?.draft),
     roles: Boolean(roles?.draft),
     skills: Boolean(skillModel?.draft),
-    questions: Boolean(questionBank?.draft),
+    assessment: Boolean(assessmentArc?.draft),
+    interview: Boolean(interviewBank?.draft),
     videos: false,
   });
   // Bumped on every publish, so a tab that fetched for itself refetches.
   const [publishedAt, setPublishedAt] = useState(0);
-  
 
-  async function token() {
+  // Stable: the batch runners depend on it, and a fresh function every render
+  // would rebuild them on every keystroke anywhere in the console.
+  const token = useCallback(async () => {
     const { data } = await supabaseBrowser().auth.getSession();
     return data.session?.access_token ?? null;
-  }
+  }, []);
 
   type Kind =
     | "discovery_content"
     | "role_catalogue"
     | "skill_model"
-    | "question_bank"
+    | "assessment_arc"
+    | "interview_bank"
     | "video_uploads";
   const slotFor = (kind: Kind) =>
     kind === "discovery_content"
@@ -431,7 +915,11 @@ export function AdminConsole({
           ? "skills"
           : kind === "video_uploads"
             ? "videos"
-            : "questions";
+            : kind === "assessment_arc"
+              ? "assessment"
+              : kind === "interview_bank"
+                ? "interview"
+                : "discovery";
 
   async function save(kind: Kind) {
     setBusy(true);
@@ -452,13 +940,26 @@ export function AdminConsole({
     }
     const data =
       kind === "discovery_content"
-        ? { worlds: (discovery?.published?.data as { worlds?: unknown })?.worlds, choices, scenarios }
+        ? {
+            // Worlds are all that is left in this document: the paired
+            // choices and micro-scenarios were the survey, and Discovery
+            // does not ask questions any more.
+            worlds: (discovery?.published?.data as { worlds?: unknown })
+              ?.worlds,
+          }
         : kind === "role_catalogue"
           ? { roles: roleSummaries, details }
           : kind === "skill_model"
             ? model
-            : bank;
-    const saved = await adminSaveDraft(t, kind, data);
+            : kind === "assessment_arc"
+              ? arcs
+              : interviews;
+    const saved = await adminSaveDraftDetailed(t, kind, data);
+    setLastSave(
+      saved.ok
+        ? `${kind}: draft v${saved.doc.version} written at ${new Date().toLocaleTimeString()}`
+        : `${kind}: refused — ${saved.reason}`,
+    );
     // Skill requirements are edited on the role card but belong to the skill
     // model, so saving roles saves both.
     const savedModel =
@@ -467,13 +968,13 @@ export function AdminConsole({
         : null;
     setBusy(false);
     setStatus(
-      !saved
-        ? "Could not save the draft. Nothing was changed."
+      !saved.ok
+        ? `Could not save the draft — ${saved.reason} Nothing was changed.`
         : kind === "role_catalogue" && model.skills.length > 0 && !savedModel
           ? "Roles saved, but the skills for them could not be saved. Try again."
           : "Draft saved. Students still see the published version.",
     );
-    if (saved) {
+    if (saved.ok) {
       setHasDraft((h) => ({
         ...h,
         [slotFor(kind)]: true,
@@ -508,15 +1009,15 @@ export function AdminConsole({
   // Adding one role by hand. The id is derived from the title so an uploaded
   // file with the same title updates this role rather than duplicating it.
   function addRole(title: string) {
-    const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+    const id = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_|_$/g, "");
     setRoleSummaries((rs) => [
       { id, title, world: "people", summary: "" },
       ...rs,
     ]);
-    setDetails((ds) => [
-      blankDetail(id),
-      ...ds,
-    ]);
+    setDetails((ds) => [blankDetail(id), ...ds]);
     setNewTitle("");
     setAddOpen(false);
     setStatus(`${title} added. Fill in the details, then save the draft.`);
@@ -546,11 +1047,17 @@ export function AdminConsole({
     const existing = model.skills.find(
       (s) => s.name.toLowerCase() === name.toLowerCase(),
     );
-    const id = existing?.id ?? `skill_${name.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
+    const id =
+      existing?.id ?? `skill_${name.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
     setModel((m) => ({
       ...m,
-      skills: existing ? m.skills : [...m.skills, { id, name, description: "" }],
-      skillRole: { ...m.skillRole, [id]: { ...(m.skillRole[id] ?? {}), [roleId]: 3 } },
+      skills: existing
+        ? m.skills
+        : [...m.skills, { id, name, description: "" }],
+      skillRole: {
+        ...m.skillRole,
+        [id]: { ...(m.skillRole[id] ?? {}), [roleId]: 3 },
+      },
       traitSkill: { ...m.traitSkill, [id]: m.traitSkill[id] ?? {} },
     }));
     setNewSkillName("");
@@ -589,18 +1096,29 @@ export function AdminConsole({
       .map((r) => ({
         title: r.title,
         skills: model.skills
-          .map((s) => ({ skillId: s.id, level: model.skillRole[s.id]?.[r.id] ?? 0 }))
-          .filter((x): x is { skillId: string; level: 1 | 2 | 3 } => x.level > 0),
+          .map((s) => ({
+            skillId: s.id,
+            level: model.skillRole[s.id]?.[r.id] ?? 0,
+          }))
+          .filter(
+            (x): x is { skillId: string; level: 1 | 2 | 3 } => x.level > 0,
+          ),
       }));
 
     const result = await adminSuggestSkills(t, {
-      roles: needs.map((r) => ({ id: r.id, title: r.title, summary: r.summary })),
+      roles: needs.map((r) => ({
+        id: r.id,
+        title: r.title,
+        summary: r.summary,
+      })),
       catalogue: model.skills,
       examples,
     });
     setSuggesting(false);
     if (!result) {
-      setStatus("Could not get suggestions. Set the skills by hand, or try again.");
+      setStatus(
+        "Could not get suggestions. Set the skills by hand, or try again.",
+      );
       return;
     }
     setModel((m) => {
@@ -634,6 +1152,80 @@ export function AdminConsole({
       ds.map((d) => (d.roleId === roleId ? { ...d, ...patch } : d)),
     );
   }
+
+  // One role of a batch write. Reads the detail at call time rather than
+  // closing over it, so a role written earlier in the same run is enriched
+  // from what it now says rather than from what it said when the run started.
+  const runRoleWrite = useCallback(
+    async (roleId: string, instruction: string): Promise<BatchOutcome> => {
+      const t = await token();
+      if (!t) return { ok: false, reason: "Your session expired. Reload." };
+      const summary = roleSummaries.find((r) => r.id === roleId);
+      if (!summary) return { ok: false, reason: "That role has gone." };
+      const current = details.find((d) => d.roleId === roleId);
+      const body = { ...BLANK_ROLE_BODY, ...(current ?? {}) };
+      const result = await adminGenerateRoleDetail(t, {
+        roleId,
+        roleTitle: summary.title,
+        roleSummary: summary.summary,
+        sector: body.sector,
+        pitch: body.pitch,
+        description: body.description,
+        workMix: body.workMix,
+        responsibilities: body.responsibilities,
+        skills: body.skills,
+        workContext: body.workContext,
+        hardTruths: body.hardTruths,
+        suitsYouIf: body.suitsYouIf,
+        instruction,
+      });
+      if (!result) return { ok: false, reason: "Could not reach the writer." };
+      if (!result.ok) return { ok: false, reason: result.reason };
+      patchDetail(roleId, mergeRoleDraft(body, result.draft));
+
+      // The same instruction also drives the five student questions and the
+      // industry variations. They are a separate generator with its own rules
+      // about which fields need a source, but from the console they are one
+      // job: "bring this role up to date" means all of it.
+      const warnings = [...result.warnings];
+      const ctx = await adminGenerateRoleContext(t, {
+        roleId,
+        roleTitle: summary.title,
+        sector: body.sector,
+        description: body.description,
+        responsibilities: body.responsibilities,
+        skills: body.skills,
+        workContext: body.workContext,
+        hardTruths: body.hardTruths,
+        guidance: instruction,
+      });
+      if (ctx?.ok) {
+        const had = current?.studentQuestions ?? {};
+        const keep = (next: string, was?: string) =>
+          next.trim() !== "" ? next : (was ?? "");
+        patchDetail(roleId, {
+          studentQuestions: {
+            entry: keep(ctx.draft.entry, had.entry),
+            where: keep(ctx.draft.where, had.where),
+            transfers: keep(ctx.draft.transfers, had.transfers),
+            changing: keep(ctx.draft.changing, had.changing),
+            seen: keep(ctx.draft.seen, had.seen),
+          },
+          acrossIndustries:
+            ctx.draft.acrossIndustries.length > 0
+              ? ctx.draft.acrossIndustries
+              : current?.acrossIndustries,
+        });
+        warnings.push(...ctx.warnings);
+      } else if (ctx && !ctx.ok) {
+        warnings.push(`Student questions: ${ctx.reason}`);
+      }
+      return { ok: true, warnings };
+    },
+    // patchDetail is a stable setState wrapper; details and roleSummaries are
+    // the state this reads.
+    [token, roleSummaries, details],
+  );
 
   function removeRole(id: string) {
     setRoleSummaries((rs) => rs.filter((r) => r.id !== id));
@@ -682,36 +1274,56 @@ export function AdminConsole({
     setHasDraft((h) => ({ ...h, [slotFor(kind)]: false }));
   }
 
+  // Every tab that owns a document names it. The assessment tab used to fall
+  // through to "discovery_content" here, which meant Save on that tab wrote
+  // the discovery questions and Publish shipped them - the arcs could not be
+  // saved at all, and pressing Publish there published something else.
   const kind: Kind =
     tab === "roles"
       ? "role_catalogue"
       : tab === "skills"
         ? "skill_model"
-        : tab === "questions"
-          ? "question_bank"
-          : tab === "videos"
-            ? "video_uploads"
-            : "discovery_content";
+          : tab === "assessment"
+            ? "assessment_arc"
+            : tab === "interview"
+              ? "interview_bank"
+              : tab === "videos"
+                ? "video_uploads"
+                : "discovery_content";
   const doc =
     tab === "roles"
       ? roles
       : tab === "skills"
         ? skillModel
-        : tab === "questions"
-          ? questionBank
-          : tab === "videos"
-            ? null
-            : discovery;
+          : tab === "assessment"
+            ? assessmentArc
+            : tab === "interview"
+              ? interviewBank
+              : tab === "videos"
+                ? null
+                : discovery;
+  // Stable, so the arc editor's generate callback is not rebuilt on every
+  // keystroke elsewhere in the console.
+  const skillsForRole = useCallback(
+    (roleId: string) =>
+      model.skills
+        .filter((s) => (model.skillRole[s.id]?.[roleId] ?? 0) > 0)
+        .map((s) => s.name),
+    [model],
+  );
+
   const draftPending =
     tab === "roles"
       ? hasDraft.roles
       : tab === "skills"
         ? hasDraft.skills
-        : tab === "questions"
-          ? hasDraft.questions
-          : tab === "videos"
-            ? hasDraft.videos
-            : hasDraft.discovery;
+          : tab === "assessment"
+            ? hasDraft.assessment
+            : tab === "interview"
+              ? hasDraft.interview
+              : tab === "videos"
+                ? hasDraft.videos
+                : hasDraft.discovery;
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 pb-16 sm:px-6">
@@ -742,21 +1354,25 @@ export function AdminConsole({
 
       {openToEveryone && (
         <p className="mt-3 rounded-xl border border-amber-400 bg-amber-50 px-4 py-2.5 text-[0.8rem] text-amber-800">
-          <strong className="font-semibold">Pilot setting:</strong> this console is
-          open to every signed-in user so the team can use it before roles exist.
-          Set <code className="font-mono">ADMIN_EMAILS</code> on the API and it
-          becomes admin-only immediately — the entry point disappears for everyone
-          else, and the API refuses their requests.
+          <strong className="font-semibold">Pilot setting:</strong> this console
+          is open to every signed-in user so the team can use it before roles
+          exist. Set <code className="font-mono">ADMIN_EMAILS</code> on the API
+          and it becomes admin-only immediately — the entry point disappears for
+          everyone else, and the API refuses their requests.
         </p>
       )}
 
-      <div role="tablist" aria-label="Content" className="mt-5 flex gap-2 border-b border-slate-200">
+      <div
+        role="tablist"
+        aria-label="Content"
+        className="mt-5 flex gap-2 border-b border-slate-200"
+      >
         {[
           { id: "roles" as const, label: "Roles" },
           { id: "skills" as const, label: "Skills & mappings" },
-          { id: "questions" as const, label: "Discovery questions" },
+          { id: "assessment" as const, label: "Assessment" },
+          { id: "interview" as const, label: "Interview questions" },
           { id: "videos" as const, label: "Video uploads" },
-          { id: "legacy" as const, label: "Role Assessment" },
         ].map((t) => (
           <button
             key={t.id}
@@ -781,128 +1397,20 @@ export function AdminConsole({
         </p>
       )}
 
-      {tab === "legacy" && (
-        <section className="mt-5 grid gap-4">
-          <h2 className="text-sm font-semibold text-slate-900">
-            Paired work choices ({choices.length})
-          </h2>
-          {choices.map((choice, i) => (
-            <article
-              key={choice.id}
-              className="rounded-xl border border-slate-200 bg-surface p-4"
-            >
-              <p className="mb-2 text-[0.7rem] font-bold uppercase tracking-[0.1em] text-slate-400">
-                {choice.id}
-              </p>
-              <Field
-                label="Question"
-                value={choice.prompt}
-                onChange={(v) =>
-                  setChoices((cs) => cs.map((c, j) => (j === i ? { ...c, prompt: v } : c)))
-                }
-              />
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                {(["a", "b"] as const).map((side) => (
-                  <div key={side} className="rounded-lg bg-slate-50 p-3">
-                    <Field
-                      label={`Option ${side.toUpperCase()}`}
-                      value={choice[side].label}
-                      multiline
-                      onChange={(v) =>
-                        setChoices((cs) =>
-                          cs.map((c, j) =>
-                            j === i ? { ...c, [side]: { ...c[side], label: v } } : c,
-                          ),
-                        )
-                      }
-                    />
-                    <Weights
-                      weights={choice[side].weights}
-                      onChange={(w) =>
-                        setChoices((cs) =>
-                          cs.map((c, j) =>
-                            j === i ? { ...c, [side]: { ...c[side], weights: w } } : c,
-                          ),
-                        )
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
-            </article>
-          ))}
-
-          <h2 className="mt-2 text-sm font-semibold text-slate-900">
-            Micro-scenarios ({scenarios.length})
-          </h2>
-          {scenarios.map((scenario, i) => (
-            <article
-              key={scenario.id}
-              className="rounded-xl border border-slate-200 bg-surface p-4"
-            >
-              <p className="mb-2 text-[0.7rem] font-bold uppercase tracking-[0.1em] text-slate-400">
-                {scenario.id}
-              </p>
-              <Field
-                label="Situation"
-                value={scenario.situation}
-                multiline
-                onChange={(v) =>
-                  setScenarios((ss) =>
-                    ss.map((s, j) => (j === i ? { ...s, situation: v } : s)),
-                  )
-                }
-              />
-              <div className="mt-3 grid gap-2">
-                {scenario.options.map((option, oi) => (
-                  <div key={option.id} className="rounded-lg bg-slate-50 p-3">
-                    <Field
-                      label={`Option ${option.id.toUpperCase()}`}
-                      value={option.label}
-                      onChange={(v) =>
-                        setScenarios((ss) =>
-                          ss.map((s, j) =>
-                            j === i
-                              ? {
-                                  ...s,
-                                  options: s.options.map((o, k) =>
-                                    k === oi ? { ...o, label: v } : o,
-                                  ),
-                                }
-                              : s,
-                          ),
-                        )
-                      }
-                    />
-                    <Weights
-                      weights={option.weights}
-                      onChange={(w) =>
-                        setScenarios((ss) =>
-                          ss.map((s, j) =>
-                            j === i
-                              ? {
-                                  ...s,
-                                  options: s.options.map((o, k) =>
-                                    k === oi ? { ...o, weights: w } : o,
-                                  ),
-                                }
-                              : s,
-                          ),
-                        )
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
-            </article>
-          ))}
-        </section>
-      )}
-
       {tab === "roles" && (
         <section className="mt-5 grid gap-4">
+          <RoleBatch
+            roles={roleSummaries.map((r) => ({ id: r.id, title: r.title }))}
+            hint="Write or enrich several roles - the pitch, the day, the skills, the hard parts, and the five student questions with the industry variations. Pay and testimonials are never touched, here or anywhere."
+            placeholder="e.g. The hard truths are too soft across the board. Make each one about a specific moment in that job, and put the worst one last."
+            actionLabel="Write them"
+            aiConfigured={aiConfigured}
+            run={runRoleWrite}
+          />
           {(() => {
-            const found = (review?.reviews ?? []).filter((r) => r.scope === "role");
+            const found = (review?.reviews ?? []).filter(
+              (r) => r.scope === "role",
+            );
             const problems = found.filter((r) => r.level === "problem");
             // Nothing wrong means nothing to say.
             if (found.length === 0) return null;
@@ -932,7 +1440,6 @@ export function AdminConsole({
                     and {found.length - 3} more, in the roles below.
                   </p>
                 )}
-
               </div>
             );
           })()}
@@ -1053,7 +1560,9 @@ export function AdminConsole({
                     <p className="mt-1">Added: {imported.added.join(", ")}</p>
                   )}
                   {imported.updated.length > 0 && (
-                    <p className="mt-1">Updated: {imported.updated.join(", ")}</p>
+                    <p className="mt-1">
+                      Updated: {imported.updated.join(", ")}
+                    </p>
                   )}
                 </div>
               )}
@@ -1102,7 +1611,15 @@ export function AdminConsole({
                   </button>
                 }
               >
-                <div className="grid gap-3 sm:grid-cols-2">
+                <RoleWriter
+                  role={role}
+                  detail={detail}
+                  token={token}
+                  aiConfigured={aiConfigured}
+                  onPatch={(patch) => patchDetail(role.id, patch)}
+                />
+
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <Field
                     label="Title"
                     value={role.title}
@@ -1148,8 +1665,12 @@ export function AdminConsole({
                       />
                       <button
                         type="button"
-                        disabled={newSkillFor !== role.id || !newSkillName.trim()}
-                        onClick={() => addSkillToRole(role.id, newSkillName.trim())}
+                        disabled={
+                          newSkillFor !== role.id || !newSkillName.trim()
+                        }
+                        onClick={() =>
+                          addSkillToRole(role.id, newSkillName.trim())
+                        }
                         className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-[0.78rem] font-semibold text-slate-700 transition-colors hover:border-slate-400 disabled:opacity-40"
                       >
                         Add
@@ -1158,7 +1679,9 @@ export function AdminConsole({
                   </div>
                   <SkillNeeds
                     skills={model.skills}
-                    levelOf={(skillId) => model.skillRole[skillId]?.[role.id] ?? 0}
+                    levelOf={(skillId) =>
+                      model.skillRole[skillId]?.[role.id] ?? 0
+                    }
                     onCycle={(skillId) =>
                       setModel((m) => {
                         const current = m.skillRole[skillId]?.[role.id] ?? 0;
@@ -1185,7 +1708,9 @@ export function AdminConsole({
                       multiline
                       onChange={(v) =>
                         setDetails((ds) =>
-                          ds.map((d) => (d.roleId === role.id ? { ...d, pitch: v } : d)),
+                          ds.map((d) =>
+                            d.roleId === role.id ? { ...d, pitch: v } : d,
+                          ),
                         )
                       }
                     />
@@ -1281,7 +1806,11 @@ export function AdminConsole({
                       label="Career progression"
                       hint="What comes next, and the pay that goes with it."
                       rows={detail.growth}
-                      blank={() => ({ title: "", when: "", pay: { min: 0, max: 0 } })}
+                      blank={() => ({
+                        title: "",
+                        when: "",
+                        pay: { min: 0, max: 0 },
+                      })}
                       onChange={(growth) => patchDetail(role.id, { growth })}
                       render={(row, set) => (
                         <div className="grid gap-2 sm:grid-cols-[1.6fr_1fr_0.8fr_0.8fr]">
@@ -1302,7 +1831,12 @@ export function AdminConsole({
                           <input
                             value={String(row.pay.min)}
                             onChange={(e) =>
-                              set({ pay: { ...row.pay, min: Number(e.target.value) || 0 } })
+                              set({
+                                pay: {
+                                  ...row.pay,
+                                  min: Number(e.target.value) || 0,
+                                },
+                              })
                             }
                             placeholder="Pay from"
                             aria-label="Pay from"
@@ -1311,7 +1845,12 @@ export function AdminConsole({
                           <input
                             value={String(row.pay.max)}
                             onChange={(e) =>
-                              set({ pay: { ...row.pay, max: Number(e.target.value) || 0 } })
+                              set({
+                                pay: {
+                                  ...row.pay,
+                                  max: Number(e.target.value) || 0,
+                                },
+                              })
                             }
                             placeholder="Pay to"
                             aria-label="Pay to"
@@ -1338,7 +1877,9 @@ export function AdminConsole({
                           />
                           <input
                             value={String(row.share)}
-                            onChange={(e) => set({ share: Number(e.target.value) || 0 })}
+                            onChange={(e) =>
+                              set({ share: Number(e.target.value) || 0 })
+                            }
                             placeholder="%"
                             aria-label="Share of hours"
                             className={SMALL_INPUT}
@@ -1383,7 +1924,12 @@ export function AdminConsole({
                       label="Testimonials"
                       hint="Leave the box below ticked unless these are real, consented quotes."
                       rows={detail.voices}
-                      blank={() => ({ name: "", title: "", journey: "", quote: "" })}
+                      blank={() => ({
+                        name: "",
+                        title: "",
+                        journey: "",
+                        quote: "",
+                      })}
                       onChange={(voices) => patchDetail(role.id, { voices })}
                       render={(row, set) => (
                         <div className="grid gap-2">
@@ -1427,14 +1973,16 @@ export function AdminConsole({
                         type="checkbox"
                         checked={detail.voicesIllustrative}
                         onChange={(e) =>
-                          patchDetail(role.id, { voicesIllustrative: e.target.checked })
+                          patchDetail(role.id, {
+                            voicesIllustrative: e.target.checked,
+                          })
                         }
                         className="mt-0.5 h-4 w-4"
                       />
                       <span>
                         These testimonials are illustrative composites, not real
-                        named people. Students are told so. Untick only when every
-                        quote here is real and consented.
+                        named people. Students are told so. Untick only when
+                        every quote here is real and consented.
                       </span>
                     </label>
 
@@ -1444,7 +1992,10 @@ export function AdminConsole({
                         value={detail.workContext.environment}
                         onChange={(v) =>
                           patchDetail(role.id, {
-                            workContext: { ...detail.workContext, environment: v },
+                            workContext: {
+                              ...detail.workContext,
+                              environment: v,
+                            },
                           })
                         }
                       />
@@ -1476,6 +2027,39 @@ export function AdminConsole({
                         }
                       />
                     </div>
+
+                    <label className="block rounded-xl border border-slate-200 p-3.5">
+                      <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+                        Anything else we know about this role
+                      </span>
+                      <span className="mt-0.5 block text-[0.75rem] leading-snug text-slate-400">
+                        Not shown on the role page. This is what the discovery
+                        assistant draws on when a student asks something the
+                        fields above do not answer — what an employer told you,
+                        how the work really runs, what people get wrong about
+                        it. Leave it empty and the assistant says it does not
+                        know rather than reaching for something adjacent.
+                      </span>
+                      <textarea
+                        rows={4}
+                        value={detail.assistantNotes ?? ""}
+                        onChange={(e) =>
+                          patchDetail(role.id, {
+                            assistantNotes: e.target.value,
+                          })
+                        }
+                        placeholder="e.g. Most people who leave in the first month do so because of the 5am start, not the work. Hubs run a buddy system for the first two weeks."
+                        className="mt-1.5 w-full rounded-lg border border-slate-300 bg-surface px-3 py-2 text-[0.85rem] outline-none focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/20"
+                      />
+                    </label>
+
+                    <RoleContextEditor
+                      role={role}
+                      detail={detail}
+                      token={token}
+                      aiConfigured={aiConfigured}
+                      onPatch={(patch) => patchDetail(role.id, patch)}
+                    />
                   </div>
                 )}
               </Collapsible>
@@ -1484,12 +2068,46 @@ export function AdminConsole({
         </section>
       )}
 
-      {tab === "questions" && (
-        <QuestionBankEditor
-          bank={bank}
-          model={model}
+      {tab === "assessment" && (
+        <AssessmentArcEditor
+          bank={arcs}
+          roles={roleSummaries.map((r) => ({
+            id: r.id,
+            title: r.title,
+            summary: r.summary,
+          }))}
+          skillsForRole={skillsForRole}
           aiConfigured={aiConfigured}
-          onChange={setBank}
+          token={token}
+          onChange={setArcs}
+        />
+      )}
+
+      {tab === "interview" && (
+        <InterviewBankEditor
+          bank={interviews}
+          roles={roleSummaries.flatMap((r) => {
+            // Questions come from what the job needs, so a summary with no
+            // detail behind it has nothing to build from.
+            const detail = details.find((d) => d.roleId === r.id);
+            return detail
+              ? [
+                  {
+                    id: r.id,
+                    title: r.title,
+                    sector: detail.sector,
+                    description: detail.description,
+                    responsibilities: detail.responsibilities,
+                    skills: detail.skills,
+                    workContext: detail.workContext,
+                    hardTruths: detail.hardTruths,
+                  },
+                ]
+              : [];
+          })}
+          aiConfigured={aiConfigured}
+          token={token}
+          onChange={setInterviews}
         />
       )}
 
@@ -1516,6 +2134,15 @@ export function AdminConsole({
             ? "You have unpublished changes — students still see the published version."
             : "No unpublished changes."}
         </p>
+        {/* What this tab is actually operating on. Publish being disabled is
+            a correct consequence of there being no draft, so the screen has to
+            show whether there is one rather than leaving it to be deduced. */}
+        <span className="w-full text-[0.72rem] text-slate-400">
+          Editing <code>{kind}</code> · published:{" "}
+          {doc?.published ? `v${doc.published.version}` : "none"} · draft:{" "}
+          {draftPending ? "yes" : "none"}
+          {lastSave ? ` · last save → ${lastSave}` : ""}
+        </span>
         {draftPending && (
           <button
             type="button"

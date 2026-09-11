@@ -1,0 +1,23 @@
+[
+  {
+    "audience": "student",
+    "duration": 8,
+    "frames": 192,
+    "loopBoundaryMeanDifference": 0.0,
+    "method": "camera-stabilized selective motion, fixed hands/device, static authored screen, eased forward/reverse ambient cycle"
+  },
+  {
+    "audience": "college",
+    "duration": 8,
+    "frames": 192,
+    "loopBoundaryMeanDifference": 2.05761316872428e-05,
+    "method": "camera-stabilized selective motion, fixed hands/device, static authored screen, eased forward/reverse ambient cycle"
+  },
+  {
+    "audience": "employer",
+    "duration": 8,
+    "frames": 192,
+    "loopBoundaryMeanDifference": 3.8901748971193414e-05,
+    "method": "camera-stabilized selective motion, fixed hands/device, static authored screen, eased forward/reverse ambient cycle"
+  }
+]

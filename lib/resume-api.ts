@@ -5,7 +5,7 @@
 
 // NEXT_PUBLIC_* must be accessed statically so Next.js can inline it into
 // the browser bundle.
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+import { API_URL } from "./api-base";
 
 function headers(token: string, json = false): Record<string, string> {
   const h: Record<string, string> = {
@@ -44,7 +44,11 @@ export type ResumeTarget = {
 
 // The three ATS-safe looks the backend can render. All single column, no
 // tables or graphics - only spacing, alignment and type differ.
-export type ResumeTemplate = "classic" | "compact" | "sidebar";
+export type ResumeTemplate = "classic" | "compact" | "sidebar" | "minimal" | "graduate" | "professional";
+/** The looks the Word export knows. The newer on-screen looks share a base structure with one of these. */
+export type ExportTemplate = "classic" | "compact" | "sidebar";
+export const exportTemplate = (template: ResumeTemplate): ExportTemplate =>
+  template === "compact" || template === "minimal" ? "compact" : template === "sidebar" ? "sidebar" : "classic";
 
 export type GapQuestion = { field: string; question: string };
 
@@ -56,7 +60,15 @@ export type GapCheckResult = {
 };
 
 export type ResumeData = {
-  header: { name: string; city: string; email: string };
+  header: {
+    name: string;
+    city: string;
+    email: string;
+    /** A resume with no phone number on it is a resume nobody rings. */
+    phone?: string;
+    /** LinkedIn or a portfolio. One link; more than one is clutter. */
+    link?: string;
+  };
   summary: string;
   skills: Array<{ group: string; items: string[] }>;
   experienceHeading: string;
@@ -74,8 +86,20 @@ export type ResumeData = {
     period: string;
     detail: string;
   }>;
+  /**
+   * Academic and personal projects, kept apart from experience: for somebody
+   * with no employment this is usually the strongest section on the page, and
+   * a college project written into experience reads as a job that was not one.
+   */
+  projects?: Array<{ title: string; detail: string; tools: string[] }>;
+  certifications?: Array<{ title: string; issuer: string; year: string }>;
+  /** Awards, ranks, published work. One line each. */
+  achievements?: string[];
   languages: string[];
+  /** What they organised or took responsibility for. */
   activities: string[];
+  /** Hobbies. Kept apart from activities, which are read very differently. */
+  interests?: string[];
   keywordsUsed: string[];
 };
 
@@ -210,7 +234,7 @@ export const saveResumeProfile = (
 export async function downloadResumeDocx(
   token: string,
   resume: ResumeData,
-  template: ResumeTemplate = "classic",
+  template: ExportTemplate = "classic",
   targetRole?: string,
 ): Promise<Blob | null> {
   try {

@@ -1,0 +1,30 @@
+{
+  "status": "completed",
+  "job_id": "0b6023e0-0697-4a22-9531-10b3c09fd401",
+  "authorized_credits": 40,
+  "quoted_credits": 40,
+  "reference": "http://localhost:3000/welcome \u2014 existing WebGL installation, not rejected storyboard",
+  "model": "cinematic_studio_3_0",
+  "duration": 8,
+  "resolution": "720p",
+  "aspect_ratio": "16:9",
+  "generate_audio": false,
+  "count": 1,
+  "prompt": "Photorealistic 3D architectural product animation, eight seconds, one continuous elegant camera move. Faithfully depict this specific existing ASCEND welcome installation: an open wall-free exhibition of three work-to-readiness stations arranged LEFT TO RIGHT on one long low rectangular charcoal platform, each on a subtle circular stone plinth, connected by a thin teal to emerald illuminated strip along the front edge. LEFT STUDENT STATION: substantial warm oak individual workbench, large widescreen desktop monitor with understated dark green abstract task interface, full-size physical keyboard, mouse, open cream notebook, pen, ceramic coffee cup, upholstered ergonomic chair and a small potted plant. CENTER COLLEGE STATION: large freestanding landscape cohort display on two slender brushed metal legs, dark green abstract matrix interface; below it a wide oak standing review table holding two neat rows of five individual physical work folders. RIGHT EMPLOYER STATION: an oversized open physical portfolio work-record mounted upright on a sculptural pedestal and oak ledge, visible paper page edges and brushed metal spine, three paper documents on its ledge representing task, response and assessment, and a taller plant. It must be clearly a portfolio exhibit, not another laptop or office desk. All three stations remain stable and physically connected in the same scene. No people, no rooms, no cabins, no walls, no classroom, no conference room, no office interior, no moving documents, no magical morphing. The setting is a premium deep forest-green studio void, #071310, with physically grounded shadows. Begin at a beautiful three-quarter overview with all three stations visible, glide down and gently forward toward the student workbench at human eye level as though stepping into the work, then drift sideways to reveal the college and employer exhibits and finish in a composed connected overview. Slow smooth camera, convincing perspective parallax, stable geometry, crisp photorealistic materials, natural wood grain, brushed metal reflections, paper texture, subtle glass screen reflections, realistic indirect illumination, soft area-light shadows, restrained teal #0f766e and emerald #059669 accents with pale aqua highlights. Sophisticated architectural visualization, not low-poly, not cartoon, not flat illustration. Installation occupies center and right of frame, leave left quarter dark and quiet for existing website text outside the video. No generated readable lettering, no logos, no numbers, no subtitles or watermarks, no floating dashboards. Silent. Preserve this exhibit concept exactly; realism and camera quality are the upgrade.",
+  "declined_preset_id": "24bae836-2c4a-48e0-89b6-49fcc0b21612",
+  "credits_spent": 40,
+  "credits_remaining": 58,
+  "local_video": "/welcome/ascend-network-film.mp4",
+  "local_poster": "/welcome/ascend-network-film.jpg",
+  "integration": "/welcome",
+  "original_animation": "/welcome?animation=original",
+  "note": "Existing generated film reused for forward-only approach. Cohort tabs preserve their CTA and restart the shared entry shot. Full original film remains on disk.",
+  "playback": {
+    "start_seconds": 1.2,
+    "end_seconds": 3.6,
+    "rate": 0.65,
+    "loop": false,
+    "end_behavior": "Hold close-up; Replay walk-in restarts the forward approach",
+    "additional_credits": 0
+  }
+}

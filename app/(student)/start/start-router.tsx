@@ -1,354 +1,123 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { selectJourneyRoute, type CareerProfile, type JourneyState } from "@/lib/api";
+import type { CareerProfile, JourneyState, HomeWorkItem } from "@/lib/api";
 import { progressOf } from "@/lib/next-step";
-import { journeyPercent, routeStatus, stages } from "@/lib/stages";
-import { ArrowRight, Check, Clock } from "@/components/icons";
-import { supabaseBrowser } from "@/lib/supabase-browser";
-import { track } from "@/lib/footprints";
+import { toFields } from "@/lib/profile";
+import { storySoFar } from "@/lib/stages";
+import { pickupReason } from "@/lib/home-presentation";
+import { Avatar } from "@/components/avatar";
 import { RememberHub } from "@/components/remember-hub";
-import { completeness, toFields } from "@/lib/profile";
+import { ArrowRight, Check, Spark, Mic, Eye } from "@/components/icons";
+import styles from "./student-home.module.css";
 
-// Outcome Router (Blueprint Screen 0) as a plan grid: each outcome is a
-// bordered card stating what you walk away with, how long it takes and what
-// it costs - the familiar "choose a plan" pattern, which is why it reads
-// instantly. Initial state arrives server-rendered; this component handles
-// choice, the idempotent select call and navigation.
+// The signed-in home, as approved in the /preview-home-focus concept: who you
+// are and your story so far on top, four workspaces and your open work below.
 
-// Card dressing by position: a tint and a decorative glyph. The glyphs are
-// aria-hidden colour, never the meaning - the sentence next to them is.
-const CARD_LOOKS = [
-  { tint: "#0d9488", glyph: "\u{1F9ED}" },
-  { tint: "#0369a1", glyph: "\u{1F4C4}" },
-  { tint: "#047857", glyph: "\u{1F3AF}" },
-  { tint: "#b45309", glyph: "\u{1F4C8}" },
-  { tint: "#be185d", glyph: "\u{1F399}" },
-  { tint: "#0f766e", glyph: "\u{1F48E}" },
-];
+// These illustrations describe the tools; they are not scores or activity charts.
+function Illustration({ kind }: { kind: "explore" | "practice" | "interview" | "apply" }) {
+  return <svg className={styles.illustration} aria-hidden="true" viewBox="0 0 150 112" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    {kind === "explore" ? <>
+      <circle cx="82" cy="54" r="39" opacity=".15" /><circle cx="82" cy="54" r="27" opacity=".25" />
+      <path d="m82 26 8 20 21 8-21 8-8 21-8-21-20-8 20-8z" fill="currentColor" fillOpacity=".1" />
+      <circle cx="82" cy="54" r="4" fill="currentColor" /><circle cx="115" cy="24" r="4" fill="currentColor" fillOpacity=".3" stroke="none" />
+      <path d="M32 76h12M38 70v12" opacity=".4" />
+    </> : kind === "practice" ? <>
+      <rect x="54" y="17" width="64" height="77" rx="10" transform="rotate(10 54 17)" opacity=".2" />
+      <rect x="39" y="19" width="64" height="77" rx="10" fill="currentColor" fillOpacity=".05" />
+      <path d="m51 39 4 4 7-8m-11 23 4 4 7-8m-11 23 4 4 7-8M71 39h18M71 58h18M71 77h13" />
+    </> : kind === "interview" ? <>
+      <rect x="48" y="14" width="40" height="59" rx="20" fill="currentColor" fillOpacity=".06" />
+      <path d="M38 56a30 30 0 0 0 60 0M68 86v13M55 99h26M59 32h18M59 42h18" />
+      <path d="M111 40v16m8-23v30m8-19v8M25 42v12M17 36v24" opacity=".3" />
+    </> : <>
+      <rect x="55" y="13" width="62" height="79" rx="8" transform="rotate(10 55 13)" opacity=".2" />
+      <rect x="36" y="16" width="62" height="81" rx="8" fill="currentColor" fillOpacity=".05" />
+      <circle cx="54" cy="36" r="7" /><path d="M69 32h16M69 40h11M49 56h35M49 65h35M49 74h22" />
+      <circle cx="103" cy="81" r="15" fill="var(--home-surface)" /><path d="m97 81 4 4 8-9" />
+    </>}
+  </svg>;
+}
+
+function workStatus(item: HomeWorkItem) {
+  return item.status === "follow_up" ? "Completed · follow-up" : item.status === "in_review" ? "In review" : "In progress";
+}
 
 export function StartRouter({
   initialState,
   profile = null,
   fallbackName = "",
+  photo,
 }: {
   initialState: JourneyState | null;
   profile?: CareerProfile | null;
   fallbackName?: string;
+  photo?: string;
 }) {
   const router = useRouter();
-  const [opening, setOpening] = useState<string | null>(null);
-  const [failed, setFailed] = useState(initialState === null);
   const state = initialState;
 
-  // Selecting a card is the action: it saves the choice and goes there.
-  // No confirm step - prerequisites are shown on the cards themselves.
-  async function choose(routeId: string) {
-    if (!state || opening) return;
-    setOpening(routeId);
-    track({
-      family: "decision",
-      event: "route_selected",
-      module: "journey",
-      target: routeId,
-    });
-    const { data } = await supabaseBrowser().auth.getSession();
-    const token = data.session?.access_token;
-    if (!token) {
-      router.push("/login?next=/start");
-      return;
-    }
-    const saved = await selectJourneyRoute(token, routeId, crypto.randomUUID());
-    if (!saved) {
-      setOpening(null);
-      setFailed(true);
-      return;
-    }
-    router.push(state.routes.find((r) => r.id === routeId)?.landing ?? "/");
+  if (!state) {
+    return <div className={styles.shell}><div className={styles.canvas}><main className={styles.home}>
+      <h1>Your workspace is here.</h1><p>We couldn’t load your saved activity.</p>
+      <button type="button" className={styles.primary} onClick={() => window.location.reload()}>Try again <ArrowRight size={16} /></button>
+    </main></div></div>;
   }
 
-  if (failed || !state) {
-    return (
-      <main className="mx-auto max-w-xl px-4 py-16 text-center">
-        <h1 className="text-2xl font-semibold text-slate-900">
-          We couldn&apos;t load your options
-        </h1>
-        <p className="mt-3 text-slate-600">
-          The server may just be waking up - give it a moment and try again.
-        </p>
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
-          className="mt-6 rounded-xl bg-brand-violet px-5 py-2.5 text-sm font-bold text-white hover:bg-brand-violet-deep"
-        >
-          Try again
-        </button>
-      </main>
-    );
-  }
-
-  const titles = Object.fromEntries(state.routes.map((r) => [r.id, r.title]));
-  const landings = Object.fromEntries(
-    state.routes.map((r) => [r.id, r.landing]),
-  );
-  const name =
-    (progressOf(state).name ?? fallbackName ?? "").split(" ")[0] || null;
-  // Where this person stands inside each door. Coming back to this page every
-  // day, "what can I do" is answered once and "where did I get to" is the
-  // question from then on.
-  const journey = stages(state);
-
-  // The backend's recommendation, staged as the one thing to do - but only
-  // while nothing is in progress. The moment someone has picked a door, the
-  // continuation above is the primary action and this screen must not offer
-  // a second one; the recommendation goes back to being a badge in the list.
-  // Whether the door they last walked through is now behind them - a
-  // completed route must never be offered as "continue".
-  const currentDone = state.current
-    ? routeStatus(state.current.route, state, journey).done
-    : false;
   const fields = toFields(profile);
-  const percent = completeness(fields);
-  const { selectedRole } = progressOf(state);
-  // What a step NEEDS before it can honestly be the next step: Discovery
-  // wants half a profile to work from; everything role-shaped (readiness,
-  // practice, interview) is meaningless before a role is chosen. The doors
-  // themselves stay open - only the recommendation is gated.
-  const eligibleNext = (routeId: string): boolean => {
-    if (routeId === "discovery" || routeId === "full_journey") return percent >= 50;
-    if (routeId === "readiness" || routeId === "practice" || routeId === "interview") {
-      return Boolean(selectedRole);
-    }
-    // The resume is a tool, not a journey stage - always available from
-    // its card, never pushed as "your next step".
-    if (routeId === "resume") return false;
-    return true;
-  };
-  // The recommendation follows the journey's own order: after Discovery
-  // comes the assessment, then practice, then the interview. The backend's
-  // static flag (the whole package) is only the fallback when the ladder
-  // is fully climbed.
-  const LADDER = ["discovery", "readiness", "practice", "interview"];
-  const nextOnLadder =
-    LADDER.map((id) => state.routes.find((r) => r.id === id))
-      .filter((r): r is (typeof state.routes)[number] => Boolean(r))
-      .find((r) => !routeStatus(r.id, state, journey).done && eligibleNext(r.id)) ?? null;
-  const spotlight =
-    !state.current || currentDone || !eligibleNext(state.current.route)
-      ? (nextOnLadder ??
-        state.routes.find(
-          (r) =>
-            r.recommended &&
-            !routeStatus(r.id, state, journey).done &&
-            eligibleNext(r.id),
-        ) ??
-        null)
-      : null;
+  const name = progressOf(state).name || fields.fullName || fallbackName;
+  const firstName = name.split(" ")[0];
+  const story = storySoFar(state, fields);
+  const work = state.work?.slice(0, 5);
+  const interview = state.work?.find(item => item.title.startsWith("Interview"));
+  const practice = state.work?.find(item => item.action.href.startsWith("/practice"));
+  const application = state.work?.find(item => /^(LinkedIn|Resume|Job fit)/.test(item.title));
+  const role = state.progress?.role?.title;
+  const cards = [
+    { kind: "explore" as const, title: "Explore the role", description: "Get a feel for the working day.", href: "/discover", icon: Eye, detail: role ? "Your chosen role is saved" : "Find a direction that feels right", earned: Boolean(role), footer: "Explore roles", tools: ["Discovery"] },
+    { kind: "practice" as const, title: "Role readiness", description: "Build confidence through real tasks.", href: "/practice", icon: Check, detail: practice ? workStatus(practice) : "Real situations. Useful feedback.", earned: practice?.status === "follow_up", footer: "Open practice", tools: ["Role Readiness Assessment", "Simulation Missions", "Career Passport"] },
+    { kind: "apply" as const, title: "Prepare to apply", description: "Turn your experience into your story.", href: "/resume", icon: Spark, detail: application ? `${application.title.split(" · ")[0]} · ${application.status === "in_review" ? "in review" : application.status === "follow_up" ? "follow-up available" : "in progress"}` : "Resume, LinkedIn and job fit", earned: false, footer: "Open applications", tools: ["Resume Builder", "LinkedIn Profile Builder", "Job Fit Analyzer"] },
+    { kind: "interview" as const, title: "Interview readiness", description: "Find your words. Make them count.", href: "/interview", icon: Mic, detail: interview?.status === "follow_up" ? "Interview completed · feedback ready" : interview ? workStatus(interview) : "A space to practise your answers", earned: interview?.status === "follow_up", footer: "Open interviews", tools: ["AI Interview", "Interview Story Bank", "Question library"] },
+  ];
 
-  const travelled = journeyPercent(journey);
-  const role = fields.currentRole || fields.course || null;
-  // The role they chose at the end of Discovery - the single most
-  // important fact this banner can show.
-  const targetRole = state.progress?.role?.title ?? null;
-  const spaces = fields.interestedSpaces
-    ? fields.interestedSpaces.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 2)
-    : [];
-
-  // The banner's one continuation, in priority order: something already
-  // started, an incomplete profile, then the recommendation.
-  // A person we know nothing about goes to the profile first - always.
-  // Only then does an unfinished route reclaim the button.
-  const continueTo =
-    percent === 0
-      ? { label: "Start: tell us about you", act: () => router.push("/profile") }
-      : state.current && !currentDone && eligibleNext(state.current.route)
-        ? {
-            label: `Continue: ${titles[state.current.route] ?? "where you left off"}`,
-            act: () => router.push(landings[state.current!.route] ?? "/"),
-          }
-        : percent < 100
-          ? { label: "Continue: finish your profile", act: () => router.push("/profile") }
-          : spotlight
-            ? { label: `Start: ${spotlight.title}`, act: () => void choose(spotlight.id) }
-            : null;
-
-  return (
-    <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-6 sm:px-6">
-      <RememberHub path="/start" />
-
-      {/* ---- mission control: the banner that knows you ---- */}
-      <section className="animate-fade-up overflow-hidden rounded-3xl border border-slate-200">
-        <div className="bg-gradient-to-r from-[#0d3b3f] via-[#0f766e] to-[#059669] px-5 py-5 text-white sm:px-6">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-            <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full border-4 border-white/30 text-center">
-              <span className="font-display text-lg font-bold leading-none">
-                {travelled}%
-                <span className="mt-0.5 block text-[0.5rem] font-semibold uppercase tracking-wide text-white/80">
-                  journey
-                </span>
-              </span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-display text-xl font-bold">
-                {percent === 0
-                  ? name
-                    ? `Hi ${name} - let\u2019s begin.`
-                    : "Welcome to Ascend - let\u2019s begin."
-                  : name
-                    ? `Hi ${name} - welcome back.`
-                    : "Welcome back."}
-              </p>
-              {role && (
-                <p className="mt-0.5 text-[0.9rem] font-medium text-white/95">
-                  {role}
-                </p>
-              )}
-            </div>
-            {continueTo && (
-              <button
-                type="button"
-                onClick={continueTo.act}
-                className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-[0.85rem] font-bold text-[#134e4a] transition-transform hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
-              >
-                {continueTo.label}
-                <ArrowRight size={15} />
-              </button>
-            )}
-          </div>
-          {(targetRole || spaces.length > 0 || (percent > 0 && percent < 100)) && (
-            <div className="mt-3.5 flex flex-wrap gap-1.5">
-              {targetRole && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[0.74rem] font-bold ring-1 ring-white/40">
-                  <span className="text-[0.56rem] font-bold uppercase tracking-wider text-white/70">
-                    aiming to be
-                  </span>
-                  {targetRole}
-                </span>
-              )}
-              {spaces.map((space) => (
-                <span
-                  key={space}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[0.74rem] font-medium ring-1 ring-white/20"
-                >
-                  <span className="text-[0.56rem] font-bold uppercase tracking-wider text-white/60">
-                    interested
-                  </span>
-                  {space}
-                </span>
-              ))}
-              {percent > 0 && percent < 100 && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[0.74rem] font-medium ring-1 ring-white/20">
-                  <span className="text-[0.56rem] font-bold uppercase tracking-wider text-white/60">
-                    profile
-                  </span>
-                  {percent}%
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* the journey, as a strip of stage bars */}
-          <div className="mt-4 flex items-start gap-1.5">
-            {journey.map((stage) => (
-              <div key={stage.id} className="min-w-0 flex-1">
-                <div
-                  className={`h-1.5 rounded-full ${
-                    stage.state === "done"
-                      ? "bg-white/90"
-                      : stage.state === "live"
-                        ? "bg-white/60"
-                        : "bg-white/25"
-                  }`}
-                />
-                <p className="mt-1 hidden truncate text-[0.6rem] font-semibold uppercase tracking-wide text-white/65 sm:block">
-                  {stage.title}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ---- the goal grid: every door, status on its sleeve ---- */}
-        <div className="grid gap-4 bg-brand-mist p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-3">
-          {state.routes.map((route, i) => {
-            const busy = opening === route.id;
-            const status = routeStatus(route.id, state, journey);
-            const started = status.percent !== null && !status.done;
-            const look = CARD_LOOKS[i % CARD_LOOKS.length];
-            const recommended = spotlight?.id === route.id && !status.done && !started;
-
-            return (
-              <div
-                key={route.id}
-                onClick={() => void choose(route.id)}
-                style={{ animationDelay: `${80 + i * 55}ms` }}
-                className={`animate-fade-up flex cursor-pointer flex-col rounded-2xl border bg-surface p-4 transition-[box-shadow,border-color] hover:shadow-md ${
-                  busy
-                    ? "border-brand-teal ring-3 ring-brand-teal/15"
-                    : recommended
-                      ? "border-teal-700/50 shadow-[0_10px_30px_-14px_rgba(13,148,136,0.4)] hover:border-teal-700"
-                      : "border-slate-200 hover:border-brand-teal/50"
-                } ${opening !== null && !busy ? "opacity-50" : ""}`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <span
-                    aria-hidden
-                    className="grid h-14 w-14 place-items-center rounded-2xl text-[1.8rem]"
-                    style={{ background: `${look.tint}18` }}
-                  >
-                    {look.glyph}
-                  </span>
-                  {status.done ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-teal-700">
-                      <Check size={10} /> Done
-                    </span>
-                  ) : started ? (
-                    <span className="rounded-full bg-teal-50 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-teal-700">
-                      {/* The resume card's status is the record count, which
-                          reads as bureaucracy here - a plain label instead. */}
-                      {route.id === "resume" ? "In progress" : status.label}
-                    </span>
-                  ) : recommended ? (
-                    <span className="rounded-full bg-brand-teal-deep px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-white">
-                      Recommended
-                    </span>
-                  ) : null}
-                </div>
-
-                <p className="mt-3 font-display text-[0.98rem] font-bold leading-snug text-brand-ink">
-                  &ldquo;{route.need}&rdquo;
-                </p>
-                <p className="mt-1 flex-1 text-[0.78rem] leading-snug text-slate-500">
-                  {route.output}
-                </p>
-
-                {route.resolved.note && (
-                  <p className="mt-2 rounded-lg bg-amber-50 px-2.5 py-1.5 text-[0.72rem] leading-snug text-amber-900">
-                    <strong className="font-semibold">First:</strong>{" "}
-                    {route.resolved.note}
-                  </p>
-                )}
-
-                <div className="mt-3 flex items-center justify-between gap-2">
-                  <button
-                    type="button"
-                    disabled={opening !== null}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-brand-teal-deep px-3.5 py-2 text-[0.78rem] font-bold text-white transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-brand-teal focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal disabled:cursor-default motion-reduce:hover:translate-y-0"
-                  >
-                    {busy ? "Opening\u2026" : route.title}
-                    {!busy && <ArrowRight size={13} />}
-                  </button>
-                  <span className="inline-flex items-center gap-1 text-[0.7rem] text-slate-400">
-                    <Clock size={11} />
-                    {route.time}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+  return <div className={styles.shell}><div className={styles.canvas}><main className={styles.home}>
+    <RememberHub path="/start" />
+    <header className={styles.hero}>
+      <div className={styles.welcome}>
+        {(name || photo) && <Link href="/profile" className={styles.avatarLink} aria-label="Open your profile"><Avatar src={photo} name={name} className={styles.avatar} /></Link>}
+        <div><span className={styles.eyebrow}>YOUR CAREER, IN THE MAKING</span><h1>{firstName ? <>Welcome back,<br /><strong>{firstName}.</strong></> : <>Your next chapter<br /><strong>starts here.</strong></>}</h1></div>
+      </div>
+      <section className={styles.story} aria-labelledby="story-heading">
+        <div className={styles.storyLabel}><span className={styles.storyMark}><Spark size={16} /></span><h2 id="story-heading">Your story so far</h2><Link href="/profile">Edit profile <ArrowRight size={13} /></Link></div>
+        <p>{story.who ?? "Add a little about your background and interests to start your story. You can explore roles at any time."}</p>
       </section>
-    </main>
-  );
+    </header>
+
+    <div className={styles.columns}>
+      <section className={styles.workspace} aria-labelledby="workspace-heading">
+        <div className={styles.sectionHeading}><div><h2 id="workspace-heading">Your workspace</h2><p>Four ways to move your career forward.</p></div></div>
+        <div className={styles.cards}>{cards.map(card => <Link href={card.href} key={card.kind} className={styles.card} data-kind={card.kind}>
+          <div className={styles.cardTop}><span className={styles.icon}><card.icon size={20} /></span><Illustration kind={card.kind} /></div>
+          <h3>{card.title}</h3><p>{card.description}</p>
+          <ul className={styles.tools} aria-label="Tools">{card.tools.map(tool => <li key={tool}>{tool}</li>)}</ul>
+          <div className={styles.cardStatus} data-earned={card.earned}>{card.earned ? <Check size={13} /> : <span className={styles.statusDot} />}{card.detail}</div>
+          <div className={styles.cardFooter}><span>{card.footer}</span><span className={styles.arrow}><ArrowRight size={17} /></span></div>
+        </Link>)}</div>
+        <div className={styles.journey}><Link href="/journey">View journey <ArrowRight size={15} /></Link></div>
+      </section>
+
+      <section className={styles.pickup} aria-labelledby="pickup-heading">
+        <div className={styles.sectionHeading}><div><h2 id="pickup-heading">Pick up your work</h2><p>Your latest open work and useful follow-ups.</p></div></div>
+        {work == null ? <div className={styles.empty}><h3>Saved work is unavailable</h3><p>We couldn’t check your latest records.</p><button type="button" onClick={() => router.refresh()}>Try again <ArrowRight size={15} /></button></div>
+          : work.length === 0 ? <div className={styles.empty}><Spark size={28} /><h3>Room for your next step</h3><p>Explore a role or open a workspace. Your open drafts and recommended follow-ups will appear here.</p><Link href="/discover">Explore roles <ArrowRight size={15} /></Link></div>
+          : <ol className={styles.workList}>{work.map((item, index) => <li key={item.id} className={styles.workItem} data-featured={index === 0}>
+            <div className={styles.workMeta}><span className={styles.badge} data-completed={item.status === "follow_up"}>{item.status === "follow_up" && <Check size={12} />}{workStatus(item)}</span>{index === 0 && <span className={styles.latest}>LATEST OPEN WORK</span>}</div>
+            <h3>{item.title}</h3>
+            <p className={styles.reason}><strong>Why pick this up: </strong>{pickupReason(item.reason)}</p>
+            <Link href={item.action.href} className={index === 0 ? styles.primary : styles.workLink}>{item.action.label}<ArrowRight size={16} /></Link>
+          </li>)}</ol>}
+      </section>
+    </div>
+  </main></div></div>;
 }

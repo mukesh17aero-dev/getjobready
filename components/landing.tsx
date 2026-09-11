@@ -1,13 +1,30 @@
 import React from "react";
+import Link from "next/link";
 import { FeatureWall } from "@/components/feature-wall";
 import { LandingCtas } from "@/components/landing-ctas";
-import { SnapStack } from "@/components/snap-stack";
-import { Check, Clock, Eye, Spark } from "@/components/icons";
+import { AudienceHero, type Audience } from "@/components/audience-hero";
+import { AuthDeepLink } from "@/components/auth-deep-link";
+import { StickyAsk } from "@/components/sticky-ask";
+import { CohortReadiness } from "@/components/cohort-readiness";
+import { ArrowRight, Check, Clock, Eye, Spark } from "@/components/icons";
+import { SwipeDeck } from "@/components/swipe-deck";
 
-// Sticky-stacked chapters: every section is a full-height sheet, and the
-// next chapter slides up and covers it while the covered one recedes into
-// the dark (pure CSS scroll timelines - no libraries). Four sheets: the
-// question, where it leads, the employer, the start.
+// One page per audience, read the way every other page is read: scrolled.
+//
+// It was four full-height sheets that covered each other, paged by a wheel
+// handler written by hand. That shape cost more than it gave. The button sat
+// in the first sheet, so the people it was for pressed it there and the
+// sheets below were written for almost nobody; the sheet a student did reach
+// was the network pitch, addressed to all three audiences at once; and two of
+// the three audiences had no ending at all - an employer who read to the
+// bottom was never asked for anything, and a college got the hero and then
+// the page stopped.
+//
+// So: no sheets, no pager, no full-height sections. The switch at the top -
+// unchanged, same control, same labels - now produces a whole page rather
+// than a headline, and each one ends in its own ask. The two pictures worth
+// keeping, the network loop and the employer chart, keep their full size,
+// which is the thing a single screen could not have done.
 //
 // The accent runs a cyan → teal → emerald spectrum: cyan where the road
 // begins, emerald where it is earned. The inner app keeps its violet
@@ -55,9 +72,9 @@ function Glow({ low = false }: { low?: boolean }) {
   );
 }
 
-// One sheet of the stack. Sticky at lg so the next sheet covers it; the
-// inner wrapper is what recedes, because a sticky element cannot animate
-// its own transform without breaking its stickiness.
+// One chapter of the page. It was sticky and snapped; it is now an ordinary
+// section that ends where its content ends, which is what lets the exhibits
+// inside it be as tall as they need to be.
 function Sheet({
   children,
   tone,
@@ -68,16 +85,13 @@ function Sheet({
   first?: boolean;
 }) {
   return (
-    <section
-      data-sheet
-      className="relative lg:sticky lg:top-14 lg:snap-start lg:snap-always"
-    >
+    <section className="relative">
       {/* Flat, full-bleed sheets: with every sheet on the same ground, a
           rounded top edge revealed the same colour behind it and read as a
           notch under the header rather than as one card over another. The
           hairline border still marks where one sheet ends. */}
       <div
-        className={`stack-recede relative overflow-hidden ${tone} ${
+        className={`relative overflow-hidden ${tone} ${
           first ? "" : "border-t border-[var(--lp-border)]"
         }`}
       >
@@ -88,8 +102,6 @@ function Sheet({
 }
 
 // The three questions every first career asks - the hero cycles them.
-const QUESTIONS = ["What fits me?", "Am I ready?", "Do I stand out?", "What’s my path?"];
-
 // The catalogue's real roles, not invented ones.
 const ROLES = [
   "Customer Success Associate",
@@ -150,74 +162,6 @@ const QA = [
   },
 ];
 
-// The same four questions and answers, cut for the swipe theatre: the
-// question you came with is swiped away LEFT; what you leave with is
-// swiped RIGHT - the dating-app grammar, spent on a career. Lines stay
-// short: a card is on stage for about three seconds.
-type SwipeCard = {
-  kind: "question" | "answer";
-  eyebrow: string;
-  title: string;
-  line?: string;
-  sub?: string;
-};
-
-const SWIPES: SwipeCard[] = [
-  {
-    kind: "question",
-    eyebrow: "Sound familiar?",
-    title: "“What if I pick something wrong for me?”",
-    sub: "Parents say one thing. Friends another. The internet says everything.",
-  },
-  {
-    kind: "answer",
-    eyebrow: "With Ascend",
-    title: "A direction you can defend",
-    line: "A focused assessment reads your potential and identifies the career roles where you can excel.",
-    sub: "Every match comes with the reasons behind it - and nothing locks you in.",
-  },
-  {
-    kind: "question",
-    eyebrow: "Sound familiar?",
-    title: "“I don’t even know what jobs exist for me.”",
-    sub: "Job boards show titles. Nobody shows the day behind them.",
-  },
-  {
-    kind: "answer",
-    eyebrow: "With Ascend",
-    title: "A dictionary of real roles",
-    line: "Roles across the market, explained - the real day, the real pay, and where each can accelerate your career.",
-    sub: "Frontline white-collar work, mapped end to end.",
-  },
-  {
-    kind: "question",
-    eyebrow: "Sound familiar?",
-    title: "“Thousands of us are applying for the same jobs.”",
-    sub: "Same degree, same resume template, same job boards.",
-  },
-  {
-    kind: "answer",
-    eyebrow: "With Ascend",
-    title: "A race you can actually win",
-    line: "Practise the real work before day one - closing the productivity gap employers actually measure.",
-    sub: "Walk in ready to excel at the job, not just interview for it.",
-  },
-  {
-    kind: "question",
-    eyebrow: "Sound familiar?",
-    title: "“Why should I trust a tool with my career?”",
-    sub: "Every app promises a dream job. None of them show their working.",
-  },
-  {
-    kind: "answer",
-    eyebrow: "With Ascend",
-    title: "Reasons, not promises",
-    line: "The reality of each role beyond what the internet shows - then training that makes you ready for it.",
-    sub: "And a connection to employers who value a productive candidate from day one.",
-  },
-];
-
-
 // The full offer, in plain language - every line is a real, shipped part
 // of the product; none of it uses internal product names.
 
@@ -237,8 +181,6 @@ const EMPLOYER_CHALLENGES = [
     a: "They’ve done the job’s tasks before day one - the gap between offer and productive shrinks to onboarding, not education.",
   },
 ];
-
-
 
 // The rotating gradient ring, shipped raw. The build's CSS minifier drops
 // `mask-composite: exclude` and reorders the -webkit- variant (which the
@@ -275,12 +217,118 @@ const BORDER_GLOW_CSS = `
 }
 `;
 
-export function Landing({ signedIn }: { signedIn: boolean }) {
+// ---- what each selection gets, in words ----
+//
+// One entry per audience, because the whole point of the switch is that the
+// page belongs to whoever is reading it. The loop is the only picture all
+// three share, and never for the same reason - which is what `network` says
+// above it.
+const PER_AUDIENCE: Record<
+  Audience,
+  {
+    beatsTitle: string;
+    beats: Array<[string, string]>;
+    network: string;
+    bar: string;
+    barCta: string;
+    barHref: string;
+    askHead: string;
+    askBody: string;
+  }
+> = {
+  student: {
+    beatsTitle: "What you get",
+    beats: [
+      [
+        "Roles that fit you",
+        "The real day behind each one, the pay it starts at, and a reason behind every match.",
+      ],
+      [
+        "A plan, then practice",
+        "Work the actual job before day one, scored, so you know where you stand.",
+      ],
+      [
+        "Proof, not claims",
+        "A record of work that was watched and marked. It stays yours.",
+      ],
+    ],
+    network:
+      "Where this goes: you are not using a tool on your own, you are on a loop that ends in a job.",
+    bar: "Ready when you are - the first role takes two minutes.",
+    barCta: "Begin your climb",
+    barHref: "/",
+    askHead: "Your dream career, built together.",
+    askBody:
+      "Ascend starts with where you are: the roles that fit you, a plan sized to you, practice that makes you ready, and proof employers trust. From the first question onward, your career has someone in its corner.",
+  },
+  college: {
+    beatsTitle: "What a placement cell gets",
+    beats: [
+      [
+        "Measured, not surveyed",
+        "Every number comes from work a student was marked on, not from a form they filled in.",
+      ],
+      [
+        "Early enough to matter",
+        "You see the gap in the year you can still do something about it.",
+      ],
+      [
+        "The cohort and the student",
+        "The whole year at a glance, and any one student behind it.",
+      ],
+    ],
+    network:
+      "And the path each of those students is on, which is what moves them along that scale.",
+    bar: "See your own cohort - a walkthrough takes fifteen minutes.",
+    barCta: "See the college view",
+    barHref: "/for/colleges",
+    askHead: "Know the gap while you can still close it.",
+    askBody:
+      "One view of the year group, built from work that was scored rather than self-reported, so placement effort goes where it changes an outcome.",
+  },
+  employer: {
+    beatsTitle: "What arrives with a candidate",
+    beats: [
+      [
+        "Evidence, not self-description",
+        "Work that was observed and marked, attached to the person who did it.",
+      ],
+      [
+        "Productive sooner",
+        "They have done a version of the job before their first day.",
+      ],
+      [
+        "Screen on the record",
+        "Compare people on the same measured work, not on how well a resume was written.",
+      ],
+    ],
+    network:
+      "And where those candidates come from - the loop that produced the record you are reading.",
+    bar: "See what arrives with a candidate.",
+    barCta: "See the employer view",
+    barHref: "/for/employers",
+    askHead: "Hire people who already know the work.",
+    askBody:
+      "Candidates reach you having practised the role and been scored on it, so a screening decision rests on evidence instead of a resume's self-description.",
+  },
+};
+
+export function Landing({
+  signedIn,
+  audience = "student",
+}: {
+  signedIn: boolean;
+  /** Which audience tab the first sheet opens on. */
+  audience?: Audience;
+}) {
+  const said = PER_AUDIENCE[audience];
   return (
     <div className="landing-surface relative bg-[var(--lp-bg-a)] text-[var(--lp-ink)]">
       <style dangerouslySetInnerHTML={{ __html: BORDER_GLOW_CSS }} />
-      <SnapStack />
-      {/* ---- sheet one: the question, and what it becomes ---- */}
+      {/* /welcome?auth=login|signup, for every audience rather than only the
+          ones whose page happens to end in the button that used to own it. */}
+      <AuthDeepLink />
+      {/* ---- the hero: who you are, and what you came here asking ---- */}
       <Sheet tone="bg-[var(--lp-bg-a)]" first>
         <Glow />
         <div
@@ -288,179 +336,30 @@ export function Landing({ signedIn }: { signedIn: boolean }) {
           className="pointer-events-none absolute inset-x-0 top-0 h-[34rem] bg-[radial-gradient(var(--lp-dots)_1px,transparent_1px)] bg-[size:26px_26px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,black,transparent)]"
         />
 
-        <div className="relative mx-auto flex min-h-[calc(100dvh-3.5rem)] max-w-6xl flex-col px-4 pb-8 pt-8 sm:px-6 lg:pt-12">
-          <div className="grid flex-1 items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
-            <header className="min-w-0 lg:flex lg:flex-col lg:justify-center">
-              <p className="animate-fade-up inline-flex max-w-full flex-wrap items-center gap-2 rounded-full border border-[var(--lp-border)] bg-[var(--lp-panel)] px-4 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[var(--lp-teal)] backdrop-blur">
-                <span className="h-1.5 w-1.5 rounded-full bg-[var(--lp-teal)] opacity-70" />
-                For students, early careers, and their employers
-              </p>
-
-              <h1
-                className="animate-fade-up mt-7 font-display text-[clamp(1.9rem,4.3vw,3.1rem)] font-semibold leading-[1.05] tracking-[-0.03em] [text-wrap:balance]"
-                style={{ animationDelay: "80ms" }}
-              >
-                <span className="block text-[var(--lp-body-strong)]">
-                  Every career start asks
-                </span>
-                <span className="relative mt-1 block h-[1.22em] overflow-hidden">
-                  <span className="sr-only">
-                    What fits me? Am I ready? Do I stand out? What’s my path?
-                  </span>
-                  <span aria-hidden className="flex animate-words flex-col">
-                    {[...QUESTIONS, QUESTIONS[0]].map((q, i) => (
-                      <span
-                        key={`${q}-${i}`}
-                        className="h-[1.22em] bg-gradient-to-r from-[var(--lp-cyan)] via-[var(--lp-teal)] to-[var(--lp-emerald)] bg-clip-text leading-[1.22] text-transparent"
-                      >
-                        {q}
-                      </span>
-                    ))}
-                  </span>
-                </span>
-              </h1>
-
-              <p
-                className="animate-fade-up mt-6 max-w-[46ch] text-[1.05rem] leading-relaxed text-[var(--lp-body)]"
-                style={{ animationDelay: "160ms" }}
-              >
-                Chasing a dream career in a competitive, AI-driven market is
-                challenging - thousands chase the same opportunity. Ascend
-                clears your path: work that fits how you think, a plan to get
-                ready, and proof employers trust.
-              </p>
-
-            </header>
-
-            {/* The argument, played as a deck inside a phone: the question
-                you came with is swiped away left; what Ascend gives you back
-                is swiped right - on the device this whole journey will
-                actually happen on. Decorative theatre; the full text lives
-                in prose below for screen readers and reduced motion. */}
-            <div
-              className="lp-dark animate-fade-up mx-auto w-full min-w-0 max-w-[19.5rem] motion-reduce:hidden"
-              style={{ animationDelay: "200ms" }}
-            >
-              <div className="lg:[perspective:1600px]">
-                <div
-                  aria-hidden
-                  className="relative rounded-[3rem] border-[10px] border-[#1c2536] bg-[#0a0f1a] ring-1 ring-[var(--lp-border)] shadow-[0_40px_90px_-30px_rgba(0,0,0,0.9),0_0_80px_-20px_rgba(45,212,191,0.3)] transition-transform duration-500 ease-out lg:[transform:rotateY(-9deg)_rotateX(4deg)] lg:hover:[transform:none]"
-                >
-                  {/* Notch. A phone without one reads as a picture frame. */}
-                  <span className="absolute left-1/2 top-2.5 z-20 h-6 w-28 -translate-x-1/2 rounded-full bg-[#1c2536]" />
-                  {/* Side buttons: the tell that this is hardware. */}
-                  <span className="absolute -left-[13px] top-24 h-10 w-[3px] rounded-full bg-[#1c2536]" />
-                  <span className="absolute -left-[13px] top-[9.5rem] h-14 w-[3px] rounded-full bg-[#1c2536]" />
-                  <span className="absolute -right-[13px] top-32 h-16 w-[3px] rounded-full bg-[#1c2536]" />
-
-                  {/* The screen: cards swipe away inside it and leave
-                      through its edge. */}
-                  <div className="relative m-1 h-[30rem] overflow-hidden rounded-[2.4rem]">
-                    {SWIPES.map((card, i) => (
-                      <article
-                        key={`${card.kind}-${i}`}
-                        style={{ animationDelay: `${i * 6}s` }}
-                        className={`absolute inset-0 flex flex-col p-6 pt-14 [animation-fill-mode:both] ${
-                          card.kind === "question"
-                            ? "animate-swipe-left bg-gradient-to-b from-[#161f2e] to-[#0d141f]"
-                            : "animate-swipe-right bg-gradient-to-b from-[#12211f] to-[#0b1613]"
-                        }`}
-                      >
-                        <p
-                          className={`text-[0.64rem] font-bold uppercase tracking-[0.18em] ${
-                            card.kind === "question"
-                              ? "text-[var(--lp-faint)]"
-                              : "text-[var(--lp-emerald)]"
-                          }`}
-                        >
-                          {card.eyebrow}
-                        </p>
-                        <div className="my-auto py-4">
-                          <h3 className="font-display text-[1.4rem] font-semibold leading-snug tracking-[-0.015em] text-[var(--lp-ink)] [text-wrap:balance]">
-                            {card.title}
-                          </h3>
-                          {card.line && (
-                            <p className="mt-2.5 text-[0.95rem] leading-relaxed text-[var(--lp-body)]">
-                              {card.line}
-                            </p>
-                          )}
-                          {card.sub && (
-                            <p className="mt-3 border-l-2 border-[var(--lp-border)] pl-3 text-[0.88rem] leading-relaxed text-[var(--lp-faint)]">
-                              {card.sub}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between pt-2">
-                          <span
-                            className={`grid h-11 w-11 place-items-center rounded-full border text-[0.85rem] ${
-                              card.kind === "question"
-                                ? "border-[var(--lp-border)] text-[var(--lp-body-strong)]"
-                                : "border-[var(--lp-border)] text-[var(--lp-faint)]"
-                            }`}
-                          >
-                            ✕
-                          </span>
-                          <span className="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-[var(--lp-faint)]">
-                            swipe
-                          </span>
-                          <span
-                            className={`grid h-11 w-11 place-items-center rounded-full ${
-                              card.kind === "answer"
-                                ? "bg-[#34d399]/25 text-[var(--lp-emerald)]"
-                                : "bg-[var(--lp-panel)] text-[var(--lp-faint)]"
-                            }`}
-                          >
-                            <Check size={15} />
-                          </span>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div
-                aria-hidden
-                className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[0.78rem] text-[var(--lp-faint)]"
-              >
-                <span className="inline-flex items-center gap-2">
-                  <span className="grid h-6 w-6 place-items-center rounded-full border border-[var(--lp-border)] text-[0.7rem] text-[var(--lp-body)]">
-                    ✕
-                  </span>
-                  the question you came with
-                </span>
-                <span className="inline-flex items-center gap-2">
-                  <span className="grid h-6 w-6 place-items-center rounded-full bg-[#34d399]/20 text-[var(--lp-emerald)]">
-                    <Check size={12} />
-                  </span>
-                  what you leave with
-                </span>
-              </div>
-            </div>
-          </div>
+        <div className="relative mx-auto flex max-w-6xl flex-col px-4 pb-8 pt-2 sm:px-6 lg:pt-2">
+          <AudienceHero audience={audience}>
+            <SwipeDeck />
+          </AudienceHero>
 
           {/* The full question-and-answer in prose - what screen readers
               hear, and what replaces the deck when the system asks for less
               motion. */}
           <div className="sr-only motion-reduce:not-sr-only">
             <ol className="mt-10 border-y border-[var(--lp-border)]">
-              {QA.map((item, i) => (
+              {QA.map((item) => (
                 <li
                   key={item.foot}
-                  className="group relative grid gap-3 border-b border-[var(--lp-border)] py-8 transition-colors last:border-b-0 hover:bg-[var(--lp-panel)] lg:grid-cols-[6rem_1.05fr_1fr] lg:items-start lg:gap-10 lg:py-10"
+                  className="group relative grid gap-3 border-b border-[var(--lp-border)] py-8 transition-colors last:border-b-0 hover:bg-[var(--lp-panel)] lg:grid-cols-[1.05fr_1fr] lg:items-start lg:gap-10 lg:py-10"
                 >
-                  <span
-                    aria-hidden
-                    className="select-none bg-gradient-to-b from-white/30 to-white/5 bg-clip-text font-display text-[2.8rem] font-bold leading-none tracking-tight text-transparent lg:pl-5"
-                  >
-                    0{i + 1}
-                  </span>
                   <div className="min-w-0">
                     <h3 className="font-display text-[1.35rem] font-semibold leading-snug tracking-[-0.015em] text-[var(--lp-ink)] [text-wrap:balance]">
                       &ldquo;{item.quote}&rdquo;
                     </h3>
                     <p
                       className={`mt-3 inline-flex items-center gap-2 text-[0.85rem] font-semibold ${
-                        item.earned ? "text-[var(--lp-emerald)]" : "text-[#67e8f9]"
+                        item.earned
+                          ? "text-[var(--lp-emerald)]"
+                          : "text-[#67e8f9]"
                       }`}
                     >
                       <item.icon size={15} />
@@ -478,39 +377,84 @@ export function Landing({ signedIn }: { signedIn: boolean }) {
           {/* The shelf of what's inside, gliding along the hero's floor:
               real roles interleaved with what there is to explore about
               them. Decorative - pauses on hover so it can be read, and not
-              selectable so it never fights the pointer. */}
-          <div aria-hidden className="mt-6 select-none">
-            <p className="text-center text-[0.7rem] font-bold uppercase tracking-[0.2em] text-[var(--lp-faint)]">
-              Inside Ascend · explore career paths
-            </p>
-            <div className="mt-3 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
-              <div className="flex w-max animate-marquee gap-12 hover:[animation-play-state:paused]">
-                {[0, 1].map((copy) => (
-                  <ul key={copy} className="flex shrink-0 items-center gap-12">
-                    {ROLES.map((role) => (
-                      <li
-                        key={role}
-                        className="flex items-center gap-3 whitespace-nowrap font-display text-[1rem] font-semibold text-[var(--lp-faint)]"
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--lp-teal)]/70" />
-                        {role}
-                      </li>
-                    ))}
-                    {INSIDE_PEEKS.map((peek) => (
-                      <li
-                        key={peek}
-                        className="flex items-center gap-3 whitespace-nowrap text-[0.92rem] font-medium text-[var(--lp-emerald)]/75"
-                      >
-                        <span className="h-1.5 w-1.5 rotate-45 bg-[#34d399]/60" />
-                        {peek}
-                      </li>
-                    ))}
-                  </ul>
-                ))}
+              selectable so it never fights the pointer.
+
+              Students only. It is a shelf of jobs somebody might want, which
+              is an invitation to browse a career - the wrong offer to make to
+              a hiring manager or a placement officer, neither of whom came
+              here to explore a role for themselves. */}
+          {audience === "student" && (
+            <div aria-hidden className="mt-6 select-none">
+              <p className="text-center text-[0.7rem] font-bold uppercase tracking-[0.2em] text-[var(--lp-faint)]">
+                Inside Ascend · explore career paths
+              </p>
+              <div className="mt-3 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
+                <div className="flex w-max animate-marquee gap-12 hover:[animation-play-state:paused]">
+                  {[0, 1].map((copy) => (
+                    <ul
+                      key={copy}
+                      className="flex shrink-0 items-center gap-12"
+                    >
+                      {ROLES.map((role) => (
+                        <li
+                          key={role}
+                          className="flex items-center gap-3 whitespace-nowrap font-display text-[1rem] font-semibold text-[var(--lp-faint)]"
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full bg-[var(--lp-teal)]/70" />
+                          {role}
+                        </li>
+                      ))}
+                      {INSIDE_PEEKS.map((peek) => (
+                        <li
+                          key={peek}
+                          className="flex items-center gap-3 whitespace-nowrap text-[0.92rem] font-medium text-[var(--lp-emerald)]/75"
+                        >
+                          <span className="h-1.5 w-1.5 rotate-45 bg-[#34d399]/60" />
+                          {peek}
+                        </li>
+                      ))}
+                    </ul>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
+        </div>
+      </Sheet>
 
+      {/* Where the hero ends, which is what the slim ask watches for. */}
+      <div id="landing-hero-foot" aria-hidden className="h-px" />
+      <StickyAsk
+        line={said.bar}
+        cta={said.barCta}
+        href={audience === "student" && signedIn ? "/profile" : said.barHref}
+      />
+
+      {/* ---- three beats: the argument, written for whoever is reading ---- */}
+      <Sheet tone="bg-[var(--lp-bg-b)]">
+        <Glow low />
+        <div className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6">
+          <p className="reveal-view text-[0.7rem] font-bold uppercase tracking-[0.16em] text-[var(--lp-teal)]">
+            {said.beatsTitle}
+          </p>
+          <ul className="reveal-view mt-5 grid gap-4 sm:grid-cols-3">
+            {said.beats.map(([head, body]) => (
+              <li
+                key={head}
+                className="rounded-2xl border border-[var(--lp-border)] bg-[var(--lp-panel)] p-5"
+              >
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-[#34d399]/20 text-[var(--lp-emerald)]">
+                  <Check size={15} />
+                </span>
+                <p className="mt-3 text-[1rem] font-semibold text-[var(--lp-ink)]">
+                  {head}
+                </p>
+                <p className="mt-1.5 text-[0.9rem] leading-relaxed text-[var(--lp-body)]">
+                  {body}
+                </p>
+              </li>
+            ))}
+          </ul>
         </div>
       </Sheet>
 
@@ -519,206 +463,291 @@ export function Landing({ signedIn }: { signedIn: boolean }) {
           product knowledge: the argument is their own ledger, the funnel
           their own pipeline, and the savings chart deliberately unitless -
           the shape of the saving, proven in a pilot, never a claimed number. */}
-      <Sheet tone="bg-[var(--lp-bg-b)]">
-        <Glow low />
-        <div
-          id="employers"
-          className="relative mx-auto grid max-w-6xl scroll-mt-16 items-center gap-10 px-4 py-12 sm:px-6 lg:min-h-[calc(100dvh-3.5rem)] lg:grid-cols-[1.02fr_0.98fr] lg:gap-10 lg:py-8"
-        >
-          <header className="reveal-view min-w-0">
-            <p className="inline-flex max-w-full flex-wrap items-center gap-2 rounded-full border border-[var(--lp-border)] bg-[var(--lp-panel)] px-4 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[var(--lp-teal)] backdrop-blur">
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--lp-teal)] opacity-70" />
-              For employers
-            </p>
-
-            <p className="mt-4 text-[0.95rem] italic text-[var(--lp-faint)]">
-              &ldquo;We hired - why aren&rsquo;t they productive
-              yet?&rdquo;
-            </p>
-
-            <h2 className="mt-3 max-w-[24ch] font-display text-[clamp(1.5rem,3.4vw,2.2rem)] font-semibold leading-[1.12] tracking-[-0.025em] text-[var(--lp-ink)] [text-wrap:balance]">
-              Hiring&apos;s costliest gap: between the offer letter and a
-              productive employee.
-            </h2>
-            <p className="mt-3 max-w-[48ch] text-[1rem] leading-relaxed text-[var(--lp-body)]">
-              Thousands of identical resumes, then months of training before a
-              new hire earns their seat. Ascend fills that gap before day one.
-            </p>
-
-            {/* The ledger: their hiring, before and after. */}
-            <div className="mt-4 grid overflow-hidden rounded-2xl border border-[var(--lp-border)] sm:grid-cols-2">
-              <div className="border-b border-[var(--lp-border)] bg-[#f87171]/[0.04] p-4 sm:border-b-0 sm:border-r">
-                <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[var(--lp-faint)]">
-                  Hiring today
+      {/* Employers only. This sheet is addressed to a hiring manager -
+          "We hired - why aren't they productive yet?" - so it is not the
+          sheet a student or a placement officer should scroll into. */}
+      {audience === "employer" && (
+        <>
+          <Sheet tone="bg-[var(--lp-bg-b)]">
+            <Glow low />
+            <div
+              id="employers"
+              className="relative mx-auto grid max-w-6xl scroll-mt-16 items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.02fr_0.98fr] lg:gap-10"
+            >
+              <header className="reveal-view min-w-0">
+                <p className="inline-flex max-w-full flex-wrap items-center gap-2 rounded-full border border-[var(--lp-border)] bg-[var(--lp-panel)] px-4 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[var(--lp-teal)] backdrop-blur">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--lp-teal)] opacity-70" />
+                  For employers
                 </p>
-                <ul className="mt-3 grid gap-3">
-                  {EMPLOYER_CHALLENGES.map((item) => (
-                    <li key={item.q} className="flex items-start gap-2.5">
-                      <span aria-hidden className="mt-0.5 font-bold text-[#f87171]">
-                        –
-                      </span>
-                      <p className="text-[0.88rem] leading-snug text-[var(--lp-body)]">
-                        {item.q}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="bg-[#34d399]/[0.05] p-4">
-                <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[var(--lp-emerald)]">
-                  Hiring from Ascend
-                </p>
-                <ul className="mt-3 grid gap-3">
-                  {EMPLOYER_CHALLENGES.map((item) => (
-                    <li key={item.a} className="flex items-start gap-2.5">
-                      <span className="mt-0.5 shrink-0 text-[#34d399]">
-                        <Check size={14} />
-                      </span>
-                      <p className="text-[0.88rem] leading-snug text-[var(--lp-body-strong)]">
-                        {item.a}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
 
-          </header>
-
-          {/* The funnel and the shape of the savings. */}
-          <div className="reveal-view min-w-0">
-            {/* 1,000 identical applicants → your bar → ready hires. */}
-            <div className="rounded-2xl border border-[var(--lp-border)] bg-[var(--lp-panel)] p-4 text-center">
-              <div
-                aria-hidden
-                className="mx-auto flex max-w-[24rem] flex-wrap justify-center gap-[7px]"
-              >
-                {Array.from({ length: 44 }).map((_, i) => (
-                  <span
-                    key={i}
-                    className="h-[5px] w-[5px] rounded-full bg-white/40"
-                    style={{ opacity: 0.25 + ((i * 7) % 10) / 25 }}
-                  />
-                ))}
-              </div>
-              <p className="mt-2 text-[0.78rem] text-[var(--lp-faint)]">
-                1,000+ applicants, identical qualifications
-              </p>
-              <div
-                aria-hidden
-                className="relative mx-auto mt-2.5 w-[86%] max-w-[22rem] px-6 py-3 text-white"
-                style={{
-                  clipPath: "polygon(0 0, 100% 0, 70% 100%, 30% 100%)",
-                  background:
-                    "linear-gradient(180deg, #155e63 0%, #0f766e 55%, #059669 100%)",
-                }}
-              >
-                <p className="text-center font-display text-[0.95rem] font-extrabold tracking-[0.22em]">
-                  ASCEND
+                <p className="mt-4 text-[0.95rem] italic text-[var(--lp-faint)]">
+                  &ldquo;We hired - why aren&rsquo;t they productive yet?&rdquo;
                 </p>
-                <ul className="mt-1 space-y-0.5 text-center text-[0.68rem] font-medium text-white/85">
-                  <li>skills demonstrated on real work</li>
-                  <li>scored against our standards</li>
-                  <li>ranked at the bar you set</li>
-                </ul>
-              </div>
-              <div className="mt-3 flex flex-wrap justify-center gap-3">
-                {[
-                  ["Student A", 84],
-                  ["Student B", 76],
-                  ["Student C", 71],
-                ].map(([name, score]) => (
-                  <span
-                    key={name}
-                    className="rounded-xl border border-[#34d399]/40 bg-[#34d399]/10 px-4 py-2 text-center"
+
+                <h2 className="mt-3 max-w-[24ch] font-display text-[clamp(1.5rem,3.4vw,2.2rem)] font-semibold leading-[1.12] tracking-[-0.025em] text-[var(--lp-ink)] [text-wrap:balance]">
+                  Hiring&apos;s costliest gap: between the offer letter and a
+                  productive employee.
+                </h2>
+                <p className="mt-3 max-w-[48ch] text-[1rem] leading-relaxed text-[var(--lp-body)]">
+                  Thousands of identical resumes, then months of training before
+                  a new hire earns their seat. Ascend fills that gap before day
+                  one.
+                </p>
+
+                {/* The ledger: their hiring, before and after. */}
+                <div className="mt-4 grid overflow-hidden rounded-2xl border border-[var(--lp-border)] sm:grid-cols-2">
+                  <div className="border-b border-[var(--lp-border)] bg-[#f87171]/[0.04] p-4 sm:border-b-0 sm:border-r">
+                    <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[var(--lp-faint)]">
+                      Hiring today
+                    </p>
+                    <ul className="mt-3 grid gap-3">
+                      {EMPLOYER_CHALLENGES.map((item) => (
+                        <li key={item.q} className="flex items-start gap-2.5">
+                          <span
+                            aria-hidden
+                            className="mt-0.5 font-bold text-[#f87171]"
+                          >
+                            –
+                          </span>
+                          <p className="text-[0.88rem] leading-snug text-[var(--lp-body)]">
+                            {item.q}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="bg-[#34d399]/[0.05] p-4">
+                    <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[var(--lp-emerald)]">
+                      Hiring from Ascend
+                    </p>
+                    <ul className="mt-3 grid gap-3">
+                      {EMPLOYER_CHALLENGES.map((item) => (
+                        <li key={item.a} className="flex items-start gap-2.5">
+                          <span className="mt-0.5 shrink-0 text-[#34d399]">
+                            <Check size={14} />
+                          </span>
+                          <p className="text-[0.88rem] leading-snug text-[var(--lp-body-strong)]">
+                            {item.a}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </header>
+
+              {/* The funnel and the shape of the savings. */}
+              <div className="reveal-view min-w-0">
+                {/* 1,000 identical applicants → your bar → ready hires. */}
+                <div className="rounded-2xl border border-[var(--lp-border)] bg-[var(--lp-panel)] p-4 text-center">
+                  <div
+                    aria-hidden
+                    className="mx-auto flex max-w-[24rem] flex-wrap justify-center gap-[7px]"
                   >
-                    <span className="block text-[0.72rem] font-semibold text-[var(--lp-body)]">
-                      {name}
-                    </span>
-                    <span className="block font-display text-[1.2rem] font-semibold leading-tight text-[var(--lp-emerald)]">
-                      {score}
-                    </span>
-                    <span className="block text-[0.58rem] font-bold uppercase tracking-[0.08em] text-[var(--lp-emerald)]/70">
-                      productivity readiness
-                    </span>
-                  </span>
-                ))}
-              </div>
-              <p className="mt-2.5 text-[0.78rem] text-[var(--lp-emerald)]/80">
-                trained on your role · productive from day one
-              </p>
-            </div>
+                    {Array.from({ length: 44 }).map((_, i) => (
+                      <span
+                        key={i}
+                        className="h-[5px] w-[5px] rounded-full bg-white/40"
+                        style={{ opacity: 0.25 + ((i * 7) % 10) / 25 }}
+                      />
+                    ))}
+                  </div>
+                  <p className="mt-2 text-[0.78rem] text-[var(--lp-faint)]">
+                    1,000+ applicants, identical qualifications
+                  </p>
+                  <div
+                    aria-hidden
+                    className="relative mx-auto mt-2.5 w-[86%] max-w-[22rem] px-6 py-3 text-white"
+                    style={{
+                      clipPath: "polygon(0 0, 100% 0, 70% 100%, 30% 100%)",
+                      background:
+                        "linear-gradient(180deg, #155e63 0%, #0f766e 55%, #059669 100%)",
+                    }}
+                  >
+                    <p className="text-center font-display text-[0.95rem] font-extrabold tracking-[0.22em]">
+                      ASCEND
+                    </p>
+                    <ul className="mt-1 space-y-0.5 text-center text-[0.68rem] font-medium text-white/85">
+                      <li>skills demonstrated on real work</li>
+                      <li>scored against our standards</li>
+                      <li>ranked at the bar you set</li>
+                    </ul>
+                  </div>
+                  <div className="mt-3 flex flex-wrap justify-center gap-3">
+                    {[
+                      ["Student A", 84],
+                      ["Student B", 76],
+                      ["Student C", 71],
+                    ].map(([name, score]) => (
+                      <span
+                        key={name}
+                        className="rounded-xl border border-[#34d399]/40 bg-[#34d399]/10 px-4 py-2 text-center"
+                      >
+                        <span className="block text-[0.72rem] font-semibold text-[var(--lp-body)]">
+                          {name}
+                        </span>
+                        <span className="block font-display text-[1.2rem] font-semibold leading-tight text-[var(--lp-emerald)]">
+                          {score}
+                        </span>
+                        <span className="block text-[0.58rem] font-bold uppercase tracking-[0.08em] text-[var(--lp-emerald)]/70">
+                          productivity readiness
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                  <p className="mt-2.5 text-[0.78rem] text-[var(--lp-emerald)]/80">
+                    trained on your role · ready for the work from week one
+                  </p>
+                </div>
 
-            {/* The saving, drawn: productivity against time since offer.
+                {/* The saving, drawn: productivity against time since offer.
                 Two illustrative curves - no units, no invented figures; the
                 shaded area between them is the gap Ascend fills, and the
                 caption sends the proof to a pilot. */}
-            <div className="mt-3 rounded-2xl border border-[var(--lp-border)] bg-[var(--lp-panel)] p-4">
-              <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[var(--lp-faint)]">
-                The productivity gap - and the saving
-              </p>
-              <svg
-                viewBox="0 0 420 205"
-                role="img"
-                aria-label="Illustrative chart of productivity against time since offer: a hire today climbs slowly through training and ramp-up, an Ascend hire starts near-productive on day one. The area between the two curves is the gap Ascend fills."
-                className="mt-2 max-h-[13rem] w-full"
-              >
-                <line x1="20" y1="30" x2="20" y2="180" stroke="var(--lp-border)" strokeWidth="1" />
-                <line x1="20" y1="180" x2="405" y2="180" stroke="var(--lp-border)" strokeWidth="1" />
-                <line x1="20" y1="80" x2="405" y2="80" stroke="var(--lp-border)" strokeWidth="1" />
-                <line x1="20" y1="130" x2="405" y2="130" stroke="var(--lp-border)" strokeWidth="1" />
-                {/* the gap between the curves */}
-                <path
-                  d="M20,105 C60,62 90,48 130,44 L400,40 L400,46 C370,56 330,84 285,116 C220,163 120,174 20,177 Z"
-                  fill="rgba(52,211,153,0.10)"
-                />
-                {/* hiring today: slow climb through training and ramp-up */}
-                <path
-                  d="M20,177 C120,174 220,163 285,116 C330,84 370,56 400,46"
-                  fill="none"
-                  stroke="var(--lp-faint)"
-                  strokeWidth="2"
-                  strokeDasharray="5 4"
-                />
-                {/* Ascend hire: near-productive from day one */}
-                <path
-                  d="M20,105 C60,62 90,48 130,44 L400,40"
-                  fill="none"
-                  stroke="#34d399"
-                  strokeWidth="2.5"
-                />
-                <circle cx="20" cy="105" r="4" fill="#34d399" />
-                <text x="138" y="30" fill="var(--lp-emerald)" fontSize="11" fontWeight="700">
-                  hired from Ascend
-                </text>
-                <text x="196" y="150" fill="var(--lp-faint)" fontSize="11" fontWeight="600">
-                  hiring today
-                </text>
-                <text x="150" y="96" fill="var(--lp-body)" fontSize="10.5" fontStyle="italic">
-                  the gap Ascend fills - your saving
-                </text>
-                <text x="20" y="196" fill="var(--lp-faint)" fontSize="9.5">
-                  day one
-                </text>
-                <text x="405" y="196" fill="var(--lp-faint)" fontSize="9.5" textAnchor="end">
-                  time since offer →
-                </text>
-                <text x="16" y="30" fill="var(--lp-faint)" fontSize="9.5" transform="rotate(-90 16 30)" textAnchor="end">
-                  productivity →
-                </text>
-              </svg>
-              <p className="mt-2 border-t border-[var(--lp-border)] pt-2 text-[0.72rem] leading-relaxed text-[var(--lp-faint)]">
-                Illustrative curves.
-              </p>
+                <div className="mt-3 rounded-2xl border border-[var(--lp-border)] bg-[var(--lp-panel)] p-4">
+                  <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[var(--lp-faint)]">
+                    The productivity gap - and the saving
+                  </p>
+                  <svg
+                    viewBox="0 0 420 205"
+                    role="img"
+                    aria-label="Illustrative chart of productivity against time since offer: a hire today climbs slowly through training and ramp-up, an Ascend hire starts near-productive on day one. The area between the two curves is the gap Ascend fills."
+                    className="mt-2 max-h-[13rem] w-full"
+                  >
+                    <line
+                      x1="20"
+                      y1="30"
+                      x2="20"
+                      y2="180"
+                      stroke="var(--lp-border)"
+                      strokeWidth="1"
+                    />
+                    <line
+                      x1="20"
+                      y1="180"
+                      x2="405"
+                      y2="180"
+                      stroke="var(--lp-border)"
+                      strokeWidth="1"
+                    />
+                    <line
+                      x1="20"
+                      y1="80"
+                      x2="405"
+                      y2="80"
+                      stroke="var(--lp-border)"
+                      strokeWidth="1"
+                    />
+                    <line
+                      x1="20"
+                      y1="130"
+                      x2="405"
+                      y2="130"
+                      stroke="var(--lp-border)"
+                      strokeWidth="1"
+                    />
+                    {/* the gap between the curves */}
+                    <path
+                      d="M20,105 C60,62 90,48 130,44 L400,40 L400,46 C370,56 330,84 285,116 C220,163 120,174 20,177 Z"
+                      fill="rgba(52,211,153,0.10)"
+                    />
+                    {/* hiring today: slow climb through training and ramp-up */}
+                    <path
+                      d="M20,177 C120,174 220,163 285,116 C330,84 370,56 400,46"
+                      fill="none"
+                      stroke="var(--lp-faint)"
+                      strokeWidth="2"
+                      strokeDasharray="5 4"
+                    />
+                    {/* Ascend hire: near-productive from day one */}
+                    <path
+                      d="M20,105 C60,62 90,48 130,44 L400,40"
+                      fill="none"
+                      stroke="#34d399"
+                      strokeWidth="2.5"
+                    />
+                    <circle cx="20" cy="105" r="4" fill="#34d399" />
+                    <text
+                      x="138"
+                      y="30"
+                      fill="var(--lp-emerald)"
+                      fontSize="11"
+                      fontWeight="700"
+                    >
+                      hired from Ascend
+                    </text>
+                    <text
+                      x="196"
+                      y="150"
+                      fill="var(--lp-faint)"
+                      fontSize="11"
+                      fontWeight="600"
+                    >
+                      hiring today
+                    </text>
+                    <text
+                      x="150"
+                      y="96"
+                      fill="var(--lp-body)"
+                      fontSize="10.5"
+                      fontStyle="italic"
+                    >
+                      the gap Ascend fills - your saving
+                    </text>
+                    <text x="20" y="196" fill="var(--lp-faint)" fontSize="9.5">
+                      day one
+                    </text>
+                    <text
+                      x="405"
+                      y="196"
+                      fill="var(--lp-faint)"
+                      fontSize="9.5"
+                      textAnchor="end"
+                    >
+                      time since offer →
+                    </text>
+                    <text
+                      x="16"
+                      y="30"
+                      fill="var(--lp-faint)"
+                      fontSize="9.5"
+                      transform="rotate(-90 16 30)"
+                      textAnchor="end"
+                    >
+                      productivity →
+                    </text>
+                  </svg>
+                  <p className="mt-2 border-t border-[var(--lp-border)] pt-2 text-[0.72rem] leading-relaxed text-[var(--lp-faint)]">
+                    Illustrative curves.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Sheet>
+        </>
+      )}
+
+      {/* ---- the cohort, for the audience that has to act on it ---- */}
+      {audience === "college" && (
+        <Sheet tone="bg-[var(--lp-bg-b)]">
+          <Glow low />
+          <div className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6">
+            <p className="reveal-view mx-auto max-w-[62ch] text-center text-[1rem] leading-relaxed text-[var(--lp-body-strong)]">
+              The year group, by how ready they are for the work they are aiming
+              at.
+            </p>
+            <div className="mt-6">
+              <CohortReadiness />
             </div>
           </div>
-        </div>
-      </Sheet>
+        </Sheet>
+      )}
 
-      {/* ---- what Ascend offers: the network, then the machine ---- */}
+      {/* ---- the network. All three audiences, never for the same reason:
+              the line above it is what changes, not the picture. ---- */}
       <Sheet tone="bg-[var(--lp-bg-c)]">
         <Glow low />
-        <div className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:flex lg:min-h-[calc(100dvh-3.5rem)] lg:flex-col lg:justify-center lg:py-5">
+        <div className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6">
           <header className="reveal-view mx-auto max-w-[62ch] text-center">
             <p className="inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-[var(--lp-border)] bg-[var(--lp-panel)] px-4 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[var(--lp-teal)] backdrop-blur">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--lp-teal)] opacity-70" />
@@ -727,10 +756,8 @@ export function Landing({ signedIn }: { signedIn: boolean }) {
             <h2 className="mt-3 font-display text-[clamp(1.4rem,3vw,1.9rem)] font-semibold leading-[1.1] tracking-[-0.025em] text-[var(--lp-ink)] [text-wrap:balance]">
               An AI-native talent fulfillment network.
             </h2>
-            <p className="mx-auto mt-2 max-w-[54ch] text-[0.9rem] leading-relaxed text-[var(--lp-body)]">
-              Students build verified, job-ready skills. Employers hire on
-              evidence, not resumes. One network closes the gap between hired
-              and productive.
+            <p className="mx-auto mt-2 max-w-[54ch] text-[0.95rem] leading-relaxed text-[var(--lp-body)]">
+              {said.network}
             </p>
           </header>
 
@@ -748,7 +775,7 @@ export function Landing({ signedIn }: { signedIn: boolean }) {
               "Sends it to an employer",
               "Shortlisted on evidence",
               "Interviewed - and hired",
-              "Productive from day one",
+              "Starts the job already knowing the work",
               "The next role opens - the loop runs again",
             ].map((step) => (
               <li key={step}>{step}</li>
@@ -757,24 +784,33 @@ export function Landing({ signedIn }: { signedIn: boolean }) {
         </div>
       </Sheet>
 
-      {/* ---- the last word ---- */}
-      {/* Not sticky: the story's final sheet scrolls into place and stays. */}
-      <section data-sheet className="relative overflow-hidden border-t border-[var(--lp-border)] bg-[var(--lp-bg-d)] lg:snap-start lg:snap-always">
+      {/* ---- the last word. Every audience gets one; two of them used to
+              reach the foot of the page and be asked for nothing. ---- */}
+      <section className="relative overflow-hidden border-t border-[var(--lp-border)] bg-[var(--lp-bg-d)]">
         <Glow />
-        <div className="relative mx-auto flex max-w-3xl flex-col justify-center px-4 py-24 text-center sm:px-6 lg:min-h-[calc(100dvh-3.5rem)] lg:py-16">
+        <div className="relative mx-auto flex max-w-3xl flex-col justify-center px-4 py-24 text-center sm:px-6 lg:py-20">
           <p className="reveal-view text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[var(--lp-teal)]">
             Your career companion
           </p>
-          <h2 className="reveal-view mx-auto mt-4 max-w-[16ch] animate-gradient-pan bg-gradient-to-r from-[var(--lp-ink)] via-[var(--lp-teal)] to-[var(--lp-ink)] bg-[length:200%_auto] bg-clip-text font-display text-[clamp(2.2rem,6vw,3.8rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-transparent [text-wrap:balance]">
-            Your dream career, built together.
+          <h2 className="reveal-view mx-auto mt-4 max-w-[18ch] animate-gradient-pan bg-gradient-to-r from-[var(--lp-ink)] via-[var(--lp-teal)] to-[var(--lp-ink)] bg-[length:200%_auto] bg-clip-text font-display text-[clamp(2.2rem,6vw,3.8rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-transparent [text-wrap:balance]">
+            {said.askHead}
           </h2>
-          <p className="reveal-view mx-auto mt-5 max-w-[44ch] text-[1rem] leading-relaxed text-[var(--lp-body)]">
-            Ascend starts with where you are: the roles that fit you, a plan
-            sized to you, practice that makes you ready, and proof employers
-            trust. From the first question onward, your career has someone in
-            its corner.
+          <p className="reveal-view mx-auto mt-5 max-w-[46ch] text-[1rem] leading-relaxed text-[var(--lp-body)]">
+            {said.askBody}
           </p>
-          <LandingCtas signedIn={signedIn} />
+          {audience === "student" ? (
+            <LandingCtas signedIn={signedIn} />
+          ) : (
+            <div className="reveal-view mt-10 flex justify-center">
+              <Link
+                href={said.barHref}
+                className="inline-flex items-center gap-2 rounded-xl bg-[var(--lp-cta-bg)] px-9 py-4 text-[1rem] font-bold text-[var(--lp-cta-ink)] shadow-[0_16px_44px_-12px_rgba(0,0,0,0.65)] transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:hover:translate-y-0"
+              >
+                {said.barCta}
+                <ArrowRight size={17} />
+              </Link>
+            </div>
+          )}
         </div>
       </section>
     </div>

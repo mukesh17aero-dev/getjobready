@@ -11,12 +11,20 @@ export default async function AdminPage() {
   if (!session) redirect("/login?next=/admin");
 
   const token = session.access_token;
-  const [access, discovery, roles, skillModel, questionBank] = await Promise.all([
+  const [
+    access,
+    discovery,
+    roles,
+    skillModel,
+    assessmentArc,
+    interviewBank,
+  ] = await Promise.all([
     adminAccess(token),
     adminContent(token, "discovery_content"),
     adminContent(token, "role_catalogue"),
     adminContent(token, "skill_model"),
-    adminContent(token, "question_bank"),
+    adminContent(token, "assessment_arc"),
+    adminContent(token, "interview_bank"),
   ]);
 
   if (access && !access.isAdmin) {
@@ -39,7 +47,8 @@ export default async function AdminPage() {
       discovery={discovery}
       roles={roles}
       skillModel={skillModel}
-      questionBank={questionBank}
+      assessmentArc={assessmentArc}
+      interviewBank={interviewBank}
     />
   );
 }

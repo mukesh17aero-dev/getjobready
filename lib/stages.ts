@@ -1,5 +1,6 @@
 import type { JourneyState } from "@/lib/api";
 import { progressOf } from "@/lib/next-step";
+import { missingForCompletion, type ProfileFields } from "@/lib/profile";
 
 // The journey as data, so every layout that shows it is showing the same thing.
 //
@@ -46,14 +47,7 @@ export type Stage = {
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
 export function stages(state: JourneyState): Stage[] {
-  const { told, discoveryDone, selectedRole, profile, discovery } =
-    progressOf(state);
-
-  // The survey has no fixed length — it ends when it is sure, somewhere between
-  // eight and fourteen. Eight is the earliest it can end, so it is the honest
-  // denominator for "how far in am I".
-  const SURVEY_FLOOR = 8;
-  const answered = discovery?.answered ?? 0;
+  const { told, discoveryDone, selectedRole, profile } = progressOf(state);
 
   const built: Array<
     Omit<Stage, "state" | "href"> & { done: boolean; href: string }
@@ -62,7 +56,10 @@ export function stages(state: JourneyState): Stage[] {
       id: "about-you",
       title: "Tell us about you",
       gives: "Everything after this is built from what you say here",
-      detail: told > 0 ? `${told} ${plural(told, "answer", "answers")} on file` : null,
+      detail:
+        told > 0
+          ? `${told} ${plural(told, "answer", "answers")} on file`
+          : null,
       unlock: null,
       minutes: 5,
       done: Boolean(profile && profile.filled >= profile.total),
@@ -78,26 +75,23 @@ export function stages(state: JourneyState): Stage[] {
     {
       id: "discovery",
       title: "Find the work that fits",
-      gives: "Three jobs that suit you, with the pay and what the day is really like",
-      detail: discoveryDone ? "Three matches, explained" : null,
+      gives:
+        "What the job actually is - the day, the pay, the hard parts - and one role you choose",
+      detail: discoveryDone ? "Role chosen" : null,
       unlock: null,
       minutes: 4,
       done: discoveryDone,
       href: "/discover",
-      progress: discoveryDone
-        ? { done: 1, total: 1, label: "Finished" }
-        : answered > 0
-          ? {
-              done: Math.min(answered, SURVEY_FLOOR),
-              total: SURVEY_FLOOR,
-              label: `${answered} ${plural(answered, "question", "questions")} in, a few to go`,
-            }
-          : null,
+      // No part-done state here any more. Discovery asked a survey once, and a
+      // survey has a count worth showing; reading roles does not. It is either
+      // finished - a role chosen - or it is not started for our purposes.
+      progress: discoveryDone ? { done: 1, total: 1, label: "Finished" } : null,
     },
     {
       id: "direction",
       title: "Choose a direction",
-      gives: "From here on, everything is about that one job instead of jobs in general",
+      gives:
+        "From here on, everything is about that one job instead of jobs in general",
       detail: selectedRole ? "Saved to your record" : null,
       unlock: null,
       minutes: 2,
@@ -108,12 +102,13 @@ export function stages(state: JourneyState): Stage[] {
     {
       id: "readiness",
       title: "Check where you stand",
-      gives: "What you can already do for that job, and the two things worth fixing",
+      gives:
+        "What you can already do for that job, and the two things worth fixing",
       detail: null,
       unlock: "Opens once you have picked a job to aim at",
       minutes: 12,
       done: false,
-      href: "/readiness",
+      href: "/practice",
       progress: null,
     },
     {
@@ -141,7 +136,8 @@ export function stages(state: JourneyState): Stage[] {
     {
       id: "passport",
       title: "Prove it",
-      gives: "Proof of what you can do, sent to an employer only when you say so",
+      gives:
+        "Proof of what you can do, sent to an employer only when you say so",
       detail: null,
       unlock: "Opens once two of those tasks have been marked",
       minutes: null,
@@ -155,8 +151,11 @@ export function stages(state: JourneyState): Stage[] {
   const liveIndex = built.findIndex((stage) => !stage.done);
 
   return built.map((stage, i) => {
-    const state: StageState =
-      stage.done ? "done" : i === liveIndex ? "live" : "ahead";
+    const state: StageState = stage.done
+      ? "done"
+      : i === liveIndex
+        ? "live"
+        : "ahead";
     return {
       id: stage.id,
       title: stage.title,
@@ -181,8 +180,8 @@ export function completed(list: Stage[]): number {
  * Progress across the whole journey, as a percentage.
  *
  * A finished stage counts once; the stage in progress counts for the fraction
- * of it that is done. Without that, someone eleven questions into a survey sits
- * at exactly the same number as someone who has not opened it.
+ * of it that is done. Without that, someone most of the way through a stage
+ * sits at exactly the same number as someone who has not opened it.
  */
 export function journeyPercent(list: Stage[]): number {
   const each = 100 / list.length;
@@ -190,7 +189,9 @@ export function journeyPercent(list: Stage[]): number {
     list.reduce((total, stage) => {
       if (stage.state === "done") return total + each;
       if (stage.state === "live" && stage.progress) {
-        return total + each * Math.min(1, stage.progress.done / stage.progress.total);
+        return (
+          total + each * Math.min(1, stage.progress.done / stage.progress.total)
+        );
       }
       return total;
     }, 0),
@@ -298,7 +299,8 @@ export function routeStatus(
         };
       }
       const answered = discovery?.answered ?? 0;
-      if (answered === 0) return { label: "Not started", percent: null, done: false };
+      if (answered === 0)
+        return { label: "Not started", percent: null, done: false };
       return {
         label: `${answered} ${plural(answered, "question", "questions")} in`,
         percent: Math.min(100, Math.round((answered / 8) * 100)),
@@ -319,3 +321,107 @@ export function routeStatus(
   }
 }
 
+/** Who this person is, in their own answers, and what is still missing. */
+export type Story = {
+  /**
+   * A description of them, not a tally of their clicks. Null when there is
+   * nothing on file yet - which is the honest answer on the first visit.
+   */
+  who: string | null;
+  /** What the profile still needs, in the words the form itself uses. */
+  missing: string[];
+};
+
+/**
+ * Your story so far.
+ *
+ * The home page tells somebody what to do next and what the doors are. Both
+ * are about the future, so a person who spent forty minutes here last week
+ * met the screen a stranger sees. This is the missing half.
+ *
+ * It says WHO THEY ARE rather than what they have clicked. The first version
+ * of this counted - "you have answered 9 of 11 questions, looked through the
+ * roles and chosen a role to aim at" - which is a description of their use of
+ * the software, not of them. Somebody reading it learns nothing about
+ * themselves that they did not already know, and a career companion that can
+ * only recite your activity has not been listening.
+ *
+ * Assembled by rule, never written by a model. Every clause is switched on by
+ * a field that has an answer in it, so an empty profile produces a short
+ * sentence rather than an invented one - and `missing` is what makes the
+ * shortness actionable instead of embarrassing.
+ */
+export function storySoFar(state: JourneyState, fields: ProfileFields): Story {
+  const { role, selectedRole } = progressOf(state);
+  const said = (key: keyof ProfileFields) => String(fields[key] ?? "").trim();
+
+  // Two short sentences rather than one long chain of clauses.
+  //
+  // The first version joined everything with commas and produced "You are
+  // Finished studying B.E at ..., based in ..., interested in A, B, C and
+  // aiming at ...". Two faults in one line: it read a person's own answer
+  // ("Finished studying") straight into the middle of a sentence it did not
+  // fit, and it strung four unlike facts onto one spine. What somebody wants
+  // to see here is themselves, said the way a person would say it.
+  const sentences: string[] = [];
+
+  const course = said("course");
+  const institution = said("institution");
+  const at = institution ? ` at ${institution}` : "";
+  const year = said("yearOfStudy");
+  const done = /finish|complet|graduat|passed/i.test(year);
+  const currentRole = said("currentRole");
+  const employer = said("employer");
+
+  if (currentRole) {
+    sentences.push(
+      employer
+        ? `You are working as a ${currentRole} at ${employer}.`
+        : `You are working as a ${currentRole}.`,
+    );
+  } else if (course && done) {
+    // Their own words for where they are, turned into a sentence rather than
+    // dropped into one: "Finished studying" is an answer, not a phrase.
+    sentences.push(`You finished your ${course}${at}.`);
+  } else if (course) {
+    sentences.push(
+      year
+        ? `You are studying ${course}${at}, ${year.toLowerCase()}.`
+        : `You are studying ${course}${at}.`,
+    );
+  }
+
+  const city = said("city");
+  const spaces = said("interestedSpaces");
+  const aim = role?.title ?? selectedRole;
+
+  const second: string[] = [];
+  if (city) second.push(`You are in ${city}`);
+  if (spaces)
+    second.push(`${second.length ? "d" : "You are d"}rawn to ${list(spaces)}`);
+  if (aim) {
+    second.push(`${second.length ? "a" : "You are a"}iming at ${aim}`);
+  }
+  if (second.length > 0) sentences.push(`${join(second)}.`);
+
+  return {
+    who: sentences.length > 0 ? sentences.join(" ") : null,
+    missing: missingForCompletion(fields),
+  };
+}
+
+/** "a, b, c" as somebody would say it: "a, b and c". */
+function list(said: string): string {
+  const parts = said
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (parts.length <= 1) return said.trim();
+  return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+}
+
+/** The same, for clauses. */
+function join(parts: string[]): string {
+  if (parts.length <= 1) return parts[0] ?? "";
+  return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+}

@@ -2,10 +2,11 @@
 // purpose: everything the interview screens need from the backend lives
 // here, so the shared client stays untouched.
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+import { API_URL } from "./api-base";
 
 export type InterviewRound = "hr" | "managerial";
-export type InterviewStage = "icebreaker" | "introduction" | "assessment" | "close";
+export type InterviewStage =
+  "icebreaker" | "introduction" | "assessment" | "close";
 
 export type InterviewTurnView = {
   index: number;
@@ -36,6 +37,23 @@ export type InterviewSessionView = {
 
 export type GrowthArea = { skill: string; note: string };
 
+/** What an interviewer listens for in an answer, rated 0-3 each by the read-out. */
+export type MarkCriterion = "situation" | "ownAction" | "outcome" | "relevance" | "clarity";
+
+/**
+ * The mark out of 100 for a rehearsal. Made on the server by a versioned
+ * rule from the read-out's ratings - never a number the model chose, and
+ * never a hiring decision. `bar` is the mark an answer needs to hold up in a
+ * real interview; `basis` says how many answers the mark rests on.
+ */
+export type InterviewMark = {
+  overall: number;
+  bar: number;
+  perQuestion: Array<{ index: number; mark: number; ratings: Record<MarkCriterion, number> }>;
+  basis: { marked: number; asked: number };
+  ruleVersion: string;
+};
+
 export type InterviewSummaryView = {
   wentWell: string[];
   toImprove: string[];
@@ -50,11 +68,23 @@ export type InterviewSummaryView = {
   }>;
   growthAreas: GrowthArea[];
   progressNote: string | null;
+  /** Absent on read-outs written before marks existed; null when nothing could be marked. */
+  mark?: InterviewMark | null;
 };
 
 export type InterviewHome = {
   selectedRole: { id: string; title: string } | null;
-  profileHints: { firstName: string | null; hasTrack: boolean; hasSkills: boolean };
+  /**
+   * Their own photo, when they have uploaded one on the professional profile.
+   * One picture of a person, not one per feature. Optional because an API one
+   * deploy behind does not send it.
+   */
+  photo?: string | null;
+  profileHints: {
+    firstName: string | null;
+    hasTrack: boolean;
+    hasSkills: boolean;
+  };
   speechAvailable: boolean;
   session: InterviewSessionView | null;
   pastCount: number;
@@ -114,7 +144,15 @@ export const startInterview = (
     interviewer?: "asha" | "ravi";
     round: InterviewRound;
   },
-) => call<InterviewSessionView>(token, "/v1/interview/sessions", { method: "POST", body });
+) =>
+  call<InterviewSessionView>(token, "/v1/interview/sessions", {
+    method: "POST",
+    body,
+  });
+
+/** Close an interview nobody answered: no read-out, no summary call spent. */
+export const leaveInterview = (token: string) =>
+  call<{ ok: true }>(token, "/v1/interview/sessions/current", { method: "DELETE" });
 
 export const requestNextTurn = (token: string) =>
   call<InterviewSessionView>(token, "/v1/interview/sessions/current/turn", {
@@ -127,7 +165,12 @@ export const answerWithText = async (
   text: string,
 ): Promise<
   | { ok: true; transcript: string; session: InterviewSessionView }
-  | { ok: false; error: string; session?: InterviewSessionView; finished?: boolean }
+  | {
+      ok: false;
+      error: string;
+      session?: InterviewSessionView;
+      finished?: boolean;
+    }
 > => {
   try {
     const res = await fetch(`${API_URL}/v1/interview/sessions/current/answer`, {
@@ -136,20 +179,33 @@ export const answerWithText = async (
       headers: headers(token, true),
       body: JSON.stringify({ text }),
     });
-    const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    const body = (await res.json().catch(() => ({}))) as Record<
+      string,
+      unknown
+    >;
     if (!res.ok) {
       return {
         ok: false,
-        error: String(body.error ?? "That answer did not go through. Try again."),
-        ...(body.session ? { session: body.session as InterviewSessionView } : {}),
+        error: String(
+          body.error ?? "That answer did not go through. Try again.",
+        ),
+        ...(body.session
+          ? { session: body.session as InterviewSessionView }
+          : {}),
         // The interview was already wrapped up when this landed.
         ...(body.finished === true ? { finished: true } : {}),
       };
     }
-    const data = body as unknown as { transcript: string; session: InterviewSessionView };
+    const data = body as unknown as {
+      transcript: string;
+      session: InterviewSessionView;
+    };
     return { ok: true, transcript: data.transcript, session: data.session };
   } catch {
-    return { ok: false, error: "Could not reach the server. Try again in a moment." };
+    return {
+      ok: false,
+      error: "Could not reach the server. Try again in a moment.",
+    };
   }
 };
 
@@ -161,7 +217,12 @@ export async function answerWithAudio(
   filename: string,
 ): Promise<
   | { ok: true; transcript: string; session: InterviewSessionView }
-  | { ok: false; error: string; session?: InterviewSessionView; finished?: boolean }
+  | {
+      ok: false;
+      error: string;
+      session?: InterviewSessionView;
+      finished?: boolean;
+    }
 > {
   try {
     const form = new FormData();
@@ -171,20 +232,34 @@ export async function answerWithAudio(
       headers: headers(token),
       body: form,
     });
-    const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    const body = (await res.json().catch(() => ({}))) as Record<
+      string,
+      unknown
+    >;
     if (!res.ok) {
       return {
         ok: false,
-        error: String(body.error ?? "That recording did not go through. Try typing instead."),
+        error: String(
+          body.error ??
+            "That recording did not go through. Try typing instead.",
+        ),
         // Present when the server is telling us our view is behind.
-        ...(body.session ? { session: body.session as InterviewSessionView } : {}),
+        ...(body.session
+          ? { session: body.session as InterviewSessionView }
+          : {}),
         ...(body.finished === true ? { finished: true } : {}),
       };
     }
-    const data = body as unknown as { transcript: string; session: InterviewSessionView };
+    const data = body as unknown as {
+      transcript: string;
+      session: InterviewSessionView;
+    };
     return { ok: true, transcript: data.transcript, session: data.session };
   } catch {
-    return { ok: false, error: "Could not reach the server. Try typing your answer." };
+    return {
+      ok: false,
+      error: "Could not reach the server. Try typing your answer.",
+    };
   }
 }
 
@@ -223,16 +298,22 @@ export async function finishInterview(
       headers: headers(token, true),
       body: JSON.stringify({}),
     });
-    const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    const body = (await res.json().catch(() => ({}))) as Record<
+      string,
+      unknown
+    >;
     if (!res.ok || !body.summary) {
       return {
         error: String(
-          body.error ?? "We could not write your read-out just now. Try again in a moment.",
+          body.error ??
+            "We could not write your read-out just now. Try again in a moment.",
         ),
       };
     }
     return { summary: body.summary as InterviewSummaryView };
   } catch {
-    return { error: "Could not reach the server. Your interview is saved - try again." };
+    return {
+      error: "Could not reach the server. Your interview is saved - try again.",
+    };
   }
 }

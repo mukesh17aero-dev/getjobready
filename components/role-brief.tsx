@@ -63,8 +63,10 @@ export function RoleBrief({ brief }: { brief: Brief; title?: string }) {
     <div className="grid gap-4 border-t border-slate-100 pt-3.5">
       <section>
         {/* The summary above already says "why this suits you", so this names
-            what the reasoning rests on instead of repeating the question. */}
-        <Heading>What your answers showed</Heading>
+            what the reasoning rests on instead of repeating the question.
+            "Answers" was right when Discovery ran a survey; it reads from the
+            tour now - the roles walked and what was said leaving each. */}
+        <Heading>What your tour showed</Heading>
         <Points items={brief.fit} />
       </section>
 

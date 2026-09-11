@@ -1,15 +1,13 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Role readiness" };
+// There is no separate assessment destination any more - readiness now lives
+// inside Practice, as the first of its three cards.
+//
+// This stays because the journey route's `landing` value is supplied by the
+// backend, which still points at /readiness, and a bookmark or a stale API
+// response should not 404 over that. Delete once ascend-backend returns
+// /practice for the readiness route.
 
-export default function ReadinessPage() {
-  return (
-    <ComingSoon
-      stage="Stage 3 · Assessment"
-      title="Check role readiness"
-      delivers="A concise, role-specific proficiency check with a benchmarked report: your baseline score, strengths, job-critical gaps and a prescribed practice plan."
-      backHref="/practice"
-      backLabel="Back to Practice"
-    />
-  );
+export default function ReadinessRedirect() {
+  redirect("/practice");
 }

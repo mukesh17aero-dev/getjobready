@@ -13,6 +13,16 @@ export type ProfileFields = {
   // shared
   fullName: string;
   city: string;
+  /**
+   * The two contact details a resume needs and nothing was asking for.
+   *
+   * A resume with no phone number on it is a resume nobody rings, and the
+   * header had nowhere to put one - the CV importer has always been able to
+   * find a phone in an uploaded file, and then had no field to write it to.
+   */
+  phone: string;
+  /** LinkedIn or a portfolio. One link; more than one is clutter. */
+  link: string;
   languages: string;
   skills: string;
   activities: string;
@@ -44,6 +54,8 @@ export const EMPTY_PROFILE: ProfileFields = {
   track: "",
   fullName: "",
   city: "",
+  phone: "",
+  link: "",
   languages: "",
   skills: "",
   activities: "",
@@ -152,6 +164,7 @@ function relevantKeys(track: Track | ""): Array<keyof ProfileFields> {
   const shared: Array<keyof ProfileFields> = [
     "fullName",
     "city",
+    "phone",
     "languages",
     "skills",
     "activities",
@@ -205,6 +218,7 @@ export function missingEssentials(fields: ProfileFields): string[] {
 // keep someone from 100%.
 const OPTIONAL_KEYS: Array<keyof ProfileFields> = [
   "activities",
+  "link",
   "employer",
   "internshipExperience",
   "reasonForChange",
@@ -218,6 +232,8 @@ const OPTIONAL_KEYS: Array<keyof ProfileFields> = [
 export const FIELD_LABELS: Partial<Record<keyof ProfileFields, string>> = {
   fullName: "your name",
   city: "where you are",
+  phone: "your phone number",
+  link: "your LinkedIn or portfolio link",
   languages: "languages you speak",
   skills: "your skills",
   activities: "anything else you do",
@@ -251,13 +267,19 @@ export function missingForCompletion(fields: ProfileFields): string[] {
 }
 
 export function completeness(fields: ProfileFields): number {
-  if (!fields.track) return 0;
-  const keys = relevantKeys(fields.track).filter(
-    (k) => !OPTIONAL_KEYS.includes(k),
-  );
+  // Nought until a track is chosen was wrong, and it was the first number
+  // somebody saw: upload a CV that fills in your name, city, schooling and
+  // skills, skip the "which describes you" question, and the bar still read
+  // "0% complete". The track decides which questions are RELEVANT, not
+  // whether the answers already given count - so without one, the shared
+  // questions everybody is asked are what it is measured against.
+  const keys = (
+    fields.track ? relevantKeys(fields.track) : relevantKeys("")
+  ).filter((k) => !OPTIONAL_KEYS.includes(k));
   const filled = keys.filter((k) => String(fields[k] ?? "").trim()).length;
-  // the track choice itself counts as one answered question
-  return Math.round(((filled + 1) / (keys.length + 1)) * 100);
+  // The track choice is itself one of the questions - answered or not.
+  const answered = filled + (fields.track ? 1 : 0);
+  return Math.round((answered / (keys.length + 1)) * 100);
 }
 
 // ---- Repeatable history ----
@@ -422,4 +444,4 @@ export function marksFromEducation(
 
 /** An entry with nothing in it is not saved - a blank row is not a fact. */
 export const hasSubstance = (entry: Record<string, string>): boolean =>
-  Object.values(entry).some((value) => value.trim().length > 0);
+  Object.entries(entry).some(([key, value]) => key !== "kind" && key !== "current" && value.trim().length > 0);

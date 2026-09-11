@@ -1,0 +1,3206 @@
+[
+  {
+    "requested": "/welcome",
+    "url": "/welcome",
+    "title": "Ascend — talent fulfillment network · Ascend",
+    "text": "ASCEND\nStudents\nColleges\nEmployers\n◑\nLog in or sign up\n\nYOUR NEXT CHAPTER STARTS HERE\n\nYour future.\nA little more\nwithin reach.\n\nFind your direction. Practise the work. Show what you can do.\n\nOpen my career home\n↗\nWhat is Ascend?\n↓\n\nExplore before creating an account.\n\nTRY THE WORK\n\nA task. Your response.\nA chance to improve.\n\nIllustrative workplace\nExplore\nPrepare\nProgress\nPause motion\n\nWHAT IS ASCEND?\n\nAn AI-native\ntalent fulfillment network.\n\nBridging the gap between getting hired and becoming productive.\nAscend connects students, colleges and employers through role discovery, preparation and evidence of capability—helping people become productive sooner.\n\nStudents · find your next step\n\nYour career home brings your profile, career options and preparation together. Start with what matters to you and return to where you left off.\n\nExplore your options and see what is available.\nColleges · focus your support\n\nStudent dashboards, employability insights and readiness reports are planned to help placement teams understand the cohort and support each student.\n\nSee the planned tools and request access.\nEmployers · see the evidence\n\nCandidate passport reviews, role readiness analytics and pre-hire simulation reports are planned to bring demonstrated work into hiring decisions.\n\nSee the planned tools and request access.",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Students",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Colleges",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Employers",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "Open my career home\n↗",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "What is Ascend?\n↓",
+        "href": "#what-is-ascend",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Pause motion",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "requested": "/",
+    "url": "/",
+    "title": "Ascend — Talent Fulfillment Network",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\nA starting point. At your pace.\n\nYour direction\nExploring\n\nYOUR FIRST MOVE\n\nLet’s start with what makes you, you.\n\nShare your background and interests to find a direction.\n\nStart: tell us about you\nAbout you\n\nYour background\nWhat you study and what you have tried.\n\nYour interests\nThe work and industries you want to explore.\n\nYour starting point\nA next step grounded in what you tell us.\n\nYour workspace\nBuild my professional presence\n\nA resume that gets past the filters and still reads well to a person, a LinkedIn profile that matches it, and a check on how well you fit any job you have found\n\nDiscover career options\n\nThree jobs that suit how you work, with what they pay and what the day is really like\n\nCheck role readiness\n\nAn honest picture of what you can already do for that job, and the two things worth fixing\n\nA readiness check measures you against one chosen role — Discovery helps you pick it in 3–5 minutes first.\nPractise the role\n\nReal tasks from the job, marked, so you can show an employer what you did\n\nPractice missions are built from your role and your gaps — Discovery picks the role first, then a readiness check finds the gaps.\nPrepare for interviews\n\nPractice interviews with feedback on what you said, and your best answers written down\n\nYour story so far\n↗\nYour saved work\n\nYour profile and chosen role will appear here.\n\nYour journey\nTell us about you\nEverything after this is built from what you say here\nFind the work that fits\nWhat the job actually is - the day, the pay, the hard parts - and one role you choose\nChoose a direction\nFrom here on, everything is about that one job instead of jobs in general\nCheck where you stand\nOpens once you have picked a job to aim at\nTry the actual work\nOpens after you have checked where you stand\nPractise the interview\nOpens at the same time as the real tasks\nProve it\nOpens once two of those tasks have been marked\nView journey ↗",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Start: tell us about you",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Build my professional presence\n\nA resume that gets past the filters and still reads well to a person, a LinkedIn profile that matc",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Discover career options\n\nThree jobs that suit how you work, with what they pay and what the day is really like",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Check role readiness\n\nAn honest picture of what you can already do for that job, and the two things worth fixing\n\nA readiness chec",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Practise the role\n\nReal tasks from the job, marked, so you can show an employer what you did\n\nPractice missions are built from you",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Prepare for interviews\n\nPractice interviews with feedback on what you said, and your best answers written down",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "View journey ↗",
+        "href": "/journey",
+        "type": ""
+      }
+    ]
+  },
+  {
+    "requested": "/start",
+    "url": "/",
+    "title": "Ascend — Talent Fulfillment Network",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\nA starting point. At your pace.\n\nYour direction\nExploring\n\nYOUR FIRST MOVE\n\nLet’s start with what makes you, you.\n\nShare your background and interests to find a direction.\n\nStart: tell us about you\nAbout you\n\nYour background\nWhat you study and what you have tried.\n\nYour interests\nThe work and industries you want to explore.\n\nYour starting point\nA next step grounded in what you tell us.\n\nYour workspace\nBuild my professional presence\n\nA resume that gets past the filters and still reads well to a person, a LinkedIn profile that matches it, and a check on how well you fit any job you have found\n\nDiscover career options\n\nThree jobs that suit how you work, with what they pay and what the day is really like\n\nCheck role readiness\n\nAn honest picture of what you can already do for that job, and the two things worth fixing\n\nA readiness check measures you against one chosen role — Discovery helps you pick it in 3–5 minutes first.\nPractise the role\n\nReal tasks from the job, marked, so you can show an employer what you did\n\nPractice missions are built from your role and your gaps — Discovery picks the role first, then a readiness check finds the gaps.\nPrepare for interviews\n\nPractice interviews with feedback on what you said, and your best answers written down\n\nYour story so far\n↗\nYour saved work\n\nYour profile and chosen role will appear here.\n\nYour journey\nTell us about you\nEverything after this is built from what you say here\nFind the work that fits\nWhat the job actually is - the day, the pay, the hard parts - and one role you choose\nChoose a direction\nFrom here on, everything is about that one job instead of jobs in general\nCheck where you stand\nOpens once you have picked a job to aim at\nTry the actual work\nOpens after you have checked where you stand\nPractise the interview\nOpens at the same time as the real tasks\nProve it\nOpens once two of those tasks have been marked\nView journey ↗",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Start: tell us about you",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Build my professional presence\n\nA resume that gets past the filters and still reads well to a person, a LinkedIn profile that matc",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Discover career options\n\nThree jobs that suit how you work, with what they pay and what the day is really like",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Check role readiness\n\nAn honest picture of what you can already do for that job, and the two things worth fixing\n\nA readiness chec",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Practise the role\n\nReal tasks from the job, marked, so you can show an employer what you did\n\nPractice missions are built from you",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Prepare for interviews\n\nPractice interviews with feedback on what you said, and your best answers written down",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "View journey ↗",
+        "href": "/journey",
+        "type": ""
+      }
+    ]
+  },
+  {
+    "requested": "/discover",
+    "url": "/discover",
+    "title": "Discovery · Ascend",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\n← Back to Discover\nRoles\nOnly interested in some industries?\nFind work you can\nsee yourself doing.\n\nExplore roles, compare them and step inside the workplace.\n\nStart a workplace tour\n6 roles to explore\nYOUR ROLE EXPLORER\nOperations Executive\n\nRetail & Commerce\n\n🛍\nCompare\nRETAIL\nOperations Executive\nRun the shop floor: stock, staffing, standards, daily numbers.\n40% on the floor with customers\n₹15K–₹22K/mo to start\nChoose this role\n🏦\nCompare\nBANKING\nRelationship Executive\nGrow customer relationships, match products to needs, hit targets.\n40% meeting customers\n₹16K–₹26K/mo to start\nChoose this role\n📦\nCompare\nLOGISTICS\nOperations Coordinator\nKeep daily operations moving: priorities, exceptions, stakeholders.\n30% planning and re-planning\n₹18K–₹26K/mo to start\nChoose this role\n📦\nCompare\nLOGISTICS\nHub Supervisor\nRun a delivery hub: shifts, throughput, escalations, safety.\n45% directing the floor\n₹22K–₹32K/mo to start\nChoose this role\n🍽\nCompare\nFOOD\nGuest Experience Associate\nOwn the guest's experience through the rush and the recovery.\n50% serving guests\n₹15K–₹22K/mo to start\nChoose this role\n🎧\nCompare\nCUSTOMER\nCustomer Success Associate\nSolve customer issues, coordinate teams, protect relationships.\n40% talking to customers\n₹20K–₹30K/mo to start\nChoose this role\n\n5 more roles are waiting, and the page behind each one - the day, the pay and the hard parts.\n\nCreate an account\nWhich of these interest you?\n\nPick as many as you like - you can change them whenever\n\n✕\n\nNobody can have a preference about work they have never seen described. Not sure what is in one? Open it and look before you pick.\n\n🛍\nRetail & Commerce\nStores, sales, category, operations\n🏦\nBanking & Financial Services\nRelationships, service, operations\n📦\nLogistics & E-commerce\nFulfilment, planning, partner ops\n🍽\nFood & Hospitality\nGuests, restaurants, shift operations\n🎧\nCustomer Operations\nSupport, quality, workforce\nPick at least one.\nShow me all roles",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "← Back to Discover",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Only interested in some industries?",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Start a workplace tour",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "checkbox",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Choose this role",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "checkbox",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Choose this role",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "checkbox",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Choose this role",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "checkbox",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Choose this role",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "checkbox",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Choose this role",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "checkbox",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Choose this role",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "Create an account",
+        "href": "/welcome?auth=signup&next=%2F",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "✕",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Show me all roles",
+        "href": null,
+        "type": "button",
+        "disabled": true
+      }
+    ]
+  },
+  {
+    "requested": "/profile",
+    "url": "/welcome?auth=signup&next=%2Fprofile",
+    "title": "Ascend — talent fulfillment network · Ascend",
+    "text": "ASCEND\nStudents\nColleges\nEmployers\n◑\nLog in or sign up\n\nYOUR NEXT CHAPTER STARTS HERE\n\nYour future.\nA little more\nwithin reach.\n\nFind your direction. Practise the work. Show what you can do.\n\nOpen my career home\n↗\nWhat is Ascend?\n↓\n\nExplore before creating an account.\n\nTRY THE WORK\n\nA task. Your response.\nA chance to improve.\n\nIllustrative workplace\nExplore\nPrepare\nProgress\nPause motion\n\nWHAT IS ASCEND?\n\nAn AI-native\ntalent fulfillment network.\n\nBridging the gap between getting hired and becoming productive.\nAscend connects students, colleges and employers through role discovery, preparation and evidence of capability—helping people become productive sooner.\n\nStudents · find your next step\n\nYour career home brings your profile, career options and preparation together. Start with what matters to you and return to where you left off.\n\nExplore your options and see what is available.\nColleges · focus your support\n\nStudent dashboards, employability insights and readiness reports are planned to help placement teams understand the cohort and support each student.\n\nSee the planned tools and request access.\nEmployers · see the evidence\n\nCandidate passport reviews, role readiness analytics and pre-hire simulation reports are planned to bring demonstrated work into hiring decisions.\n\nSee the planned tools and request access.\n✕\nCreate your account\n\nOne account. One career record. Every module.\n\nContinue with Google\nOR\nEmail\nPassword\nSign up\n\nAlready have an account? Log in",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Students",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Colleges",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Employers",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "Open my career home\n↗",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "What is Ascend?\n↓",
+        "href": "#what-is-ascend",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Pause motion",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Close dialog",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "✕",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Continue with Google",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "email",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "password",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Sign up",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "requested": "/practice",
+    "url": "/practice",
+    "title": "Practice · Ascend",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\n←\nBack to Home\nPractice the role\n\nKnowing about a job and being able to do it are different things, and only one of them survives contact with a first week. This is where the second one gets built.\n\nYou have not chosen a role yet, so nothing here is aimed at one. Discovery is what makes it specific.\n\nRole Readiness Assessment\nAVAILABLE NOW\n\nFifteen minutes of the actual work, and what it showed.\n\nOpen Role Readiness Assessment\n15 min\nSimulation Missions\nIN DEVELOPMENT\n\nReal workplace situations, with decisions that carry weight.\n\nCareer Passport\nIN DEVELOPMENT\n\nThe record of what you proved, in one place.\n\nRole Readiness Assessment\nAVAILABLE NOW\nascend.app/practice/readiness\nWHAT\nWHO\nHOW\nRESULT\nWhat you get\n\nA readiness score for the job and a score for each skill your work actually showed, each one quoting the writing that produced it. A resume says what you claim; this says what you did, on work somebody in the job actually does.\n\n68\n\nPRODUCTIVE READINESS\n\nHeld the policy line and said what happens next. The record you left behind is where it thins out.\n\nHandling a complaint\n74\nKeeping the record true\n61\nWorking with AI\n68\n\nSkills the work never called on are left out, not scored zero. Every number quotes the writing it came from.\n\n1 of 4",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "←\nBack to Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discovery",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Open Role Readiness Assessment",
+        "href": "/practice/readiness",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Pause walkthrough",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "WHAT",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "WHO",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "HOW",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "RESULT",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to What",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to Who",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to How",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to Result",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Previous section",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Next section",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "requested": "/readiness",
+    "url": "/practice",
+    "title": "Practice · Ascend",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\n←\nBack to Home\nPractice the role\n\nKnowing about a job and being able to do it are different things, and only one of them survives contact with a first week. This is where the second one gets built.\n\nYou have not chosen a role yet, so nothing here is aimed at one. Discovery is what makes it specific.\n\nRole Readiness Assessment\nAVAILABLE NOW\n\nFifteen minutes of the actual work, and what it showed.\n\nOpen Role Readiness Assessment\n15 min\nSimulation Missions\nIN DEVELOPMENT\n\nReal workplace situations, with decisions that carry weight.\n\nCareer Passport\nIN DEVELOPMENT\n\nThe record of what you proved, in one place.\n\nRole Readiness Assessment\nAVAILABLE NOW\nascend.app/practice/readiness\nWHAT\nWHO\nHOW\nRESULT\nWhat you get\n\nA readiness score for the job and a score for each skill your work actually showed, each one quoting the writing that produced it. A resume says what you claim; this says what you did, on work somebody in the job actually does.\n\n68\n\nPRODUCTIVE READINESS\n\nHeld the policy line and said what happens next. The record you left behind is where it thins out.\n\nHandling a complaint\n74\nKeeping the record true\n61\nWorking with AI\n68\n\nSkills the work never called on are left out, not scored zero. Every number quotes the writing it came from.\n\n1 of 4",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "←\nBack to Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discovery",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Open Role Readiness Assessment",
+        "href": "/practice/readiness",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Pause walkthrough",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "WHAT",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "WHO",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "HOW",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "RESULT",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to What",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to Who",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to How",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to Result",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Previous section",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Next section",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "requested": "/practice/readiness",
+    "url": "/practice/readiness",
+    "title": "Role readiness · Ascend",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\n←\nBack to Practice\nWhich workplace will you step into?\n\nStep into the job for 15 minutes. Handle short workplace situations through decisions, messages, handovers or spoken updates. Your saved work becomes the evidence for feedback on what to strengthen next.\n\nTHE JOB\nGuest Experience Associate\nRelationship Executive\nHub Supervisor\nOperations Executive\nOperations Coordinator\nCustomer Success Associate\n\nYou have not taken this one yet. You have not chosen this job in Discover, but you can still be assessed on it.\n\nOpen my work shift\nChange the job you are aiming at, in Discover",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "←\nBack to Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "SELECT",
+        "text": "Guest Experience Associate\nRelationship Executive\nHub Supervisor\nOperations Executive\nOperations Coordinator\nCustomer Success Asso",
+        "href": null,
+        "type": "select-one",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "Open my work shift",
+        "href": "/practice/readiness?role=guest_experience_associate&begin=1",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Change the job you are aiming at, in Discover",
+        "href": "/discover",
+        "type": ""
+      }
+    ]
+  },
+  {
+    "requested": "/practice/readiness/results",
+    "url": "/welcome?auth=login&next=%2Fpractice%2Freadiness%2Fresults",
+    "title": "Ascend — talent fulfillment network · Ascend",
+    "text": "ASCEND\nStudents\nColleges\nEmployers\n◑\nLog in or sign up\n\nYOUR NEXT CHAPTER STARTS HERE\n\nYour future.\nA little more\nwithin reach.\n\nFind your direction. Practise the work. Show what you can do.\n\nOpen my career home\n↗\nWhat is Ascend?\n↓\n\nExplore before creating an account.\n\nTRY THE WORK\n\nA task. Your response.\nA chance to improve.\n\nIllustrative workplace\nExplore\nPrepare\nProgress\nPause motion\n\nWHAT IS ASCEND?\n\nAn AI-native\ntalent fulfillment network.\n\nBridging the gap between getting hired and becoming productive.\nAscend connects students, colleges and employers through role discovery, preparation and evidence of capability—helping people become productive sooner.\n\nStudents · find your next step\n\nYour career home brings your profile, career options and preparation together. Start with what matters to you and return to where you left off.\n\nExplore your options and see what is available.\nColleges · focus your support\n\nStudent dashboards, employability insights and readiness reports are planned to help placement teams understand the cohort and support each student.\n\nSee the planned tools and request access.\nEmployers · see the evidence\n\nCandidate passport reviews, role readiness analytics and pre-hire simulation reports are planned to bring demonstrated work into hiring decisions.\n\nSee the planned tools and request access.\n✕\nWelcome back\n\nLog in to continue your journey.\n\nContinue with Google\nOR\nEmail\nPassword\nLog in\n\nNew to Ascend? Create an account",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Students",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Colleges",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Employers",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "Open my career home\n↗",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "What is Ascend?\n↓",
+        "href": "#what-is-ascend",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Pause motion",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Close dialog",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "✕",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Continue with Google",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "email",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "password",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Create an account",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "requested": "/practice/missions",
+    "url": "/practice/missions",
+    "title": "Role missions · Ascend",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\n←\nBack to Practice\nChoose a job first\n\nSimulation missions put you back into the work of one job. Which job decides which situations you get and what they are scored against. Pick one in Discover and come back. It takes a few minutes, and everything here points at it afterwards.\n\nGo to Discover",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "←\nBack to Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Go to Discover",
+        "href": "/discover",
+        "type": ""
+      }
+    ]
+  },
+  {
+    "requested": "/resume",
+    "url": "/resume",
+    "title": "Professional Presence · Ascend",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\n←\nBack to Home\nProfessional Presence\n\nMost applications are filtered before a person reads them. What an employer finds - your resume, your profile, how well you match the job - decides whether anybody sees the rest of you.\n\nYou have not chosen a role yet, so nothing here is aimed at one. Discovery is what makes it specific.\n\nResume Builder\nAVAILABLE NOW\n\nWrite a resume from what you have already told us.\n\nOpen Resume Builder\n15-20 min\nLinkedIn Profile Builder\nAVAILABLE NOW\n\nMake your profile sound professional, without sounding invented.\n\nOpen LinkedIn Profile Builder\n10-15 min\nJob Fit Analyzer\nAVAILABLE NOW\n\nAm I ready for this job? Answered against one posting.\n\nOpen Job Fit Analyzer\n2-3 min\nResume Builder\nAVAILABLE NOW\nascend.app/resume/build\nWHAT\nWHO\nHOW\nRESULT\nWhat you get\n\nA complete resume written for one named role, in your choice of three layouts, downloadable as Word or PDF. Most applications are read by screening software before a person sees them, so it is written to get through that and still read well to a hiring manager.\n\nA. Sample\n\nCoimbatore · a.sample@example.com\n\nCareer objective\n\nFinal-year commerce graduate with six months of part-time retail experience, looking for a first customer success role. Comfortable handling complaints on the floor and closing them without escalating.\n\nSkills\nCustomer: Complaint handling, Returns processing, Point of sale\nTools: Excel, Google Workspace\nExperience\n\nSales Assistant (part-time), Regional apparel chain\n\nJan 2025 - Mar 2026\n\nHandled around 40 customer conversations a shift, including returns and complaints.\nTrained two new starters on the returns process during the festive season.\nCovered the service desk single-handed on weekends across a six-month period.\n\nStudent placement coordinator, College placement cell\n\n2025\n\nOrganised a two-day recruitment drive for 120 students across nine employers.\nEducation\n\nB.Com, Bharathiar University\n\n2023 - 2026\n\nCommerce, with accounting and business communication.\n\nLanguages\n\nHindi, English, Tamil\n\nActivities\nCollege placement cell volunteer\n\nEXAMPLE — NOT A REAL PERSON\n\nREAD BY THE FILTER — 7 ROLE KEYWORDS FOUND\n\nCustomer service · Complaint resolution · Point of sale · Returns processing · Team training · Hindi · English\n\n!\nOne unexplained six-month gap (Jun-Dec 2025)\nFilters flag gaps over three months. A single line - study, exams, family - closes it, and the reader stops wondering.\n!\nNo month on the second role's dates\nYears alone are read as approximate. Some systems drop the entry rather than guess at it.\n!\n'Excel — basic' understates a listed skill\nKeyword matching does not read qualifiers, but a human does. Either name what you can do in Excel, or leave it out.\n\nWHERE THIS STANDS · COMPETITIVE\n\nFor a first customer-facing role this sits above the median: there is real customer contact, a quantified workload and one clear example of added responsibility. It is not yet strong because no entry states an outcome, so a reader can see what you did but not what changed.\n\nWHAT WORKS\n\nEvery bullet has a number or a scale attached. 'Around 40 conversations a shift' is checkable; 'excellent communication skills' is not.\nThe training line shows responsibility beyond the job description, which is the strongest signal on the page for an early-career applicant.\nThe summary names the role being applied for. Filters and readers both look for that in the first two lines.\nLanguages are listed explicitly, which matters for customer-facing roles and is often left off.\n\nWHAT TO FIX, AND HOW\n\nNo outcome on the placement-cell entry\nYou organised a drive for 120 students across nine employers. Add what came of it — offers made, attendance, or that it ran without incident.\nThe summary describes you, not the employer's problem\nRewrite the second sentence around what a customer success team gets: someone who has already handled complaints face to face and closed them without escalating.\nNo mention of systems or tools by name\nYou used a point-of-sale system daily. Name it. Recruiters search for the tools they already run.\n1 of 4",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "←\nBack to Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discovery",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Open Resume Builder",
+        "href": "/resume/build",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Open LinkedIn Profile Builder",
+        "href": "/profile/professional",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Open Job Fit Analyzer",
+        "href": "/job-fit",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Pause walkthrough",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "WHAT",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "WHO",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "HOW",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "RESULT",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to What",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to Who",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to How",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to Result",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Previous section",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Next section",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "requested": "/resume/build",
+    "url": "/resume/build",
+    "title": "Build your resume · Ascend",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\n←\nBack to Professional Presence\nBuild your resume\n\nMost applications are read by screening software before a recruiter sees them, so we write yours for both: from what you have actually done, in the words the role is screened on. Look through the templates first. We only ask about you when you are ready to build.\n\nWhat are we building?\nChoose one to begin\n▾\nWhere are you right now?\n\nA student’s resume leads with education and projects; a working person’s leads with the job.\n\nStill studying\nWorking, or have worked\n\nWe lead with your strongest evidence rather than a role’s words. Aimed at a role it will always land harder - and you can build that version from the same record in two minutes.\n\nPick a look\n\nClassic and Compact are single column - the safest read for screening software. Sidebar is a designed two-column look, best when a person reads it. Switch any time.\n\nAarav Sharma\n\nHyderabad · aarav.sharma@example.com\n\nSummary\n\nCustomer-focused commerce graduate with hands-on practice in order handling, billing queries and everyday problem solving. Comfortable working shifts, quick to pick up new tools, and calm with difficult customers. Looking for work where the day is measured in problems closed rather than hours sat.\n\nSkills\nCustomer service: Clear phone manner, Patient listening, Complaint handling, Escalation judgement\nTools: Google Sheets, Billing systems, Tally, Hindi typing\nWays of working: Shift work, Counter ownership, Working to daily targets\nWork experience\n\nStore assistant, Sharma General Stores\n\n2023 - 2024\n\nHandled daily billing and customer questions at the counter, about 60 customers a day\nKept stock lists up to date in Google Sheets so reorders went out before shelves emptied\nSettled billing disputes at the counter without calling the owner in\n\nCustomer support intern, Zippy Logistics\n\nJun 2023 - Dec 2023\n\nAnswered 40 delivery queries a day across calls and email\nLogged repeat complaints in a shared tracker so the team could see which routes caused them\nCovered evening shifts through the festive peak without a missed handover\n\nVolunteer, registration desk, College fest\n\n2023\n\nManaged sign-ins for 200 students and sorted out schedule clashes on the day\nEducation\n\nB.Com, Osmania University\n\n2021 - 2024\n\n72%, specialised in accounting and taxation\n\nClass XII, Commerce, Kendriya Vidyalaya, Hyderabad\n\n2021\n\n78%\n\nLanguages\n\nEnglish, Hindi, Telugu\n\nActivities\nCollege cricket team, two seasons\nPeer study group - ran weekly accounts revision for eight classmates\nNSS volunteer at two blood donation drives\nClassic\nAarav Sharma\n\nHyderabad | aarav.sharma@example.com\n\nSUMMARY\n\nCustomer-focused commerce graduate with hands-on practice in order handling, billing queries and everyday problem solving. Comfortable working shifts, quick to pick up new tools, and calm with difficult customers. Looking for work where the day is measured in problems closed rather than hours sat.\n\nSKILLS\nCustomer service: Clear phone manner, Patient listening, Complaint handling, Escalation judgement\nTools: Google Sheets, Billing systems, Tally, Hindi typing\nWays of working: Shift work, Counter ownership, Working to daily targets\nWORK EXPERIENCE\n\nStore assistant, Sharma General Stores· 2023 - 2024\n\nHandled daily billing and customer questions at the counter, about 60 customers a day\nKept stock lists up to date in Google Sheets so reorders went out before shelves emptied\nSettled billing disputes at the counter without calling the owner in\n\nCustomer support intern, Zippy Logistics· Jun 2023 - Dec 2023\n\nAnswered 40 delivery queries a day across calls and email\nLogged repeat complaints in a shared tracker so the team could see which routes caused them\nCovered evening shifts through the festive peak without a missed handover\n\nVolunteer, registration desk, College fest· 2023\n\nManaged sign-ins for 200 students and sorted out schedule clashes on the day\nEDUCATION\n\nB.Com, Osmania University· 2021 - 2024\n\n72%, specialised in accounting and taxation\n\nClass XII, Commerce, Kendriya Vidyalaya, Hyderabad· 2021\n\n78%\n\nLANGUAGES\n\nEnglish, Hindi, Telugu\n\nACTIVITIES\nCollege cricket team, two seasons\nPeer study group - ran weekly accounts revision for eight classmates\nNSS volunteer at two blood donation drives\nCompact\nAARAV SHARMA\n\nWritten for whoever reads it\n\nINFO\n\nHyderabad\n\naarav.sharma@example.com\n\nSKILLS\nCustomer service: Clear phone manner, Patient listening, Complaint handling, Escalation judgement\nTools: Google Sheets, Billing systems, Tally, Hindi typing\nWays of working: Shift work, Counter ownership, Working to daily targets\nLANGUAGES\n\nEnglish, Hindi, Telugu\n\nSUMMARY\n\nCustomer-focused commerce graduate with hands-on practice in order handling, billing queries and everyday problem solving. Comfortable working shifts, quick to pick up new tools, and calm with difficult customers. Looking for work where the day is measured in problems closed rather than hours sat.\n\nWORK EXPERIENCE\n\nStore assistant, Sharma General Stores\n\n2023 - 2024\n\nHandled daily billing and customer questions at the counter, about 60 customers a day\nKept stock lists up to date in Google Sheets so reorders went out before shelves emptied\nSettled billing disputes at the counter without calling the owner in\n\nCustomer support intern, Zippy Logistics\n\nJun 2023 - Dec 2023\n\nAnswered 40 delivery queries a day across calls and email\nLogged repeat complaints in a shared tracker so the team could see which routes caused them\nCovered evening shifts through the festive peak without a missed handover\n\nVolunteer, registration desk, College fest\n\n2023\n\nManaged sign-ins for 200 students and sorted out schedule clashes on the day\nEDUCATION\n\nB.Com, Osmania University\n\n2021 - 2024\n\n72%, specialised in accounting and taxation\n\nClass XII, Commerce, Kendriya Vidyalaya, Hyderabad\n\n2021\n\n78%\n\nACTIVITIES\nCollege cricket team, two seasons\nPeer study group - ran weekly accounts revision for eight classmates\nNSS volunteer at two blood donation drives\nSidebar\nBuild my resume\n\nPreview · Classic look\n\nWaiting for your answers\n\nAnswer the two questions on the left and your resume appears here.\n\nEXAMPLE\nAarav Sharma\n\nHyderabad · aarav.sharma@example.com\n\nSummary\n\nCustomer-focused commerce graduate with hands-on practice in order handling, billing queries and everyday problem solving. Comfortable working shifts, quick to pick up new tools, and calm with difficult customers. Looking for work where the day is measured in problems closed rather than hours sat.\n\nSkills\nCustomer service: Clear phone manner, Patient listening, Complaint handling, Escalation judgement\nTools: Google Sheets, Billing systems, Tally, Hindi typing\nWays of working: Shift work, Counter ownership, Working to daily targets\nWork experience\n\nStore assistant, Sharma General Stores\n\n2023 - 2024\n\nHandled daily billing and customer questions at the counter, about 60 customers a day\nKept stock lists up to date in Google Sheets so reorders went out before shelves emptied\nSettled billing disputes at the counter without calling the owner in\n\nCustomer support intern, Zippy Logistics\n\nJun 2023 - Dec 2023\n\nAnswered 40 delivery queries a day across calls and email\nLogged repeat complaints in a shared tracker so the team could see which routes caused them\nCovered evening shifts through the festive peak without a missed handover\n\nVolunteer, registration desk, College fest\n\n2023\n\nManaged sign-ins for 200 students and sorted out schedule clashes on the day\nEducation\n\nB.Com, Osmania University\n\n2021 - 2024\n\n72%, specialised in accounting and taxation\n\nClass XII, Commerce, Kendriya Vidyalaya, Hyderabad\n\n2021\n\n78%\n\nLanguages\n\nEnglish, Hindi, Telugu\n\nActivities\nCollege cricket team, two seasons\nPeer study group - ran weekly accounts revision for eight classmates\nNSS volunteer at two blood donation drives\nWHAT YOU GET AFTERWARDS\nEXAMPLE\n\nOnce you have built one, your own resumes sit here. This is a finished example — it belongs to nobody.\n\nCustomer Success Associate\nClassic layout · 7 keywords matched · 3 things to fix",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "←\nBack to Professional Presence",
+        "href": "/resume",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Choose one to begin\n▾",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "radio",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "radio",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "radio",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "radio",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "radio",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Build my resume",
+        "href": null,
+        "type": "button",
+        "disabled": true
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Customer Success Associate\nClassic layout · 7 keywords matched · 3 things to fix",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "requested": "/profile/professional",
+    "url": "/profile/professional",
+    "title": "LinkedIn Profile Builder · Ascend",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\n←\nBack to Professional Presence\nMake your profile sound professional\n\nBring in the profile you already have, then tell Scribe what to change in plain words and watch it change on the right. Nothing is kept until you say so.\n\nHow do you want to start?\n\nYour own words go on the right first. Nothing is changed until you ask.\n\nChoose one to begin\n▾\n\nPick one of the three above and your profile appears on the right.\n\nUpload file\n\nWAITING FOR YOUR CHOICE\n\n4 sections not kept yet\n\nA\nOpen to work\nAnjali Kumar\n\nCustomer Success Associate · Escalations, CRM, 50+ queries a day · Bengaluru\n\nCopy\n\nBengaluru, Karnataka\n\nOPEN TO WORK\n\nCopy\n\nOpen to Customer Success and Operations roles in Bengaluru\n\nAbout\nCopy\n\nI am aiming at customer-facing operations work. In a timed simulation I cleared 52 queries in a shift and handled three escalations end to end. Before that I ran the counter at my family's store on weekends, roughly sixty customers a day, and dealt with the complaints myself. The part I am best at is being the one who actually sorts it out.\n\nExperience & projects\nCopy\n\nCounter and complaints, weekends\n\nCopy\n\nFamily retail store\n\nRan the counter alone on Saturdays, around 60 customers a day, with no billing errors on the busiest one.\nHandled complaints myself instead of passing them on, including refunds outside the stated window.\nCut the wait for complicated purchases by batching the simple ones and telling people why they were waiting.\n\nBusy shift simulation\n\nCopy\n\nAscend\n\nCleared 52 queries in a timed shift and handled three escalations end to end.\nCaught two tickets filed to the wrong account at handover and corrected them before they reached the customer.\nSkills\nCopy\nEscalation handling\nCRM data entry\nCustomer communication\nShift coordination\n\nYour profile appears here once you have chosen how to start.\n\nTHREE HEADLINES. PICK ONE\n\nCustomer Success Associate · Escalations, CRM, 50+ queries a day · Bengaluru\n76 characters\nKeeping customers when something has gone wrong · Support & escalations · Bengaluru\n83 characters\nEscalation handling and CRM accuracy for customer teams · Bengaluru\n67 characters\n\nKEEP WHAT IS RIGHT\n\nHeadline\nKeep this\nExperience\nKeep this\nAbout\nKeep this\nSkills\nKeep this\nOpen to work\nKEPT\n\nNothing here is on LinkedIn until you copy it across. Check every line against something you actually did. If a sentence describes somebody slightly better than you, cut it.",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "←\nBack to Professional Presence",
+        "href": "/resume",
+        "type": ""
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "file",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Choose one to begin\n▾",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Upload file",
+        "href": null,
+        "type": "button",
+        "disabled": true
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Copy",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Copy",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Copy",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Copy",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Copy",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Copy",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Copy",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Customer Success Associate · Escalations, CRM, 50+ queries a day · Bengaluru\n76 characters",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Keeping customers when something has gone wrong · Support & escalations · Bengaluru\n83 characters",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Escalation handling and CRM accuracy for customer teams · Bengaluru\n67 characters",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Keep this",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Keep this",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Keep this",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Keep this",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "requested": "/job-fit",
+    "url": "/job-fit",
+    "title": "Job fit · Ascend",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\n←\nBack to Professional Presence\nAm I ready for this job?\n\nPaste a job description. Ascend compares it against what you have actually done here and shows your match, your gaps, and what to improve before applying.\n\nThe job description\n\nA job title on its own is not enough to check you against.\n\nCheck my fit\n\nAn example— this is somebody else's check, not yours. Yours would be measured against your own record.\n\nCustomer Success Associate\n\n60\nOF 100\n\nREADINESS\n\nYou against what this job asks\n\nInterviews\nStories\nQuestions\nYou\nThis job\n\nYou have proof for the two parts of this job that actually carry it, and nothing at all behind the CRM line.\n\nReadiness for this posting, from your own record. It is not a chance of being hired — nobody can tell you that.\n\nPROVEN\nOwn escalations end to end\nYou have told this one, and it rests on a scored interview answer rather than on your own account.\nStory: The refund I could not give\nPROVEN\nHandle 40-60 customer queries a day\nYour answer about the Saturday counter held up when it was read back.\nPractice answer: under-pressure\nCLAIMED\nKeep the customer informed through a delay\nIt is on your record and nothing backs it up yet. One practice answer would fix that.\nYour experience, as you told us\nCLAIMED\nCoordinate with operations on delivery issues\nAdjacent to what you have described, but not the same thing, and an interviewer will hear the difference.\nYour experience, as you told us\nNOTHING YET\nMaintain CRM records accurately\nNever mentioned and never practised. This is the one to close first.\nNothing on file\n\n2 things here are claimed and not proven. In an interview those are the questions you will be asked and cannot answer.\n\nTHE ONE THING TO DO NEXT\n\nAnswer the two questions in the library about picking up a new system. That turns the weakest line here into something you can talk about for two minutes.\n\nCheck where you stand for this role\nPractise the questions this tests",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "←\nBack to Professional Presence",
+        "href": "/resume",
+        "type": ""
+      },
+      {
+        "tag": "TEXTAREA",
+        "text": "Paste the responsibilities and what they are asking for…",
+        "href": null,
+        "type": "textarea",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Check my fit",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "Check where you stand for this role",
+        "href": "/practice/readiness",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practise the questions this tests",
+        "href": "/interview/questions",
+        "type": ""
+      }
+    ]
+  },
+  {
+    "requested": "/interview",
+    "url": "/interview",
+    "title": "Interview practice · Ascend",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\n←\nBack to Home\nInterview practice\n\nInterviews are the one part of hiring that is pure performance under pressure, and the only reliable way through it is having said the words out loud before the day.\n\nYou have not chosen a role yet, so nothing here is aimed at one. Discovery is what makes it specific.\n\nAI Interview\nAVAILABLE NOW\n\nA full practice interview, with feedback on what you said.\n\nOpen AI Interview\n12-15 min\nInterview Story Bank\nIN DEVELOPMENT\n\nBuild answers from what you have already proven.\n\nQuestion library\nAVAILABLE NOW\n\nPractise the questions you will actually be asked, one at a time.\n\nOpen Question library\n3-5 min a question\nAI Interview\nAVAILABLE NOW\nascend.app/interview/practice\nWHAT\nWHO\nHOW\nRESULT\nWhat you get\n\nA full practice interview - questions written for your role, answered by voice or by typing - and a detailed read-out afterwards covering every answer you gave. Interviews are performance under pressure, and the only preparation that transfers is having said the words out loud before the day.\n\nYOUR INTERVIEW READ-OUT\n\nHow your Customer Success Associate practice went\n\nEverything below comes from what you actually said in this interview - nothing else.\n\nPROGRESS YOU HAVE EARNED\n\nThis was a first interview, so there is nothing to compare it against yet. The next one will show what moved.\n\nWHAT WENT WELL\n✓\nUsed a specific incident for the difficult-customer question rather than describing what you would do in general. Interviewers score concrete examples far higher.\n✓\nAcknowledged the trade-off in the refund question instead of giving an answer that only worked for one side.\n✓\nKept answers to roughly 60-90 seconds, which is the range most interviewers expect for a behavioural question.\n✓\nUsed the customer's own words when describing the complaint, which showed you had actually listened rather than paraphrased.\nWHAT TO IMPROVE\n→\nTwo answers began by restating the question. It costs about ten seconds each time and makes a confident answer sound hesitant.\n→\nYou described what you did but not what changed as a result. An interviewer cannot score an outcome you did not state.\n→\nThe word 'basically' appeared six times. It is filler, and it tends to appear just before the most important part of a sentence.\nFOCUS ON THIS NEXT\n\nStart with the outcome, then explain how you got there. Most of your answers already have the right content in the wrong order.\n\nQuestion by question\nQuestion 1\nTell me about a time you handled an unhappy customer.\nQuestion 2\nA customer asks for a refund outside policy. What do you do?\nQuestion 3\nWhy do you want to work in customer success?\nQuestion 4\nDescribe a time you worked under pressure.\nSkills to build\nStating outcomes - Three of your four answers described actions without results. Practise ending each one with a sentence starting 'As a result…'.\nAnswer structure - Lead with the situation in two sentences, then spend the rest on what you did. You are currently spending about half the answer on context.\nFiller words - 'Basically' and 'sort of' appeared nine times between them. Pausing instead of filling reads as considered rather than uncertain.\n\nThese are exactly what Practice missions are built for - real workplace situations where you build the skill by using it.\n\nClose the gap in Practice →\n\nEXAMPLE — NOT A REAL PERSON\n\n1 of 4",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "←\nBack to Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discovery",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Open AI Interview",
+        "href": "/interview/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Open Question library",
+        "href": "/interview/questions",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Pause walkthrough",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "WHAT",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "WHO",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "HOW",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "RESULT",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "SUMMARY",
+        "text": "Question 1\nTell me about a time you handled an unhappy customer.",
+        "href": null
+      },
+      {
+        "tag": "SUMMARY",
+        "text": "Question 2\nA customer asks for a refund outside policy. What do you do?",
+        "href": null
+      },
+      {
+        "tag": "SUMMARY",
+        "text": "Question 3\nWhy do you want to work in customer success?",
+        "href": null
+      },
+      {
+        "tag": "SUMMARY",
+        "text": "Question 4\nDescribe a time you worked under pressure.",
+        "href": null
+      },
+      {
+        "tag": "A",
+        "text": "Close the gap in Practice →",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to What",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to Who",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to How",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to Result",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Previous section",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Next section",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "requested": "/interview/practice",
+    "url": "/interview/practice",
+    "title": "Interview practice · Ascend",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\n←\nBack to Interview\nNew interview\n1 saved\n▾\nReady to ace your next interview?\n\nTen minutes with an interviewer who has read your record. You answer out loud, it ends on time, and you leave with an honest read of how it went - answer by answer.\n\nReady to start\n\nYou\n\nNOT CHECKED\nY\n\nYou\n\nCheck my microphone\n\nTip 1 of 3 - Answer with one concrete example, not a list of qualities.\n\nYOU ARE JOINING\n\nRole you are interviewing for\nPaste the job description (optional)\nWhich round?\nHR round\nCommunication and how you work with people.\nManagerial round\nReal situations - judgement and pressure.\nWho takes it?\nA\nAsha\nR\nRavi\nAnything you want to be pushed on? (optional)\n\n10 minutes, up to ten questions, ends on time. Questions arrive as text; answer by voice or typing.\n\nJoin the interview\n\nNo mic today? Type your answers instead\n\nYour profile is missing your track and your skills - the interviewer can still work without them, but filling them in makes the questions yours.",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "←\nBack to Interview",
+        "href": "/interview",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "New interview\n1 saved\n▾",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Check my microphone",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "e.g. Customer Support Associate",
+        "href": null,
+        "type": "text",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Paste the job description (optional)",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "radio",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "radio",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "radio",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "radio",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Anything you want to be pushed on? (optional)",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Join the interview",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Type your answers instead",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "filling them in",
+        "href": "/profile",
+        "type": ""
+      }
+    ]
+  },
+  {
+    "requested": "/interview/questions",
+    "url": "/interview/questions",
+    "title": "Question library · Ascend",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\n←\nBack to Interview\nQuestion library\n\nWhat interviews for early-career roles actually ask, and what each question is really testing. Answering one and getting a read on it needs an account.\n\nSearch questions\nEverything\nHR round\nManagerial round\nHandling conflict\nWorking under pressure\nLearning quickly\nTaking ownership\nWorking with others\nCommunicating clearly\nHR ROUND\nTell me about a difficult customer or classmate you had to deal with.\nWhether you can disagree with someone without either caving or escalating.\nNEVER ANSWERED\nHandling conflict\nHR ROUND\nA customer asks for something the policy does not allow. What do you do?\nWhether you hold a line while leaving the person feeling dealt with honestly.\nNEVER ANSWERED\nHandling conflict\nMANAGERIAL ROUND\nYour manager tells you to do something you think is wrong. What happens next?\nWhether you raise it once, properly, and then get on with it.\nNEVER ANSWERED\nHandling conflict\nHR ROUND\nDescribe a time you had more to do than time to do it in.\nWhether you prioritise deliberately or simply go faster.\nNEVER ANSWERED\nWorking under pressure\nMANAGERIAL ROUND\nSixty queries and the system is down. Walk me through your day.\nWhether you keep people informed when you cannot fix anything.\nNEVER ANSWERED\nWorking under pressure\nHR ROUND\nTell me about something you had to learn quickly with nobody to teach you.\nWhether you have a method, or you just hope.\nNEVER ANSWERED\nLearning quickly\nHR ROUND\nHow do you go about picking up a system you have never used?\nWhether you can be handed a CRM on your first morning and be useful by Thursday.\nNEVER ANSWERED\nLearning quickly\nHR ROUND\nGive me an example of a mistake you made and what happened after it.\nWhether you can name a real one. An answer with no mistake in it is the wrong answer.\nNEVER ANSWERED\nTaking ownership\nMANAGERIAL ROUND\nTell me about something you sorted out that was not really your job.\nWhether anything moves when nobody has asked you to move it.\nNEVER ANSWERED\nTaking ownership\nHR ROUND\nTell me about working with someone who was not pulling their weight.\nWhether you handled it with them, or went around them to someone senior.\nNEVER ANSWERED\nWorking with others\nMANAGERIAL ROUND\nHow do you hand something over to a colleague halfway through?\nWhether you think about the next person at all. Most freshers do not.\nNEVER ANSWERED\nWorking with others\nHR ROUND\nExplain something you understand well to someone who knows nothing about it.\nWhether you can be plain without being rude about it.\nNEVER ANSWERED\nCommunicating clearly\nHR ROUND\nHow would you tell a customer something they will not want to hear?\nWhether you get to the point early. Burying it is the common mistake.\nNEVER ANSWERED\nCommunicating clearly\nHR ROUND\nWhy this role, and not the one next to it?\nWhether you have a reason of your own, or you are saying what you think they want.\nNEVER ANSWERED\nCommunicating clearly",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "←\nBack to Interview",
+        "href": "/interview",
+        "type": ""
+      },
+      {
+        "tag": "INPUT",
+        "text": "Search questions…",
+        "href": null,
+        "type": "text",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Everything",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "HR round",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Managerial round",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Handling conflict",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Working under pressure",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Learning quickly",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Taking ownership",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Working with others",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Communicating clearly",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "HR ROUND\nTell me about a difficult customer or classmate you had to deal with.\nWhether you can disagree with someone without eithe",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "HR ROUND\nA customer asks for something the policy does not allow. What do you do?\nWhether you hold a line while leaving the person",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "MANAGERIAL ROUND\nYour manager tells you to do something you think is wrong. What happens next?\nWhether you raise it once, properly",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "HR ROUND\nDescribe a time you had more to do than time to do it in.\nWhether you prioritise deliberately or simply go faster.\nNEVER ",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "MANAGERIAL ROUND\nSixty queries and the system is down. Walk me through your day.\nWhether you keep people informed when you cannot ",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "HR ROUND\nTell me about something you had to learn quickly with nobody to teach you.\nWhether you have a method, or you just hope.\nN",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "HR ROUND\nHow do you go about picking up a system you have never used?\nWhether you can be handed a CRM on your first morning and be",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "HR ROUND\nGive me an example of a mistake you made and what happened after it.\nWhether you can name a real one. An answer with no m",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "MANAGERIAL ROUND\nTell me about something you sorted out that was not really your job.\nWhether anything moves when nobody has asked",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "HR ROUND\nTell me about working with someone who was not pulling their weight.\nWhether you handled it with them, or went around the",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "MANAGERIAL ROUND\nHow do you hand something over to a colleague halfway through?\nWhether you think about the next person at all. Mo",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "HR ROUND\nExplain something you understand well to someone who knows nothing about it.\nWhether you can be plain without being rude ",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "HR ROUND\nHow would you tell a customer something they will not want to hear?\nWhether you get to the point early. Burying it is the",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "HR ROUND\nWhy this role, and not the one next to it?\nWhether you have a reason of your own, or you are saying what you think they w",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "requested": "/stories",
+    "url": "/stories",
+    "title": "Your story bank · Ascend",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\n←\nBack to Interview\n\nIN DEVELOPMENT\n\nYour story bank is being built\n\nIt will hold the handful of real examples most interview questions are actually asking for, drafted from what you have done here rather than from a blank page. That drafting needs work of yours to read, so it opens when there is some.\n\nUntil then, the practice questions are the place to work on answers, and anything you write there will be here when this opens.\n\nGo to practice questions",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "←\nBack to Interview",
+        "href": "/interview",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Go to practice questions",
+        "href": "/interview/questions",
+        "type": ""
+      }
+    ]
+  },
+  {
+    "requested": "/passport",
+    "url": "/passport",
+    "title": "Your Passport · Ascend",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\n←\nBack to Home\n\nIN DEVELOPMENT\n\nYour Passport is being built\n\nIt will be a booklet with your name on it and a page for every skill you have proved, each one naming the work behind it. It is sealed from work that was marked - so it opens when there is enough of that to fill it, and not before.\n\nIn the meantime, the readiness assessment is where measured work comes from, and everything it records will be in here when this opens.\n\nGo to Practice",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "←\nBack to Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Go to Practice",
+        "href": "/practice",
+        "type": ""
+      }
+    ]
+  },
+  {
+    "requested": "/journey",
+    "url": "/journey",
+    "title": "The whole journey · Ascend",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\n←\nBack to Home\n1\nDiscovery\n2\nAssessment\n3\nPractice\n4\nSimulation\n5\nCareer Passport\n6\nAI Interview\n7\nJob Deployment\n\n2 of 7 stages are open today. The rest are listed so you can see where this goes — tap any stage to read what it will do.\n\nThe whole journey\n\nEach of these is useful alone. In order, they compound - what you learn in Discovery decides the role, the role decides what you practise, and what you practise is what you end up able to prove.\n\nYou have not chosen a role yet, so nothing here is aimed at one. Discovery is what makes it specific.\n\nDiscovery\nAVAILABLE NOW\n\nSee what the work actually is, then pick the role you want.\n\nOpen Discovery\n15-22 min\nAssessment\nIN DEVELOPMENT\n\nMeasure where you stand against the role you picked.\n\nPractice\nIN DEVELOPMENT\n\nClose the gaps the assessment found.\n\nSimulation\nIN DEVELOPMENT\n\nDo the job before anyone has hired you to.\n\nCareer Passport\nIN DEVELOPMENT\n\nEverything you proved, gathered into one record.\n\nAI Interview\nAVAILABLE NOW\n\nSay the words out loud before the day.\n\nOpen AI Interview\n12-15 min\nJob Deployment\nNOT RELEASED YET\n\nReach the employers who are looking for what you proved.\n\nDiscovery\nAVAILABLE NOW\nascend.app/discover\nWHAT\nWHO\nHOW\nASK\nRESULT\nWhat you get\n\nA real catalogue of non-technical jobs, opened up: what each day involves, what it pays now and three steps later, where it leads, and what is hard about it. Applying for whatever appears is how people end up in jobs that do not fit.\n\nCustomer Success Associate\n\nCustomer Operations\n\nPAY AND CAREER GROWTH · monthly, indicative\n\n₹20K–₹30K\n₹32K–₹45K\n₹50K–₹70K\n\nCustomer Success Associate\n\nYear 0-2\n\nYOU START HERE\n\nSenior Associate\n\nYear 2-4\n\nTeam Lead\n\nYear 4-7\n\nIndicative monthly ranges for metros and tier-1 cities. Smaller cities run lower, and the first-year figure moves most with the size of the employer.\n\nPEOPLE DOING THIS JOB\n\nIllustrative: a composite written from the pay and progression data above, not a real individual.\n\n“The first year is mostly learning to say no without losing the customer. Nobody tells you that is the skill, but it is the one that got me promoted.”\n\nMeera · Team Lead, retail support\n\nStarted as an associate in 2021\n\n1 of 5",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "←\nBack to Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "1\nDiscovery",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "2\nAssessment",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "3\nPractice",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "4\nSimulation",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "5\nCareer Passport",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "6\nAI Interview",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "7\nJob Deployment",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "Discovery",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Open Discovery",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Open AI Interview",
+        "href": "/interview/practice",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Pause walkthrough",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "WHAT",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "WHO",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "HOW",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "ASK",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "RESULT",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to What",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to Who",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to How",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to Ask",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Go to Result",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Previous section",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Next section",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "requested": "/opportunities",
+    "url": "/opportunities",
+    "title": "Opportunities · Ascend",
+    "text": "ASCEND\nHome\nDiscover\nPractice\nOpportunities\n◑\nLog in or sign up\n←\nBack to home\n\nSTAGE 7 · TALENT NETWORK\n\nOpportunities\n\nMatched employer interviews ranked by your verified capability, with an interview kit for each — and your evidence shared only with your consent.\n\nThis part isn't built yet.",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Home",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Discover",
+        "href": "/discover",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Practice",
+        "href": "/practice",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "Opportunities",
+        "href": "/opportunities",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "←\nBack to home",
+        "href": "/",
+        "type": ""
+      }
+    ]
+  },
+  {
+    "requested": "/settings",
+    "url": "/welcome?auth=login&next=%2Fsettings",
+    "title": "Ascend — talent fulfillment network · Ascend",
+    "text": "ASCEND\nStudents\nColleges\nEmployers\n◑\nLog in or sign up\n\nYOUR NEXT CHAPTER STARTS HERE\n\nYour future.\nA little more\nwithin reach.\n\nFind your direction. Practise the work. Show what you can do.\n\nOpen my career home\n↗\nWhat is Ascend?\n↓\n\nExplore before creating an account.\n\nTRY THE WORK\n\nA task. Your response.\nA chance to improve.\n\nIllustrative workplace\nExplore\nPrepare\nProgress\nPause motion\n\nWHAT IS ASCEND?\n\nAn AI-native\ntalent fulfillment network.\n\nBridging the gap between getting hired and becoming productive.\nAscend connects students, colleges and employers through role discovery, preparation and evidence of capability—helping people become productive sooner.\n\nStudents · find your next step\n\nYour career home brings your profile, career options and preparation together. Start with what matters to you and return to where you left off.\n\nExplore your options and see what is available.\nColleges · focus your support\n\nStudent dashboards, employability insights and readiness reports are planned to help placement teams understand the cohort and support each student.\n\nSee the planned tools and request access.\nEmployers · see the evidence\n\nCandidate passport reviews, role readiness analytics and pre-hire simulation reports are planned to bring demonstrated work into hiring decisions.\n\nSee the planned tools and request access.\n✕\nWelcome back\n\nLog in to continue your journey.\n\nContinue with Google\nOR\nEmail\nPassword\nLog in\n\nNew to Ascend? Create an account",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Students",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Colleges",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Employers",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "Open my career home\n↗",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "What is Ascend?\n↓",
+        "href": "#what-is-ascend",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Pause motion",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Close dialog",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "✕",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Continue with Google",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "email",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "password",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Create an account",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "requested": "/for/colleges",
+    "url": "/for/colleges",
+    "title": "Ascend for colleges · Ascend",
+    "text": "ASCEND\n◑\nLog in or sign up\nFor colleges\n\nPlacement outcomes are judged on the cohort, not the individual - which means seeing where a whole year group actually stands, early enough to change it.\n\nNone of this is released yet — it is here so you can see what is coming.\n\n📊\nNOT RELEASED YET\nStudent Dashboards\n\nWhere each student stands, without asking them.\n\nFOR Placement officers and faculty responsible for a cohort.\n\nNot available yet\n\n🔍\nNOT RELEASED YET\nEmployability Insights\n\nWhat the cohort is strong at, and where it is thin.\n\nFOR Departments deciding where to spend limited teaching time.\n\nNot available yet\n\n📋\nNOT RELEASED YET\nReadiness Reports\n\nEvidence you can put in front of a recruiter.\n\nFOR Institutions that have to show outcomes to employers or regulators.\n\nNot available yet\n\n🎯\nNOT RELEASED YET\nPlacement Preparation\n\nRun the run-up to placement season as a programme.\n\nFOR Placement cells with a season to prepare for and limited staff.\n\nNot available yet\n\n📈\nNOT RELEASED YET\nCohort Analytics\n\nCompare years, courses and interventions.\n\nFOR Heads of department and placement leadership.\n\nNot available yet\n\nRequest access\n\nTell us who you are and we will reach out to you.\n\nOrganisation\nCollege or company name\nYour name\nWork email\nWe reply here\nYour role\ne.g. Placement Officer\nWhat are you hoping to do? Optional\nSend request\n\nOpens your mail client with the answers filled in.",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "text",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "text",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "email",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "text",
+        "disabled": false
+      },
+      {
+        "tag": "TEXTAREA",
+        "text": "",
+        "href": null,
+        "type": "textarea",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Send request",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "requested": "/for/employers",
+    "url": "/for/employers",
+    "title": "Ascend for employers · Ascend",
+    "text": "ASCEND\n◑\nLog in or sign up\nFor employers\n\nA resume tells you what somebody says they can do. Everything here is about what they were actually observed doing, before you spend an interview slot finding out.\n\nNone of this is released yet — it is here so you can see what is coming.\n\n📊\nNOT RELEASED YET\nCandidate Passport Review\n\nLook at what a candidate proved, not what they claimed.\n\nFOR Hiring managers screening early-career candidates at volume.\n\nNot available yet\n\n🔍\nNOT RELEASED YET\nRole Readiness Analytics\n\nSee how a candidate pool maps to the role you are filling.\n\nFOR Recruiters filling the same role repeatedly.\n\nNot available yet\n\n📋\nNOT RELEASED YET\nPre-Hire Simulation Reports\n\nWatch how someone handled the job before you hired them.\n\nFOR Employers who have been burned by candidates who interview well.\n\nNot available yet\n\n🎯\nNOT RELEASED YET\nHiring Outcome Tracking\n\nCheck whether the signal actually predicted performance.\n\nFOR Talent teams accountable for quality of hire, not just time to hire.\n\nNot available yet\n\nRequest access\n\nTell us who you are and we will reach out to you.\n\nOrganisation\nCollege or company name\nYour name\nWork email\nWe reply here\nYour role\ne.g. Placement Officer\nWhat are you hoping to do? Optional\nSend request\n\nOpens your mail client with the answers filled in.",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "text",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "text",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "email",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "text",
+        "disabled": false
+      },
+      {
+        "tag": "TEXTAREA",
+        "text": "",
+        "href": null,
+        "type": "textarea",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Send request",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "requested": "/admin",
+    "url": "/welcome?auth=login&next=%2Fadmin",
+    "title": "Ascend — talent fulfillment network · Ascend",
+    "text": "ASCEND\nStudents\nColleges\nEmployers\n◑\nLog in or sign up\n\nYOUR NEXT CHAPTER STARTS HERE\n\nYour future.\nA little more\nwithin reach.\n\nFind your direction. Practise the work. Show what you can do.\n\nOpen my career home\n↗\nWhat is Ascend?\n↓\n\nExplore before creating an account.\n\nTRY THE WORK\n\nA task. Your response.\nA chance to improve.\n\nIllustrative workplace\nExplore\nPrepare\nProgress\nPause motion\n\nWHAT IS ASCEND?\n\nAn AI-native\ntalent fulfillment network.\n\nBridging the gap between getting hired and becoming productive.\nAscend connects students, colleges and employers through role discovery, preparation and evidence of capability—helping people become productive sooner.\n\nStudents · find your next step\n\nYour career home brings your profile, career options and preparation together. Start with what matters to you and return to where you left off.\n\nExplore your options and see what is available.\nColleges · focus your support\n\nStudent dashboards, employability insights and readiness reports are planned to help placement teams understand the cohort and support each student.\n\nSee the planned tools and request access.\nEmployers · see the evidence\n\nCandidate passport reviews, role readiness analytics and pre-hire simulation reports are planned to bring demonstrated work into hiring decisions.\n\nSee the planned tools and request access.\n✕\nWelcome back\n\nLog in to continue your journey.\n\nContinue with Google\nOR\nEmail\nPassword\nLog in\n\nNew to Ascend? Create an account",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Students",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Colleges",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Employers",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "Open my career home\n↗",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "What is Ascend?\n↓",
+        "href": "#what-is-ascend",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Pause motion",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Close dialog",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "✕",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Continue with Google",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "email",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "password",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Create an account",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "requested": "/login?next=/resume/build",
+    "url": "/welcome?auth=login&next=%2Fresume%2Fbuild",
+    "title": "Ascend — talent fulfillment network · Ascend",
+    "text": "ASCEND\nStudents\nColleges\nEmployers\n◑\nLog in or sign up\n\nYOUR NEXT CHAPTER STARTS HERE\n\nYour future.\nA little more\nwithin reach.\n\nFind your direction. Practise the work. Show what you can do.\n\nOpen my career home\n↗\nWhat is Ascend?\n↓\n\nExplore before creating an account.\n\nTRY THE WORK\n\nA task. Your response.\nA chance to improve.\n\nIllustrative workplace\nExplore\nPrepare\nProgress\nPause motion\n\nWHAT IS ASCEND?\n\nAn AI-native\ntalent fulfillment network.\n\nBridging the gap between getting hired and becoming productive.\nAscend connects students, colleges and employers through role discovery, preparation and evidence of capability—helping people become productive sooner.\n\nStudents · find your next step\n\nYour career home brings your profile, career options and preparation together. Start with what matters to you and return to where you left off.\n\nExplore your options and see what is available.\nColleges · focus your support\n\nStudent dashboards, employability insights and readiness reports are planned to help placement teams understand the cohort and support each student.\n\nSee the planned tools and request access.\nEmployers · see the evidence\n\nCandidate passport reviews, role readiness analytics and pre-hire simulation reports are planned to bring demonstrated work into hiring decisions.\n\nSee the planned tools and request access.\n✕\nWelcome back\n\nLog in to continue your journey.\n\nContinue with Google\nOR\nEmail\nPassword\nLog in\n\nNew to Ascend? Create an account",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Students",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Colleges",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Employers",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "Open my career home\n↗",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "What is Ascend?\n↓",
+        "href": "#what-is-ascend",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Pause motion",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Close dialog",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "✕",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Continue with Google",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "email",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "password",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Create an account",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      }
+    ]
+  },
+  {
+    "requested": "/signup?next=/profile",
+    "url": "/welcome?auth=signup&next=%2Fprofile",
+    "title": "Ascend — talent fulfillment network · Ascend",
+    "text": "ASCEND\nStudents\nColleges\nEmployers\n◑\nLog in or sign up\n\nYOUR NEXT CHAPTER STARTS HERE\n\nYour future.\nA little more\nwithin reach.\n\nFind your direction. Practise the work. Show what you can do.\n\nOpen my career home\n↗\nWhat is Ascend?\n↓\n\nExplore before creating an account.\n\nTRY THE WORK\n\nA task. Your response.\nA chance to improve.\n\nIllustrative workplace\nExplore\nPrepare\nProgress\nPause motion\n\nWHAT IS ASCEND?\n\nAn AI-native\ntalent fulfillment network.\n\nBridging the gap between getting hired and becoming productive.\nAscend connects students, colleges and employers through role discovery, preparation and evidence of capability—helping people become productive sooner.\n\nStudents · find your next step\n\nYour career home brings your profile, career options and preparation together. Start with what matters to you and return to where you left off.\n\nExplore your options and see what is available.\nColleges · focus your support\n\nStudent dashboards, employability insights and readiness reports are planned to help placement teams understand the cohort and support each student.\n\nSee the planned tools and request access.\nEmployers · see the evidence\n\nCandidate passport reviews, role readiness analytics and pre-hire simulation reports are planned to bring demonstrated work into hiring decisions.\n\nSee the planned tools and request access.\n✕\nCreate your account\n\nOne account. One career record. Every module.\n\nContinue with Google\nOR\nEmail\nPassword\nSign up\n\nAlready have an account? Log in",
+    "controls": [
+      {
+        "tag": "A",
+        "text": "ASCEND",
+        "href": "/welcome",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Students",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Colleges",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Employers",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "◑",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in or sign up",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "A",
+        "text": "Open my career home\n↗",
+        "href": "/",
+        "type": ""
+      },
+      {
+        "tag": "A",
+        "text": "What is Ascend?\n↓",
+        "href": "#what-is-ascend",
+        "type": ""
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Pause motion",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Close dialog",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "✕",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Continue with Google",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "email",
+        "disabled": false
+      },
+      {
+        "tag": "INPUT",
+        "text": "",
+        "href": null,
+        "type": "password",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Sign up",
+        "href": null,
+        "type": "submit",
+        "disabled": false
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Log in",
+        "href": null,
+        "type": "button",
+        "disabled": false
+      }
+    ]
+  }
+]

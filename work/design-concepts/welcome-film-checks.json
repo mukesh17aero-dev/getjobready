@@ -1,0 +1,50 @@
+[
+  {
+    "label": "Film loads and plays",
+    "pass": true
+  },
+  {
+    "label": "Pause stops playback",
+    "pass": true
+  },
+  {
+    "label": "Cohort 1 updates CTA and film",
+    "pass": true
+  },
+  {
+    "label": "Cohort 2 updates CTA and film",
+    "pass": true
+  },
+  {
+    "label": "Cohort 0 updates CTA and film",
+    "pass": true
+  },
+  {
+    "label": "Play resumes playback",
+    "pass": true
+  },
+  {
+    "label": "No overflow 360 light",
+    "pass": true
+  },
+  {
+    "label": "No overflow 360 dark",
+    "pass": true
+  },
+  {
+    "label": "No overflow 1440 light",
+    "pass": true
+  },
+  {
+    "label": "No overflow 1440 dark",
+    "pass": true
+  },
+  {
+    "label": "Reduced motion only loads poster",
+    "pass": true
+  },
+  {
+    "label": "Failed film falls back to original",
+    "pass": true
+  }
+]

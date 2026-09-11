@@ -1,0 +1,42 @@
+{
+  "status": "prepared-awaiting-new-image-budget-approval",
+  "theme": "From knowing to doing",
+  "sourceVideoJob": "91d5a703-3433-43f0-a87c-27956f1a4f66",
+  "referenceMediaId": "f46d5118-d623-4ace-bcce-b7c797c60d3d",
+  "settings": {
+    "model": "gpt_image_2",
+    "aspect_ratio": "16:9",
+    "resolution": "2k",
+    "quality": "high",
+    "count": 1
+  },
+  "quote": {
+    "exactCreditsPerImage": 6.5,
+    "images": 4,
+    "budget": 26,
+    "note": "Tool reports credits=6 and credits_exact=6.5 per request; budget uses exact cost. Recheck before submission. No generation submitted."
+  },
+  "jobs": [
+    {
+      "key": "student-reference",
+      "title": "Student continuity reference",
+      "prompt": "Split-screen character sheet composition, left side a full-body shot of the character standing upright in a neutral straight standing pose facing the camera with both feet flat on the ground and arms relaxed at the sides, full head-to-toe framing with the whole body and both feet visible, right side a tight close-up chest-up portrait of the same character, identical original female character on all views, preserve the original generated younger woman from the reference and exclude the mentor, pure white seamless studio background, professional character sheet presentation, Indian woman in her early twenties with medium-brown skin, preserve reference oval face and defined adult jaw and cheekbones and nose and natural matte lips, dark-brown eyes with naturally muted catchlights, no oversized specular glare in the iris, eye color muted rather than glowing, natural dark eyebrows, dark brown-black hair center-parted and tied back in a low ponytail with natural flyaways, plain dark hair tie, visible fine skin texture with natural pores and subtle asymmetries and texture irregularities, minimal natural makeup rather than flawless coverage, no digital smoothing or beauty filter or AI-airbrushed look, matte-to-natural complexion, average build with natural adult proportions, light-blue long-sleeve cotton button-up shirt matching the reference with sleeves ending at the wrists, no outer layer, straight charcoal trousers, no visible belt, plain black flat shoes, tiny simple stud earrings, no bag, soft diffused studio lighting without harsh reflections, natural anatomy and unretouched commercial photography style and cinematic realism with sharp skin texture detail, single subject only exactly one person represented across the two views, only the character in frame, no other people, no duplicate figures within each view, no mannequin, no reflections, no props, no furniture, no background objects, empty seamless studio, left panel standing full-body head-to-toe not cropped not sitting, right panel tight close-up not full body, no babyface, no overly youthful rounded proportions, no plastic skin, no glossy skin, original character not a celebrity or existing copyrighted character, no text, no watermark, no logos, no frame borders."
+    },
+    {
+      "key": "student-practice",
+      "title": "From knowing to doing",
+      "prompt": "Photorealistic cinematic still for Ascend, an Indian talent fulfilment network bridging the productivity gap. Believable contemporary Indian campus and customer-operations work, natural skin pores and asymmetry, realistic hands, cotton fabric texture, warm window daylight, restrained teal and emerald accents. People actively doing meaningful work. Eye-level 35mm camera with foreground-to-background depth suitable for a later forward dolly. No orbit, no furniture exhibit, no holograms, no floating cards, no graduation props, no luxury boardroom, no fake testimonials, no invented scores, no logos, no readable generated UI. Screens will receive actual Ascend recordings in post-production. Preserve exactly the student from the supplied reference sheet: face, hair, blue shirt, charcoal trousers and accessories. Wide 16:9 shot of her at a modest Indian college career-practice room, leaning forward thoughtfully, consulting a cream notebook while using a graphite laptop to resolve a customer escalation scenario. Notebook and laptop form a clear visual connection between curriculum concepts and application. A muted teal notebook cover and a white task sheet with a simple three-column block layout sit beside the laptop; no legible text. Face and action occupy center-right, quiet darker space at left for HTML hero copy. Other adult students softly out of focus in background. Motivated concentration, no exaggerated worry. Screen visible at a compositable three-quarter angle."
+    },
+    {
+      "key": "college-mentoring",
+      "title": "Feedback becomes improvement",
+      "prompt": "Photorealistic cinematic still for Ascend, an Indian talent fulfilment network bridging the productivity gap. Believable contemporary Indian campus and customer-operations work, natural skin pores and asymmetry, realistic hands, cotton fabric texture, warm window daylight, restrained teal and emerald accents. People actively doing meaningful work. Eye-level 35mm camera with foreground-to-background depth suitable for a later forward dolly. No orbit, no furniture exhibit, no holograms, no floating cards, no graduation props, no luxury boardroom, no fake testimonials, no invented scores, no logos, no readable generated UI. Screens will receive actual Ascend recordings in post-production. Preserve exactly the same student and the silver-haired Indian woman mentor in the source reference; student wears the same blue cotton shirt and low ponytail, mentor the same deep-teal blouse and short silver bob. Wider view of a practical mentoring session in a believable Indian college career studio with other adult students working in soft background focus. Student uses one finger to identify a specific missing step on the white task sheet, mentor listens attentively and indicates the corresponding laptop area. One graphite laptop, the same cream notebook with muted teal cover, and the same three-column task-sheet layout. This is constructive feedback on customer escalation priority, ownership and next update, conveyed through action without readable generated words. Warm authentic interaction, no handshake, no staged looking at camera. Subjects center-right, foreground work clearly visible, space at left for real page copy."
+    },
+    {
+      "key": "employer-review",
+      "title": "Work employers can examine",
+      "prompt": "Photorealistic cinematic still for Ascend, an Indian talent fulfilment network bridging the productivity gap. Believable contemporary Indian campus and customer-operations work, natural skin pores and asymmetry, realistic hands, cotton fabric texture, warm window daylight, restrained teal and emerald accents. People actively doing meaningful work. Eye-level 35mm camera with foreground-to-background depth suitable for a later forward dolly. No orbit, no furniture exhibit, no holograms, no floating cards, no graduation props, no luxury boardroom, no fake testimonials, no invented scores, no logos, no readable generated UI. Screens will receive actual Ascend recordings in post-production. Distinct modern Indian customer-operations team workspace, Indian hiring manager in their thirties wearing a charcoal overshirt and cream top, seated alongside a colleague in an olive cotton shirt, reviewing an applicant's actual work artifact on a widescreen monitor rather than a resume. Over-shoulder three-quarter composition makes their attentive faces, mouse hand and monitor visible. The screen contains neutral flat areas reserved for later compositing the real role-specific work-evidence interface, with a three-column document layout visually matching the student's task sheet and an unnumbered assessment sidebar. No numerical score, badges or readable text. Visible occupied team area through glass in background, authentic medium-size Indian company, warm daylight and a small emerald accent. Employer assessing evidence carefully, not celebrating a hire. This scene must look different from the student's college practice space."
+    }
+  ],
+  "execution": "Generate the reference sheet first using confirmed source still. Inspect it. Generate three independent scenes through generate_image_batch with approved references. Keep original source still for mentor continuity. Review every result before animation. Actual welcome UI, Ascend mark and evidence interface must be composited after page approval."
+}

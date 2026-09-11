@@ -11,7 +11,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+import { API_URL } from "@/lib/api-base";
 
 const KINDS = [
   { id: "teaser" as const, label: "Teaser", blurb: "The film on the welcome page." },

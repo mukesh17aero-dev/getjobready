@@ -1,0 +1,3 @@
+
+# Local HTTPS dev certificates (mkcert). Private keys — never commit.
+/certificates/

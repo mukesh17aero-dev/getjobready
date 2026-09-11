@@ -16,7 +16,7 @@ export default async function SettingsPage() {
   return (
     <main className="mx-auto w-full max-w-2xl px-4 pb-16 sm:px-6">
       <div className="pt-4">
-        <BackLink fallbackHref="/" fallbackLabel="Back to home" />
+        <BackLink fallbackHref="/" fallbackLabel="Back to Home" />
       </div>
 
       <header className="mt-5">

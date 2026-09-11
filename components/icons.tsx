@@ -124,3 +124,14 @@ export function Clock(props: IconProps) {
     </Svg>
   );
 }
+
+/** A microphone. Recording a spoken answer, and stopping one. */
+export function Mic(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0" />
+      <path d="M12 18v3" />
+    </Svg>
+  );
+}
