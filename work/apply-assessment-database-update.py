@@ -6,7 +6,6 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-from urllib.parse import unquote, urlsplit
 
 PROJECT = "polkexjgphmwtpwhmspk"
 FILES = (
@@ -15,32 +14,27 @@ FILES = (
 )
 
 
-def connection_environment(connection):
-    try:
-        url = urlsplit(connection)
-        host = url.hostname or ""
-        username = unquote(url.username or "")
-        port = url.port or 5432
-    except ValueError:
-        raise ValueError("Use the PostgreSQL URI from Supabase Connect > Session pooler.") from None
+def connection_environment(host, username, password):
+    host = host.strip().lower()
+    username = username.strip()
     direct = host == f"db.{PROJECT}.supabase.co" and username == "postgres"
     pooled = host.endswith(".pooler.supabase.com") and username == f"postgres.{PROJECT}"
-    if url.scheme not in ("postgres", "postgresql") or not (direct or pooled):
-        raise ValueError(f"This importer only accepts the Ascend test project ({PROJECT}).")
-    if port != 5432:
-        raise ValueError("Choose Session pooler (port 5432), not Transaction pooler.")
-    database = unquote(url.path.lstrip("/")) or "postgres"
-    if database != "postgres":
-        raise ValueError("Use the postgres database for the Ascend test project.")
-    password = unquote(url.password or "")
-    if not password or password.strip("[]").upper() in ("YOUR-PASSWORD", "YOUR_PASSWORD", "PASSWORD"):
-        password = getpass.getpass("Database password (hidden): ")
+    if "://" in host or "/" in host or "@" in host:
+        raise ValueError("Paste only the Host field, not a URL or full connection string.")
+    if not (direct or pooled):
+        raise ValueError(
+            "Host and User do not identify the configured Ascend test project. "
+            f"For Session pooler, User must be postgres.{PROJECT}; "
+            f"open https://supabase.com/dashboard/project/{PROJECT} and copy its Connect fields. "
+            "Nothing has been run."
+        )
     if not password:
         raise ValueError("A database password is required. Nothing has been run.")
-    # Do not put credentials in command arguments, files, or shell history.
+    # Read the password separately so special characters need no URL encoding.
+    # Never put credentials in command arguments, files, or shell history.
     environment = {k: v for k, v in os.environ.items() if not k.startswith("PG")}
-    environment.update(PGHOST=host, PGPORT=str(port), PGUSER=username,
-                       PGDATABASE=database, PGPASSWORD=password,
+    environment.update(PGHOST=host, PGPORT="5432", PGUSER=username,
+                       PGDATABASE="postgres", PGPASSWORD=password,
                        PGSSLMODE="require", PGCONNECT_TIMEOUT="20")
     return environment
 
@@ -55,10 +49,15 @@ def main():
         print("Keep this importer beside both assessment SQL files. No changes made.")
         return 1
     print(f"Ascend TEST database update: {PROJECT}")
-    print("In that project's Supabase dashboard, open Connect > Session pooler > URI.")
-    print("Copy the PostgreSQL connection URI. Input is hidden and is not saved.")
+    print(f"Open https://supabase.com/dashboard/project/{PROJECT}, then Connect > Session pooler.")
+    print("Use the individual connection parameters: Host and User. Port is 5432.")
+    print("Do not paste a connection URI. Your password is entered separately and is not saved.")
     try:
-        environment = connection_environment(getpass.getpass("Paste connection URI (hidden), then press Enter: ").strip())
+        host = input("Host (for example aws-0-ap-south-1.pooler.supabase.com): ")
+        username = input("User (copy exactly from Supabase): ")
+        # Validate the target before prompting for a password or running SQL.
+        connection_environment(host, username, "validation-only")
+        environment = connection_environment(host, username, getpass.getpass("Database password (hidden): "))
     except (ValueError, EOFError, KeyboardInterrupt) as error:
         print(str(error) or "Cancelled. No changes made.")
         return 1
