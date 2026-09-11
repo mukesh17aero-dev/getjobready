@@ -43,3 +43,43 @@ Current validation: frontend typecheck, lint (five pre-existing warnings), 63 te
 ### Earlier validation
 
 Validation at handoff: frontend typecheck, lint (five pre-existing warnings, no errors), 63 tests and production build pass; backend typecheck, 267 tests (41 opt-in integration tests skipped) and build pass. Chrome screenshot verified the prominent narrated player in dark mode and an unsigned preview showing the newly published Operations Executive question plus vocabulary help. Video started with volume at 100%; its file has non-silent speech and a 51-second duration. Exact caption/transcript parity checked. Browser interaction is frequently interrupted by the user; no mobile screenshot was completed in this pass. An Incognito readiness preview window was created for testing and the user subsequently interacted with it; do not close it blindly. The separate signed-in Admin console tab remains open.
+
+### Test deployment setup gap discovered later on September 11
+
+The deployed frontend points to https://ascend-backendservice-3.onrender.com. Its SQL health reports the Supabase pooler; local `.env` DATABASE_URL points to localhost. Earlier migrations were applied locally, not to deployed Supabase. Schema-only REST checks with the configured service credential returned PGRST205 for assessment_runs and assessment_answers; discovery_attempts and its selection columns exist. The signed-in test homepage shows Customer Success Associate as saved. REST returned no published assessment_arc documents; the public roles endpoint had been advertising getArcs()'s built-in seed. Both missing schema and missing published bank must be resolved on the deployed database.
+
+Fixed frontend: API failure now renders a retry state preserving the known chosen role; empty published list has a separate state. ReadinessStart honours the URL/saved role instead of always selecting roles[0]. Fixed backend: only actual published banks with an eligible 12-question workplace count as available, no seed fallback. Added migration 0034 enabling assessment table RLS (0026 omitted it). Backend SQL/service role access remains available; browser roles have no direct answer-writing policy.
+
+Pushed from isolated worktrees to daniel/wip: frontend 9c57892, backend 9209599. Claude's active local daniel/personal branches were not switched; the same fixes remain uncommitted in the shared working trees. Isolated checkouts: /tmp/ascend-readiness-frontend-fix and /tmp/ascend-readiness-backend-fix. Tests: 68 frontend, 279 backend, typechecks/builds pass; lint has five existing warnings.
+
+Prepared work/DEPLOY-ASSESSMENT-SCHEMA-2026-09-11.sql applies assessment migrations 0026–0034 transactionally with migration-ledger guards and row security. The script was run twice locally before adding the existing 0029 content-kind migration to the bundle. It is NOT applied on test Supabase yet. Prepared approved bank /tmp/ascend-approved-assessment-bank.json has six roles and 460 questions, from local published v8; it is NOT published on test yet. Do not replace any subsequently created test bank/draft without comparing it first.
+
+Pending user input: requested that they sign in and open Supabase SQL editor for project polkexjgphmwtpwhmspk in Chrome. No reply at handoff. No direct deployed database SQL credential is available; service-role REST can inspect existing data but cannot apply schema SQL. Browser is actively used by the founder; navigation repeatedly interrupted. Applying SQL and publishing the reviewed bank remain required before the deployed readiness assessment will run. Do not claim this deployment issue fully fixed yet.
+
+## Tool launch visibility and resume layout follow-up
+
+- Frontend `26eadcc`: Practice, Resume and Interview tab activation reveals/focuses the selected launch action (or in-development state), including repeated selection. Actions precede the long explanation; reduced motion uses instant scrolling. Arrow-key tab navigation retains tab focus.
+- Resume builder Choose a look now occupies the left setup column. Selected-plan template gating is preserved.
+- Frontend typecheck, lint (five pre-existing warnings), 74 tests and production build passed. Native Chrome returned no page accessibility content, so interactive visual verification remains pending.
+- User will apply test database changes. Run `work/DEPLOY-ASSESSMENT-SCHEMA-2026-09-11.sql` in Supabase project `polkexjgphmwtpwhmspk`; not applied by this agent.
+- Prepared `work/IMPORT-REVIEWED-ASSESSMENT-DRAFT-2026-09-11.sql` locally (not committed): imports the reviewed 460-question/six-role bank as a draft, refuses to overwrite any existing assessment content. Run after schema update, then reload the test Admin > Assessment and publish the reviewed draft through the usual admin flow. Contains scoring criteria; do not put under public/.
+
+## Database import recovery
+
+User hit missing public.content_documents and SQL-editor size rejection. Corrected the schema bundle to create the migration-0011 prerequisite and record the four earlier kind-only constraint changes superseded by 0029. Tested from a completely empty isolated PostgreSQL 17 database, imported six roles/460 scenes, reran schema without changing the draft, confirmed question_limit default 12 and RLS on all three tables.
+
+Added local `work/apply-assessment-database-update.py`: invokes psql against files to avoid the SQL editor payload limit; accepts only the configured Supabase test project and session pooler/direct port 5432. Reads connection URI/password with getpass and never saves or passes passwords in process arguments. User runs the importer in Terminal, then reviews/publishes in Admin. The bank SQL stays local, beside the helper. Test database validation only; test Supabase still not modified by this agent.
+
+## Import connection mismatch
+
+User supplied a placeholder URI for project pgovjkyqqyfqnmaangvr (us-east-2 pooler). The deployed frontend's public JS still names polkexjgphmwtpwhmspk and ascend-backendservice-3.onrender.com; local frontend/backend auth configuration agrees. Backend health timed out during this check, so its exact database project was not verified. Do not retarget the importer or application to pgov without confirming an intended environment migration. Updated importer to request Host and User individually plus a hidden database password, avoiding connection-URI parsing/encoding mistakes. Validation checks prove wrong-project input runs no SQL and does not prompt for a password.
+
+## Test question bank published — 2026-09-11 15:36 UTC
+
+User completed the file-based importer against polkexjgphmwtpwhmspk. Opened signed-in test Admin > Assessment, verified draft matches the reviewed local bank exactly using read-only Supabase REST (six roles, 460 questions, each question has skill mappings), then clicked Publish in Admin. Verified published version 2 at 2026-09-11T15:36:26.645605+00:00, exact data match, no remaining draft. Student API /v1/assessment/preview/roles now lists all six roles including Customer Success Associate. Admin displayed 12 questions/no time limit, first-two AI assistance and Buddy disabled. The Admin immediately after publishing showed stale v1 label, but direct database verification confirmed v2. Attempt to navigate student readiness was interrupted by user changing Chrome; no new assessment was started or submitted.
+
+## Test role details restored
+
+Compared local published role_catalogue v11 with test published v2. Role lists and all existing detail values were identical. Exactly three fields were missing on each of six roles: assistantNotes, acrossIndustries, studentQuestions. No test draft existed. Restored only those 18 fields into a new draft using configured test service credentials after a second read guarded against changes; inserted without upsert to avoid overwriting a concurrent draft. Backup snapshots at /tmp/ascend-role-catalogue-local.json and /tmp/ascend-role-catalogue-test.json.
+
+Published via signed-in test Admin > Roles. Verified database published v3, no draft, and full equality with local v11. Verified public /v1/discovery content.roles exactly matches all six restored details. Some FAQ answers are blank locally and remain blank intentionally. Signed-in browser Discovery stayed at Loading and native screenshot was blank white, so student visual verification was unavailable; do not claim visual QA passed. No app source or scoring changes.

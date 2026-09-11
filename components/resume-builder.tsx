@@ -616,7 +616,7 @@ export function EssentialsModal({
 export const TEMPLATES: Array<{ id: ResumeTemplate; name: string; blurb: string }> = [
   {
     id: "classic",
-    name: "Classic",
+    name: "Basic",
     blurb: "Serif and traditional - the trusted look.",
   },
   {

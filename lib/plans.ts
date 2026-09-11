@@ -18,8 +18,8 @@ export type Plan = {
 };
 
 export const PLANS: Plan[] = [
-  { id: "starter", name: "Resume Starter", price: 99, tag: "START SMALL", intro: "For your first application.", outcome: "One resume you can feel ready to share.", features: ["1 AI resume draft", "5 AI improvements", "Resume feedback", "PDF and Word downloads"] },
-  { id: "plus", name: "Resume Plus", price: 199, tag: "RECOMMENDED FOR MULTIPLE APPLICATIONS", intro: "For a few different opportunities.", outcome: "Shape your story for up to three roles.", features: ["3 AI resume drafts", "15 AI improvements", "Feedback for each resume", "PDF and Word downloads"] },
+  { id: "starter", name: "Resume Starter", price: 99, tag: "START SMALL", intro: "For your first application.", outcome: "One resume you can feel ready to share.", features: ["3 resume layouts", "1 AI resume draft", "5 AI improvements", "Resume feedback", "PDF and Word downloads"] },
+  { id: "plus", name: "Resume Plus", price: 199, tag: "RECOMMENDED FOR MULTIPLE APPLICATIONS", intro: "For a few different opportunities.", outcome: "Shape your story for up to three roles.", features: ["All 6 resume layouts", "3 AI resume drafts", "15 AI improvements", "Feedback for each resume", "PDF and Word downloads"] },
   { id: "pro", name: "Career Pro", price: 499, tag: "THE CAREER WORKSPACE", intro: "For applications and interview preparation.", outcome: "Build your application. Practise what comes next.", features: ["All Resume Plus features", "5 resume drafts + 30 AI improvements total", "LinkedIn profile + 5 AI revisions", "5 job-fit checks", "2 AI mock interviews · 10 minutes each", "1 readiness assessment + 5 practice sets"] },
 ];
 

@@ -44,6 +44,8 @@ import {
   type ResumeTarget,
   type ResumeTemplate,
 } from "@/lib/resume-api";
+import { resumePage } from "@/lib/resume-pagination";
+import { previewTemplate, previewTemplates } from "@/lib/resume-template-access";
 import { PLANS, PLAN_KEY, isPlan, type PlanId } from "@/lib/plans";
 import s from "./resume-studio.module.css";
 
@@ -107,8 +109,10 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   const ledger = useMemo<LedgerEntry[]>(() => {
     const raw = profile?.preferences?.["resumeLedger"];
     if (!Array.isArray(raw)) return [];
-    return raw.filter((e): e is LedgerEntry => typeof e === "object" && e !== null && typeof (e as { role?: unknown }).role === "string").slice().reverse().slice(0, 10);
+    return raw.filter((e): e is LedgerEntry => typeof e === "object" && e !== null && typeof (e as { role?: unknown }).role === "string").slice().reverse();
   }, [profile]);
+  const [savedPage, setSavedPage] = useState(0);
+  const savedVersions = resumePage(ledger, savedPage);
   const opened = recordAt ? ledger.find(entry => entry.at === recordAt && entry.resume) : undefined;
   const lockedRole = target?.role ?? null;
   const savedTrack: Track | null = prefs["track"] === "student" || prefs["track"] === "early_career" ? (prefs["track"] as Track) : null;
@@ -121,7 +125,15 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   const [roleInput, setRoleInput] = useState(lockedRole?.title ?? "");
   const [jdInput, setJdInput] = useState("");
   const [trackChoice, setTrackChoice] = useState<Track | null>(savedTrack);
-  const [template, setTemplate] = useState<ResumeTemplate>(asTemplate(opened?.template));
+  const [selectedTemplate, setSelectedTemplate] = useState<ResumeTemplate>(asTemplate(opened?.template));
+  const allowedTemplateIds = previewTemplates(planChosen ? plan : null, signedOut);
+  const hasAdditionalTemplates = allowedTemplateIds.length > 1;
+  const template = previewTemplate(selectedTemplate, allowedTemplateIds);
+  const availableTemplates = TEMPLATES.filter(item => allowedTemplateIds.includes(item.id));
+  function setTemplate(next: ResumeTemplate) {
+    if (!allowedTemplateIds.includes(next)) { go("plan"); return; }
+    setSelectedTemplate(next);
+  }
   const [upload, setUpload] = useState<{ filename: string; text: string; read: { experience: number; education: number; skills: number }; parsed: Record<string, unknown> | null } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState<null | "checking" | "building" | "reviewing" | "revising" | "exporting" | "saving">(null);
@@ -389,7 +401,7 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   }
   function openVersion(entry: LedgerEntry) {
     if (!entry.resume) return;
-    setResult({ resume: entry.resume, targetRole: entry.role }); setTemplate(asTemplate(entry.template)); setRevisions([]); setReview(entry.review ?? null); setAts(null); setExported(false);
+    setResult({ resume: entry.resume, targetRole: entry.role }); setSelectedTemplate(asTemplate(entry.template)); setRevisions([]); setReview(entry.review ?? null); setAts(null); setExported(false);
     go("draft");
   }
 
@@ -431,19 +443,31 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
 
       {building ? <section className={`${s.card} ${s.buildState}`}><div className={s.buildGlyph} aria-hidden="true">✦</div><span className={s.smallLabel} style={{ justifyContent: "center", marginTop: 18 }}>{busy === "checking" ? "GETTING YOUR DETAILS TOGETHER" : "WRITING YOUR DRAFT"}</span><h2>Bringing your story together.</h2><p>Your draft is written from your saved record and nothing else.</p><div className={s.buildRows}><span>Read your experience and skills</span><span>Shape the draft for your direction</span><span>Prepare the document for your review</span></div><p className={s.quiet}>This takes a minute or so. Stay on this page.</p></section> : <>
 
-      {stage === "start" && <div className={s.setupGrid}><section className={s.card}><div className={s.sectionHeading}><h2>What are you making?</h2></div>
+      {stage === "start" && <div className={s.setupGrid}><div className={s.setupLeft}><section className={s.card}><div className={s.sectionHeading}><h2>What are you making?</h2></div>
         <div className={s.purposes} role="group" aria-label="Resume purpose">{([{ id: "role", name: "For a role", copy: "Give it a clear direction", icon: "◎" }, { id: "general", name: "General resume", copy: "Bring your story together", icon: "▤" }, { id: "improve", name: "Improve existing", copy: "Start with your document", icon: "↥" }] as Array<{ id: Purpose; name: string; copy: string; icon: string }>).map(item => <button type="button" key={item.id} aria-pressed={purpose === item.id} onClick={() => choosePurpose(item.id)}><span className={s.purposeIcon}>{item.icon}</span><strong>{item.name}</strong><small>{item.copy}</small></button>)}</div>
         {purpose === "improve" && (upload ? <div className={s.softBox}><strong>Working from {upload.filename}</strong><p>{uploadRead(upload.read)} We keep what you wrote and work on how it reads.</p><button type="button" className={s.undo} onClick={() => setUpload(null)}>Remove</button></div> : <button type="button" className={s.upload} disabled={uploading} onClick={() => fileRef.current?.click()}><strong>{uploading ? "Reading your resume…" : "Choose an existing resume"}</strong><small>PDF or Word. We read it, keep what you wrote, and say what is missing.</small></button>)}
         {purpose !== "general" ? <><label className={s.field}>Target role {purpose === "improve" ? "(optional)" : ""}<input value={roleInput} onChange={e => setRoleInput(e.target.value)} placeholder="e.g. Customer Success Associate" /></label>{lockedRole && roleInput.trim() !== lockedRole.title && <button type="button" className={s.undo} onClick={() => setRoleInput(lockedRole.title)}>Use {lockedRole.title}, from your Discovery</button>}<details className={s.details}><summary>Add a job posting <span>Optional</span></summary><label className={s.field}>Job description<textarea rows={3} value={jdInput} onChange={e => setJdInput(e.target.value)} /></label></details></> : <p className={s.softBox}>Create a reusable introduction to your experience. The feedback will suggest roles worth exploring.</p>}
         <fieldset className={s.track}><legend>Where are you right now?</legend><div className={s.starterTrack}>{([{ id: "student", label: "Still studying" }, { id: "early_career", label: "Working, or have worked" }] as Array<{ id: Track; label: string }>).map(option => <label key={option.id}><input type="radio" name="resume-track" value={option.id} checked={trackChoice === option.id} onChange={() => setTrackChoice(option.id)} />{option.label}</label>)}</div></fieldset>
-      </section><aside className={s.setupAside}>
-        {ledger.length > 0 && <section className={s.card}><div className={s.sectionHeading}><h2>Your saved resumes</h2><span>{ledger.length} {ledger.length === 1 ? "version" : "versions"}</span></div><div className={s.versions}>{ledger.map((entry, i) => <button type="button" key={`${entry.at}-${i}`} onClick={() => openVersion(entry)}><span><strong>{entry.role}</strong><small>{entry.downloadedAt ? `Downloaded ${whenLabel(entry.downloadedAt)}` : `Built ${whenLabel(entry.at)}`}</small></span><span>Open <Arrow /></span></button>)}</div><p className={s.quiet}>Open one to read it, refine it or export it again. Building below makes a new version.</p></section>}
-        <section className={s.recordCard}><span className={s.smallLabel}>{signedOut ? "✓ A HEAD START FROM YOUR RECORD" : text("fullName") ? "✓ A HEAD START FROM YOUR RECORD" : "YOUR RECORD"}</span><h2>{signedOut ? "Your saved details come with you" : text("fullName") || "Nothing saved yet"}</h2><p>{signedOut ? "Once you have an account, your experience, education and skills are written in for you." : `${profile?.experience.length ?? 0} experience, ${profile?.education.length ?? 0} education, ${profileSkills.length} skills on your record.`}</p>{!signedOut && <div className={s.facts}><span><b>{profile?.experience.length ?? 0}</b> experience entries</span><span><b>{profile?.education.length ?? 0}</b> education entries</span><span><b>{profileSkills.length}</b> listed skills</span></div>}<small>{signedOut ? "The preview beside the looks below is an illustration, not your information." : "Anything missing is asked for when you build, and saved to your profile."}</small></section>
-        <section className={s.card}><div className={s.sectionHeading}><h2>Choose a look</h2><span>Switch any time</span></div><div className={s.templates} role="group" aria-label="Template selection">{TEMPLATES.map(item => <button type="button" key={item.id} aria-pressed={template === item.id} onClick={() => setTemplate(item.id)}><span className={s.thumb}><MiniPreview id={item.id} resume={previewResume} roleLine={targeted ? roleInput.trim() || "The role you are aiming at" : "Written for whoever reads it"} track={trackChoice ?? undefined} /></span><strong>{item.name}</strong><small>{item.blurb}</small></button>)}</div>
-          <div className={s.lookPreview}><div className={s.sectionHeading}><h3>Preview · {TEMPLATES.find(item => item.id === template)?.name}</h3><span>{signedOut ? "Illustration, not your information" : "Your details, in this look"}</span></div><div className={`${s.documentFrame} ${s.lookSheet}`}><A4Frame><ResumeSheet resume={previewResume} template={template} roleLine={targeted ? roleInput.trim() || "The role you are aiming at" : "Written for whoever reads it"} track={trackChoice ?? undefined} /></A4Frame></div></div></section>
+      </section>
+        <section className={s.card}><div className={s.sectionHeading}><h2>Choose a look</h2><span>{hasAdditionalTemplates ? "Switch any time" : "Basic is free to preview"}</span></div><div className={s.templates} role="group" aria-label="Template selection">{TEMPLATES.map(item => {
+            const locked = !allowedTemplateIds.includes(item.id);
+            return <button type="button" key={item.id} aria-pressed={!locked && template === item.id} aria-label={locked ? `${item.name} · plan-locked template. View plans to unlock` : `Preview ${item.name}`} data-locked={locked} onClick={() => locked ? go("plan") : setTemplate(item.id)}>
+              <span className={s.templatePreview}>
+                <span className={s.thumb} aria-hidden={locked || undefined} inert={locked || undefined}><MiniPreview id={item.id} resume={previewResume} roleLine={targeted ? roleInput.trim() || "The role you are aiming at" : "Written for whoever reads it"} track={trackChoice ?? undefined} /></span>
+                {locked && <span className={s.templateLock}><span aria-hidden="true">▣</span>Plan required<span>View plans →</span></span>}
+              </span>
+              <strong>{item.name}</strong><small>{locked ? "View plans to unlock" : item.id === "classic" ? "Free to preview" : item.blurb}</small>
+            </button>;
+          })}</div>
+        </section>
+      </div><aside className={s.setupAside}>
+        {ledger.length > 0 && <section className={s.card}><div className={s.sectionHeading}><h2>Your saved resumes</h2><span>{ledger.length} {ledger.length === 1 ? "version" : "versions"}</span></div><div className={`${s.versions} ${s.pagedVersions}`}>{savedVersions.entries.map((entry, i) => <button type="button" key={`${entry.at}-${savedVersions.start + i}`} onClick={() => openVersion(entry)}><span><strong>{entry.role}</strong><small>{entry.downloadedAt ? `Downloaded ${whenLabel(entry.downloadedAt)}` : `Built ${whenLabel(entry.at)}`}</small></span><span>Open <Arrow /></span></button>)}</div>{savedVersions.pages > 1 && <nav className={s.savedPagination} aria-label="Saved resume pages"><button type="button" disabled={savedVersions.page === 0} onClick={() => setSavedPage(savedVersions.page - 1)}>Previous</button><span aria-live="polite" aria-atomic="true">Page {savedVersions.page + 1} of {savedVersions.pages}<small>{savedVersions.start + 1}–{savedVersions.start + savedVersions.entries.length} of {ledger.length} resumes</small></span><button type="button" disabled={savedVersions.page === savedVersions.pages - 1} onClick={() => setSavedPage(savedVersions.page + 1)}>Next</button></nav>}<p className={s.quiet}>Open one to read it, refine it or export it again. Building below makes a new version.</p></section>}
+        <section className={`${s.card} ${s.lookPreview}`}><div className={s.sectionHeading}><h2>Preview · {TEMPLATES.find(item => item.id === template)?.name}</h2><span>{signedOut ? "Illustration, not your information" : "Your details, in this look"}</span></div><div className={`${s.documentFrame} ${s.lookSheet}`}><A4Frame><ResumeSheet resume={previewResume} template={template} roleLine={targeted ? roleInput.trim() || "The role you are aiming at" : "Written for whoever reads it"} track={trackChoice ?? undefined} /></A4Frame></div></section>
+        <section className={s.recordCard}><span className={s.smallLabel}>{signedOut ? "✓ A HEAD START FROM YOUR RECORD" : text("fullName") ? "✓ A HEAD START FROM YOUR RECORD" : "YOUR RECORD"}</span><h2>{signedOut ? "Your saved details come with you" : text("fullName") || "Nothing saved yet"}</h2><p>{signedOut ? "Once you have an account, your experience, education and skills are written in for you." : `${profile?.experience.length ?? 0} experience, ${profile?.education.length ?? 0} education, ${profileSkills.length} skills on your record.`}</p>{!signedOut && <div className={s.facts}><span><b>{profile?.experience.length ?? 0}</b> experience entries</span><span><b>{profile?.education.length ?? 0}</b> education entries</span><span><b>{profileSkills.length}</b> listed skills</span></div>}<small>{signedOut ? "The resume preview is an illustration, not your information." : "Anything missing is asked for when you build, and saved to your profile."}</small></section>
+
       </aside></div>}
 
-      {stage === "plan" && <><div className={s.shared}><Tick /><span>Every plan includes all three layouts, clean downloads, manual edits and saved work.</span><span>Tax-inclusive prices · no automatic renewal</span></div>
+      {stage === "plan" && <><div className={s.shared}><Tick /><span>Basic is free to preview. Starter includes three layouts; Plus and Pro include all six.</span><span>Tax-inclusive prices · no automatic renewal</span></div>
         <div className={s.cards} role="group" aria-label="Select a plan">{PLANS.map(item => <button type="button" key={item.id} className={s.plan} aria-pressed={plan === item.id} onClick={() => setPlan(item.id)}><div className={s.planTop}><span>{item.tag}</span><i>{plan === item.id && <Tick />}</i></div><h2>{item.name}</h2><p>{item.intro}</p><div className={s.price}><strong>₹{item.price}</strong><span>one-time<br />30-day pass</span></div><p className={s.outcome}>{item.outcome}</p><ul>{item.features.map(feature => <li key={feature}><Tick />{feature}</li>)}</ul><div className={s.planBottom}>{plan === item.id ? "Selected" : "Choose this plan"}<Arrow /></div></button>)}</div>
         <p className={s.usageNote}>One AI draft creates a new resume version; one AI improvement is one successful Scribe revision. Manual edits, switching layouts and downloading saved files do not use AI allowances.</p>
         <div className={s.questions}><details><summary>What happens after 30 days?</summary><p>Your AI allowance expires; existing work remains available to view and download.</p></details><details><summary>Can I upgrade?</summary><p>Pay the difference during your current pass. Keep the original expiry and carry existing usage into the higher plan.</p></details><details><summary>Does Pro mean unlimited?</summary><p>It includes the listed career tools with clear allowances, including two 10-minute AI interviews. It does not include unlimited AI or every future feature.</p></details></div></>}
@@ -458,7 +482,7 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
           {flagged.length > 0 && <div className={s.flagged}><strong>Worth a second look</strong>{flagged.map(skill => <label key={skill}><input type="checkbox" checked={acknowledged.has(skill.toLowerCase())} onChange={() => setAcknowledged(prev => { const next = new Set(prev); const key = skill.toLowerCase(); if (next.has(key)) next.delete(key); else next.add(key); return next; })} /><span><b>{skill}</b> is new. Confirm it is true and you could back it up in an interview.</span></label>)}<p>Confirmed skills go on the resume; unticked ones stay off it.</p></div>}
         </>}</section></div>}
 
-      {stage === "draft" && <>{exampleBanner}<div className={s.documentToolbar}><span><i />{isExample ? "Example resume" : revisions.length ? `Your draft · ${revisions.length} ${revisions.length === 1 ? "change" : "changes"}` : "Your draft · ready to review"}</span><label>Layout<select value={template} onChange={e => setTemplate(asTemplate(e.target.value))}>{TEMPLATES.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div>
+      {stage === "draft" && <>{exampleBanner}<div className={s.documentToolbar}><span><i />{isExample ? "Example resume" : revisions.length ? `Your draft · ${revisions.length} ${revisions.length === 1 ? "change" : "changes"}` : "Your draft · ready to review"}</span><label>Layout<select value={template} onChange={e => setTemplate(asTemplate(e.target.value))}>{availableTemplates.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div>
         <div className={s.mobileTabs} role="group" aria-label="Workspace view"><button type="button" aria-pressed={pane === "document"} onClick={() => setPane("document")}>Document</button><button type="button" aria-pressed={pane === "edit"} onClick={() => setPane("edit")}>Edit with Scribe</button></div>
         <div className={s.editorGrid} data-pane={pane}><div className={s.document}><div className={`${s.documentFrame} ${s.sheetScroll}`}><A4Frame><ResumeSheet resume={shown.resume} template={template} roleLine={shown.targetRole} track={trackChoice ?? undefined} onPages={setSheetPages} watermark={isExample ? "Example" : "Draft"} /></A4Frame></div><p className={s.pagesNote}>{sheetPages === 1 ? "One A4 page. " : `${sheetPages} A4 pages - ask Scribe to tighten it if you would rather it fit one. `}Check every name, date and claim before sharing.</p></div>
           <aside className={s.editor}><div className={s.editorTabs} role="group" aria-label="Editing mode"><button type="button" aria-pressed={editor === "scribe"} onClick={() => setEditor("scribe")}>✦ Scribe</button><button type="button" aria-pressed={editor === "summary"} onClick={() => { setEditor("summary"); setSummaryDraft(shown.resume.summary); }}>Edit summary</button></div>

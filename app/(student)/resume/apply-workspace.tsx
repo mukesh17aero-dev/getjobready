@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { HomeWorkItem, ProfileState, JobFitCheck } from "@/lib/api";
 import { pickupReason } from "@/lib/home-presentation";
 import { Avatar } from "@/components/avatar";
+import { ToolLaunch } from "@/components/tool-launch";
 import { RememberHub } from "@/components/remember-hub";
 import { ArrowRight, Check, Spark } from "@/components/icons";
 import type { ResumeSnapshot } from "./resume-excerpt";
@@ -35,6 +36,7 @@ export function ApplyWorkspace({ name, photo, role, work, resume, professional, 
   professional: ProfileState | null; check: JobFitCheck | null; signedIn: boolean; available: Record<ToolId, boolean>;
 }) {
   const [selected, setSelected] = useState<ToolId>(() => work?.map(toolFor).find((id): id is ToolId => id !== null) ?? "resume");
+  const [activation, setActivation] = useState(0);
   const tabs = useRef<Array<HTMLButtonElement | null>>([]);
   const tool = TOOLS.find(t => t.id === selected)!;
   const currentWork = work?.find(item => toolFor(item) === selected);
@@ -69,7 +71,7 @@ export function ApplyWorkspace({ name, photo, role, work, resume, professional, 
         <Link className={styles.back} href="/">← Home</Link>
         <header className={styles.header}><div><h1>Your professional<br /><span>presence.</span></h1><p>Put your experience to work: your resume, your LinkedIn profile, your next application.</p></div><div className={styles.role}><span className={styles.roleIcon}><Spark size={20} /></span><div><small>YOUR CHOSEN ROLE</small><strong>{role ?? "Still exploring"}</strong><Link href="/discover">{role ? "Explore your direction" : "Find a role to explore"} <ArrowRight size={13} /></Link></div></div></header>
 
-        <div className={styles.tabs} data-layout="compact" role="tablist" aria-label="Application tools">{TOOLS.map((item, index) => <button key={item.id} ref={node => { tabs.current[index] = node; }} type="button" role="tab" id={`apply-tab-${item.id}`} aria-selected={selected === item.id} aria-controls="apply-panel" tabIndex={selected === item.id ? 0 : -1} onClick={() => setSelected(item.id)} onKeyDown={event => onTabKey(event, index)} className={styles.tab} data-kind={item.id}>
+        <div className={styles.tabs} data-layout="compact" role="tablist" aria-label="Application tools">{TOOLS.map((item, index) => <button key={item.id} ref={node => { tabs.current[index] = node; }} type="button" role="tab" id={`apply-tab-${item.id}`} aria-selected={selected === item.id} aria-controls="apply-panel" tabIndex={selected === item.id ? 0 : -1} onClick={() => { setSelected(item.id); setActivation(value => value + 1); }} onKeyDown={event => onTabKey(event, index)} className={styles.tab} data-kind={item.id}>
           <span className={styles.toolIcon}><ToolIcon kind={item.id} /></span><span className={styles.tabCopy}><strong className={styles.desktopTitle}>{item.title}</strong><strong className={styles.mobileTitle}>{item.short}</strong><small>{item.subtitle}</small><span className={styles.tabStatus}>{status(item.id)}</span></span><ArrowRight className={styles.tabArrow} size={17} />
         </button>)}</div>
 
@@ -108,9 +110,11 @@ export function ApplyWorkspace({ name, photo, role, work, resume, professional, 
           </div>
 
           <div className={styles.guidance}><span className={styles.guidanceLabel}><Spark size={15} />{currentWork ? "PICK UP WHERE YOU LEFT OFF" : "MAKE YOUR NEXT MOVE"}</span><h2>{tool.outcome}</h2><p className={styles.intro}>{tool.intro}</p>
+            <ToolLaunch activation={activation}>
+              <Link href={action.href} className={styles.primary}>{action.label}<ArrowRight size={17} /></Link>
+            </ToolLaunch>
             <div className={styles.why}><span>WHY THIS MATTERS</span><p>{tool.why}</p></div>
             <div className={styles.reason}><span>{currentWork ? "Why pick this up" : saved ? "Your work is saved" : "What you’ll leave with"}</span><p>{currentWork ? pickupReason(currentWork.reason) : saved ? "Open your saved work to review it and decide what you want to do next." : selected === "resume" ? "A resume you can review, refine and download." : selected === "linkedin" ? "A headline, About section and experience you can copy to LinkedIn." : "A clear view of what you can show for this posting and what to work on next."}</p></div>
-            <Link href={action.href} className={styles.primary}>{action.label}<ArrowRight size={17} /></Link>
             {saved && selected === "resume" && <Link className={styles.secondary} href="/resume/build">Create another resume <ArrowRight size={13} /></Link>}
             {saved && selected === "fit" && <Link className={styles.secondary} href="/job-fit">Check another posting <ArrowRight size={13} /></Link>}
             <ul className={styles.benefits}>{tool.points.map(point => <li key={point}><Check size={14} />{point}</li>)}</ul>
