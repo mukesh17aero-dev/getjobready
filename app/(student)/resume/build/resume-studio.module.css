@@ -14,3 +14,9 @@
 @container(max-width:440px){.templates{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 .setupLeft{display:flex;flex-direction:column;gap:20px;min-width:0}
+
+.pagedVersions{max-height:none;overflow:visible;margin-bottom:12px}
+.savedPagination{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.savedPagination button{min-height:44px;padding:0 10px;border:1px solid var(--color-slate-200);border-radius:8px;font-size:11px;color:var(--color-slate-900);background:var(--color-surface)}
+.savedPagination>span{text-align:center;font-size:11px;color:var(--color-slate-900)}
+.savedPagination small{display:block;margin-top:3px;font-size:10px;color:var(--color-slate-600)}

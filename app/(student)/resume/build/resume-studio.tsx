@@ -44,6 +44,7 @@ import {
   type ResumeTarget,
   type ResumeTemplate,
 } from "@/lib/resume-api";
+import { resumePage } from "@/lib/resume-pagination";
 import { previewTemplate, previewTemplates } from "@/lib/resume-template-access";
 import { PLANS, PLAN_KEY, isPlan, type PlanId } from "@/lib/plans";
 import s from "./resume-studio.module.css";
@@ -108,8 +109,10 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   const ledger = useMemo<LedgerEntry[]>(() => {
     const raw = profile?.preferences?.["resumeLedger"];
     if (!Array.isArray(raw)) return [];
-    return raw.filter((e): e is LedgerEntry => typeof e === "object" && e !== null && typeof (e as { role?: unknown }).role === "string").slice().reverse().slice(0, 10);
+    return raw.filter((e): e is LedgerEntry => typeof e === "object" && e !== null && typeof (e as { role?: unknown }).role === "string").slice().reverse();
   }, [profile]);
+  const [savedPage, setSavedPage] = useState(0);
+  const savedVersions = resumePage(ledger, savedPage);
   const opened = recordAt ? ledger.find(entry => entry.at === recordAt && entry.resume) : undefined;
   const lockedRole = target?.role ?? null;
   const savedTrack: Track | null = prefs["track"] === "student" || prefs["track"] === "early_career" ? (prefs["track"] as Track) : null;
@@ -458,7 +461,7 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
           })}</div>
         </section>
       </div><aside className={s.setupAside}>
-        {ledger.length > 0 && <section className={s.card}><div className={s.sectionHeading}><h2>Your saved resumes</h2><span>{ledger.length} {ledger.length === 1 ? "version" : "versions"}</span></div><div className={s.versions}>{ledger.map((entry, i) => <button type="button" key={`${entry.at}-${i}`} onClick={() => openVersion(entry)}><span><strong>{entry.role}</strong><small>{entry.downloadedAt ? `Downloaded ${whenLabel(entry.downloadedAt)}` : `Built ${whenLabel(entry.at)}`}</small></span><span>Open <Arrow /></span></button>)}</div><p className={s.quiet}>Open one to read it, refine it or export it again. Building below makes a new version.</p></section>}
+        {ledger.length > 0 && <section className={s.card}><div className={s.sectionHeading}><h2>Your saved resumes</h2><span>{ledger.length} {ledger.length === 1 ? "version" : "versions"}</span></div><div className={`${s.versions} ${s.pagedVersions}`}>{savedVersions.entries.map((entry, i) => <button type="button" key={`${entry.at}-${savedVersions.start + i}`} onClick={() => openVersion(entry)}><span><strong>{entry.role}</strong><small>{entry.downloadedAt ? `Downloaded ${whenLabel(entry.downloadedAt)}` : `Built ${whenLabel(entry.at)}`}</small></span><span>Open <Arrow /></span></button>)}</div>{savedVersions.pages > 1 && <nav className={s.savedPagination} aria-label="Saved resume pages"><button type="button" disabled={savedVersions.page === 0} onClick={() => setSavedPage(savedVersions.page - 1)}>Previous</button><span aria-live="polite" aria-atomic="true">Page {savedVersions.page + 1} of {savedVersions.pages}<small>{savedVersions.start + 1}–{savedVersions.start + savedVersions.entries.length} of {ledger.length} resumes</small></span><button type="button" disabled={savedVersions.page === savedVersions.pages - 1} onClick={() => setSavedPage(savedVersions.page + 1)}>Next</button></nav>}<p className={s.quiet}>Open one to read it, refine it or export it again. Building below makes a new version.</p></section>}
         <section className={`${s.card} ${s.lookPreview}`}><div className={s.sectionHeading}><h2>Preview · {TEMPLATES.find(item => item.id === template)?.name}</h2><span>{signedOut ? "Illustration, not your information" : "Your details, in this look"}</span></div><div className={`${s.documentFrame} ${s.lookSheet}`}><A4Frame><ResumeSheet resume={previewResume} template={template} roleLine={targeted ? roleInput.trim() || "The role you are aiming at" : "Written for whoever reads it"} track={trackChoice ?? undefined} /></A4Frame></div></section>
         <section className={s.recordCard}><span className={s.smallLabel}>{signedOut ? "✓ A HEAD START FROM YOUR RECORD" : text("fullName") ? "✓ A HEAD START FROM YOUR RECORD" : "YOUR RECORD"}</span><h2>{signedOut ? "Your saved details come with you" : text("fullName") || "Nothing saved yet"}</h2><p>{signedOut ? "Once you have an account, your experience, education and skills are written in for you." : `${profile?.experience.length ?? 0} experience, ${profile?.education.length ?? 0} education, ${profileSkills.length} skills on your record.`}</p>{!signedOut && <div className={s.facts}><span><b>{profile?.experience.length ?? 0}</b> experience entries</span><span><b>{profile?.education.length ?? 0}</b> education entries</span><span><b>{profileSkills.length}</b> listed skills</span></div>}<small>{signedOut ? "The resume preview is an illustration, not your information." : "Anything missing is asked for when you build, and saved to your profile."}</small></section>
 
