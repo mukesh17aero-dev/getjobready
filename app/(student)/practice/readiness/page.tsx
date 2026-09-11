@@ -7,16 +7,13 @@ import {
 } from "@/lib/api";
 import { AssessmentRun } from "@/components/assessment-run";
 import { BackLink } from "@/components/back-link";
-import { NeedsRole } from "@/components/needs-role";
+import Link from "next/link";
 import { ReadinessStart } from "./start-screen";
 
 // Sitting the role readiness assessment.
 //
-// The role may be named in the URL, but only from the list this person chose
-// in Discovery - and the API checks that list again rather than trusting this
-// page, because a body field that decides what somebody's evidence is about
-// cannot be verified on the client. A role nobody chose produces evidence
-// about nothing.
+// The URL or saved direction selects an offered role. The assessment API
+// controls availability; a failed lookup is not a missing Discovery choice.
 
 export const metadata = { title: "Role readiness" };
 export const dynamic = "force-dynamic";
@@ -58,25 +55,31 @@ export default async function ReadinessRunPage({
       current: false,
     }));
   const current = state?.progress?.role ?? null;
-  // The URL only wins if it names a role they actually chose. Otherwise the
-  // role on their record stands, and if that is missing, the first they chose.
+  // Prefer a valid URL choice, then the saved direction, then the API's order.
   const picked =
     roles.find((r) => r.roleId === asked) ??
     roles.find((r) => r.roleId === current?.id) ??
     roles[0] ??
     null;
 
-  // Nothing chosen means nothing to assess. Discovery is where that is
-  // decided, so send them there rather than showing an empty sitting.
-  // The same gate as everywhere else under Practice, from the same component
-  // rather than written out again here - which is how it came to be enforced
-  // on this page and nowhere else.
-  if (!picked) {
+  const unavailable = session ? listed === null : open === null;
+  if (unavailable || !picked) {
     return (
-      <NeedsRole
-        what="The readiness assessment is 12 questions about one job’s actual work, with no time limit."
-        because="It needs to know which job before it can put you in it."
-      />
+      <main className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6">
+        <BackLink fallbackHref="/practice" fallbackLabel="Back to Practice" />
+        <h1 className="mt-4 text-xl font-semibold text-slate-900">
+          {unavailable ? "We couldn’t load your assessments" : "No assessments are available yet"}
+        </h1>
+        {current && <p className="mt-3 text-sm font-semibold text-slate-900">Your chosen role: {current.title}</p>}
+        <p className="mt-2 text-[0.9rem] leading-relaxed text-slate-600">
+          {unavailable
+            ? "The assessment service is temporarily unavailable. Try again to load the available assessments."
+            : "There are no published assessments available to start right now. Please check back soon."}
+          {current && " Your role choice is saved; you do not need to choose it again."}
+        </p>
+        <a href={`/practice/readiness${asked ? `?role=${encodeURIComponent(asked)}` : ""}`} className="mt-5 inline-flex min-h-11 items-center rounded-lg bg-brand-violet px-5 text-sm font-bold text-white">Try again</a>
+        <Link href="/practice" className="ml-4 inline-flex min-h-11 items-center text-sm font-semibold text-slate-600">Back to Practice</Link>
+      </main>
     );
   }
 
@@ -88,7 +91,7 @@ export default async function ReadinessRunPage({
       <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
         <BackLink fallbackHref="/practice" fallbackLabel="Back to Practice" />
         <div className="mt-5">
-          <ReadinessStart roles={roles} />
+          <ReadinessStart key={picked.roleId} roles={roles} initialRoleId={picked.roleId} />
         </div>
       </main>
     );

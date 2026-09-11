@@ -25,8 +25,8 @@ function history(role: AssessableRole): string {
     : `You have taken this ${times}. Your last score was ${role.lastReadiness} out of 100.`;
 }
 
-export function ReadinessStart({ roles }: { roles: AssessableRole[] }) {
-  const [roleId, setRoleId] = useState(roles[0]?.roleId ?? "");
+export function ReadinessStart({ roles, initialRoleId }: { roles: AssessableRole[]; initialRoleId?: string }) {
+  const [roleId, setRoleId] = useState(initialRoleId ?? roles[0]?.roleId ?? "");
   const picked = roles.find((r) => r.roleId === roleId) ?? roles[0];
   if (!picked) return null;
 
