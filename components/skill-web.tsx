@@ -65,6 +65,9 @@ const BAND_STYLE: Record<string, { stroke: string; fill: string; swatch: string 
 const SIZE = 300;
 const MID = SIZE / 2;
 const R = 96;
+// Room either side for the labels at three and nine o'clock, which are
+// anchored outside the ring and were cut off on a phone-width drawing.
+const PAD = 48;
 
 /** Where a value on one axis lands. Twelve o'clock, then clockwise. */
 function point(i: number, of: number, value: number): [number, number] {
@@ -91,7 +94,7 @@ export function SkillWeb({
   return (
     <figure className="m-0">
       <svg
-        viewBox={`0 0 ${SIZE} ${SIZE}`}
+        viewBox={`${-PAD} 0 ${SIZE + PAD * 2} ${SIZE}`}
         className="mx-auto h-auto w-full max-w-sm"
         role="img"
         aria-label={`Your scores: ${axes

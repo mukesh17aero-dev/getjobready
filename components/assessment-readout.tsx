@@ -509,7 +509,8 @@ function Scores({
       <div className="rounded-2xl border border-slate-200 bg-surface p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-5 sm:gap-7">
           <Ring score={review.readiness.score} />
-          <div className="min-w-0 flex-1">
+          {/* Wide enough to read: below the ring on a phone, beside it otherwise. */}
+          <div className="min-w-[14rem] flex-1">
             <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
               Productive readiness for this role
             </p>

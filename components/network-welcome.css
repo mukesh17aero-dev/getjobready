@@ -71,11 +71,9 @@ h1 em{background:var(--ascend-light-gradient);background-clip:text;-webkit-backg
      headline, and the call to action and the film link on one row. */
   .network-welcome header { padding: 12px 20px 10px; gap: 10px; }
   .network-welcome nav button { min-height: 42px; padding: 10px 8px; font-size: 13px; }
-  .network-welcome .scene--stills, .network-welcome .scene:not(.scene--stills) { max-height: 23svh; overflow: hidden; }
-  .network-welcome .scene-info { position: relative; z-index: 2; background: #071310; }
-  .network-welcome .scene-info { margin: 8px 20px 0; padding: 2px 0 2px 12px; }
-  .network-welcome .scene-info p { font-size: 14px; margin: 4px 0; }
-  .network-welcome .scene-info small { font-size: 11px; }
+  /* No caption on a phone: the rotating line sat over the photo and forced the
+     photo to be cropped. Without it the photo shows whole. */
+  .network-welcome .scene-info, .network-welcome:has(.scene--stills) .scene-info { display: none; }
   .network-welcome main { padding: 4px 20px 16px; }
   .network-welcome .eyebrow { margin-bottom: 8px; font-size: 11px; }
   .network-welcome h1 { font-size: clamp(32px, 10vw, 42px); letter-spacing: -1.8px; line-height: 1.04; margin-bottom: 10px; }
