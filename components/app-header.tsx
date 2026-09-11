@@ -206,9 +206,12 @@ function ThemeQuickToggle({ night }: { night: boolean }) {
 function AuthControls({
   account,
   night,
+  themeToggle = true,
 }: {
   account: Account | null | undefined;
   night: boolean;
+  /** The welcome page keeps its header to the one door and nothing else. */
+  themeToggle?: boolean;
 }) {
   const [mode, setMode] = useState<AuthMode | null>(null);
   if (account === undefined) return <span className="h-8 w-8" aria-hidden />;
@@ -220,7 +223,7 @@ function AuthControls({
   if (account === null) {
     return (
       <span className="flex items-center gap-2">
-        <ThemeQuickToggle night={night} />
+        {themeToggle && <ThemeQuickToggle night={night} />}
         <button
           type="button"
           onClick={() => setMode("login")}
@@ -252,7 +255,7 @@ function AuthControls({
 // remain available on every entry point.
 export function WelcomeAccountControls() {
   const account = useAccount();
-  return <AuthControls account={account} night />;
+  return <AuthControls account={account} night themeToggle={false} />;
 }
 
 // Avatar opens an account menu (Blueprint header pattern) instead of showing
