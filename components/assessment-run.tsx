@@ -16,7 +16,8 @@ import { AssessmentIntroduction } from "@/components/assessment-introduction";
 import { AssessmentQuestion } from "@/components/assessment-question";
 import { track, flushFootprints } from "@/lib/footprints";
 import { watchAnswer, type IntegrityWatch, type AnswerSignals } from "@/lib/integrity-signals";
-import { protectAssessmentCopy } from "@/lib/assessment-copy";
+import {ScreenGuard} from "@/components/screen-guard";
+import { protectAssessmentCopy,protectAssessmentInputs } from "@/lib/assessment-copy";
 import "./assessment-workspace.css";
 
 type Helper = "assistant" | "buddy";
@@ -141,8 +142,9 @@ export function AssessmentRun({ roleId, roleTitle, backHref, signedOut = false }
     } });
     watch.current = observer;
     const releaseCopyProtection = assessmentTask.current ? protectAssessmentCopy(assessmentTask.current, action => observer.block(action)) : () => {};
+    const releaseInputProtection=assessmentTask.current?protectAssessmentInputs(assessmentTask.current,action=>{if(action==='paste'||action==='drop')observer.block(action);else setIntegrityWarning(action==='print'?'Printing assessment content is disabled.':'Please do not capture or share assessment questions.');}):()=>{};
     const interval = setInterval(() => { setDirty(true); setIntegrityRevision(value => value + 1); }, 5000);
-    return () => { releaseCopyProtection(); clearInterval(interval); observer.stop(); if (watch.current === observer) watch.current = null; };
+    return () => { releaseInputProtection();releaseCopyProtection(); clearInterval(interval); observer.stop(); if (watch.current === observer) watch.current = null; };
   }, [sceneId, begun, readout]);
 
   const queueSave = useCallback((draft: AssessmentAnswerDraft) => {
@@ -289,7 +291,7 @@ export function AssessmentRun({ roleId, roleTitle, backHref, signedOut = false }
   const offered: Helper[] = run.answered < 2 && ["assistant", "both"].includes(scene.support) ? ["assistant"] : [];
   const textChange = (text: string) => { setDirty(true); setResponse(text); setVia(scene.answer === "artefact" ? "artefact" : "typed"); };
 
-  return <section className="assessment-workspace">
+  return <ScreenGuard identity={`Ascend assessment · ${run.runId.slice(0,8)||'preview'}`}><section className="assessment-workspace">
     {begun && focusNotice && <AssessmentFocusPrompt message={focusNotice} onAcknowledge={() => {
       if (run.runId) { track({ family: "scenario", event: "assessment_focus_acknowledged", module: "assessment", target: scene.id, meta: { runId: run.runId, sceneId: scene.id, at: new Date().toISOString() } }); void flushFootprints(); }
       setFocusNotice(null);
@@ -308,5 +310,5 @@ export function AssessmentRun({ roleId, roleTitle, backHref, signedOut = false }
       </div></div>
       {dock && offered.includes(dock) && <section className="assessment-chat" aria-label="Workplace support"><header><h2>{dock === "buddy" ? run.buddy : "AI assistant"}</h2><button aria-label="Close support" onClick={() => setDock(null)}>×</button></header><ol aria-live="polite">{chats[dock].map((turn, i) => <li key={i}><strong>{turn.who === "them" ? "You" : dock === "buddy" ? run.buddy : "Assistant"}</strong><RichText text={turn.text} /></li>)}</ol><p>{Math.max(0, 3 - chats[dock].filter(turn => turn.who === "them").length)} questions remaining for this task.</p><form onSubmit={event => { event.preventDefault(); void ask(); }}><label htmlFor="assessment-help">Your question</label><input id="assessment-help" value={asking} maxLength={2000} disabled={disabled || thinking} onChange={e => setAsking(e.target.value)} /><button disabled={disabled || thinking || !asking.trim() || chats[dock].filter(turn => turn.who === "them").length >= 3}>{thinking ? "Thinking…" : "Ask"}</button></form></section>}
     </>}
-  </section>;
+  </section></ScreenGuard>;
 }

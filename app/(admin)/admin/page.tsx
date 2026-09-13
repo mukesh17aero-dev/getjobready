@@ -1,16 +1,19 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/supabase-server";
 import { adminAccess, adminContent } from "@/lib/api";
+import { RoleStudio } from "./role-studio";
 import { AdminConsole } from "./admin-console";
 
 export const metadata = { title: "Admin console" };
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage() {
+export default async function AdminPage({searchParams}:{searchParams:Promise<{view?:string;role?:string;add?:string}>}) {
+  const query=await searchParams;
   const session = await getServerSession();
   if (!session) redirect("/login?next=/admin");
 
   const token = session.access_token;
+  if(query.view!=="content"&&!query.role&&!query.add){const access=await adminAccess(token);if(!access?.isAdmin)return <main className="p-10">Admin access is unavailable. Sign in as an administrator and retry.</main>;return <RoleStudio/>;}
   const [
     access,
     discovery,
@@ -42,6 +45,8 @@ export default async function AdminPage() {
 
   return (
     <AdminConsole
+      initialRoleId={query.role}
+      startAdding={query.add==="1"}
       openToEveryone={access?.openToEveryone ?? true}
       aiConfigured={access?.aiConfigured ?? false}
       discovery={discovery}

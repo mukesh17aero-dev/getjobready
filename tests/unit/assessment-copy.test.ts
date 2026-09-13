@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { protectAssessmentCopy } from "../../lib/assessment-copy";
+import { protectAssessmentCopy,protectAssessmentInputs } from "../../lib/assessment-copy";
 
 class FakeNode extends EventTarget {
   nodes = new Set<unknown>();
@@ -50,4 +50,9 @@ describe("assessment content copy protection", () => {
     expect(copy().defaultPrevented).toBe(false);
     expect(blocked).not.toHaveBeenCalled();
   });
+});
+
+describe('assessment paste and capture deterrence',()=>{
+ it('blocks native paste and beforeinput insertion only inside the task',()=>{const block=vi.fn();const stop=protectAssessmentInputs(root as unknown as HTMLElement,block);const answer=new FakeNode();root.nodes.add(answer);expect(copy('paste',answer).defaultPrevented).toBe(true);expect(copy('drop',answer).defaultPrevented).toBe(true);expect(copy('paste',doc).defaultPrevented).toBe(false);const input=new Event('beforeinput',{cancelable:true});Object.defineProperties(input,{target:{value:answer},inputType:{value:'insertFromPaste'}});doc.dispatchEvent(input);expect(input.defaultPrevented).toBe(true);stop();expect(copy('paste',answer).defaultPrevented).toBe(false);});
+ it('blocks printing shortcuts when the browser delivers them',()=>{const block=vi.fn();protectAssessmentInputs(root as unknown as HTMLElement,block);const event=new Event('keydown',{cancelable:true});Object.defineProperties(event,{key:{value:'p'},ctrlKey:{value:true}});doc.dispatchEvent(event);expect(event.defaultPrevented).toBe(true);expect(block).toHaveBeenCalledWith('print');});
 });

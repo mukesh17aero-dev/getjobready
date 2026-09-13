@@ -1,0 +1,21 @@
+'use client';
+import {useState} from 'react';
+import type {CourseView,ProgressDestination} from '@/lib/simulation-api';
+import s from './simulation.module.css';
+function scheduleLabel(course:CourseView){return course.overview.status==='Completed'?'Completed':course.dailyPlan?.scheduleStatus?.state==='behind'?'Behind schedule':course.dailyPlan&&!course.dailyPlan.fitsTarget?'Adjust target':course.dailyPlan?'On track':'Plan not set';}
+export function ProgressSummary({course,onOpen}:{course:CourseView;onOpen:()=>void}){
+ const p=course.overview;if(!p)return null;
+ return <section className={s.progressSummary} aria-label="Simulation progress"><div className={s.progressPercent}><strong>{p.percent}%</strong><span>complete</span></div><div><div className={s.progressSummaryLabels}><strong>{p.status}</strong><span>{p.completed} of {p.total} steps completed</span></div><progress aria-label="Overall simulation completion" value={p.completed} max={p.total}/><small>{scheduleLabel(course)}{p.drafts>0?` · ${p.drafts} saved ${p.drafts===1?'draft':'drafts'}`:''}</small></div><button className={s.secondary} onClick={onOpen}>View progress ↗</button></section>;
+}
+export function SimulationProgress({course,onContinue,onSkill,onReplan}:{course:CourseView;onContinue:(destination:ProgressDestination)=>void;onSkill:(skillId:string)=>void;onReplan:()=>void}){
+ const [page,setPage]=useState(0),p=course.overview;if(!p)return <p role="status">Reload to see your latest saved progress.</p>;
+ const pages=Math.max(1,Math.ceil(p.skills.length/6)),current=Math.min(page,pages-1),skills=p.skills.slice(current*6,current*6+6),schedule=course.dailyPlan;
+ return <section aria-label="Your simulation progress">
+ {p.next?<div className={s.progressContinue}><div><small>Pick up where you left off</small><h3>{p.next.title}</h3><p>Your completed work is saved. Continue with the next unfinished step.</p></div><button className={s.primary} onClick={()=>onContinue(p.next!)}>Continue →</button></div>:<p className={s.notice}>All course steps are completed. You can review your submitted work and coaching below.</p>}
+ <div className={s.progressStages}>{p.stages.map(stage=><article key={stage.id}><span>{stage.label}</span><strong>{stage.completed}<small> / {stage.total}</small></strong><progress aria-label={`${stage.label} completion`} value={stage.completed} max={stage.total}/><small>{stage.locked?'Unlocks after lessons and missions':stage.completed===stage.total?'Completed':stage.completed?'In progress':'Not started'}</small></article>)}</div>
+ <p className={s.progressCaption}>Lessons count when marked covered; missions and reassessment count when submitted. This tracks completion, not a readiness score.</p>
+ {schedule&&<div className={s.progressSchedule} data-behind={schedule.scheduleStatus?.state==='behind'||!schedule.fitsTarget}><div><strong>{scheduleLabel(course)}</strong><p>{schedule.scheduleStatus?.state==='behind'?`${schedule.scheduleStatus.overdueTasks} tasks are overdue. `:''}Target: {schedule.targetDate} · Estimated finish: {schedule.projectedFinish}</p></div><button className={s.secondary} onClick={onReplan}>Replan my schedule →</button></div>}
+ <h3>Progress by skill</h3><div className={s.skillProgressGrid}>{skills.map(skill=><article key={skill.skillId}><div className={s.skillProgressHeading}><h4>{skill.name}</h4><span data-complete={skill.status==='Completed'}>{skill.status}</span></div><progress aria-label={`${skill.name} lesson and missions completed`} value={skill.missions+(skill.lesson?1:0)} max={skill.totalMissions+1}/><p>{skill.lesson?'Lesson covered':'Lesson remaining'} · {skill.missions}/{skill.totalMissions} missions submitted{skill.drafts?` · ${skill.drafts} saved ${skill.drafts===1?'draft':'drafts'}`:''}</p><button className={s.secondary} onClick={()=>onSkill(skill.skillId)}>{skill.status==='Completed'?'Review work':skill.status==='Not started'?'Start skill':'Continue skill'} →</button></article>)}</div>
+ {pages>1&&<nav className={s.actions} aria-label="Skill progress pages"><button className={s.secondary} disabled={current===0} onClick={()=>setPage(current-1)}>Previous</button><span>Skills {current*6+1}–{Math.min((current+1)*6,p.skills.length)} of {p.skills.length}</span><button className={s.secondary} disabled={current===pages-1} onClick={()=>setPage(current+1)}>Next</button></nav>}
+ </section>;
+}

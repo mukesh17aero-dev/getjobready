@@ -1,11 +1,12 @@
 "use client";
 
+import { AdminReviewLink } from "./review-notifications";
+import { studioRequest } from "@/lib/admin-studio-api";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   adminDiscardDraft,
   adminImportCatalogue,
-  adminPublish,
   adminReviewSkillModel,
   adminRoleTemplate,
   adminGenerateRoleContext,
@@ -784,6 +785,8 @@ const SMALL_INPUT =
   "w-full rounded-md border border-slate-300 bg-surface px-2.5 py-1.5 text-[0.82rem] outline-none focus:border-brand-violet";
 
 export function AdminConsole({
+  initialRoleId,
+  startAdding=false,
   openToEveryone,
   aiConfigured,
   discovery,
@@ -792,6 +795,8 @@ export function AdminConsole({
   assessmentArc,
   interviewBank,
 }: {
+  initialRoleId?:string;
+  startAdding?:boolean;
   openToEveryone: boolean;
   aiConfigured: boolean;
   discovery: AdminContent | null;
@@ -876,7 +881,7 @@ export function AdminConsole({
     };
   }, [model]);
 
-  const [addOpen, setAddOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(startAdding);
   const [newTitle, setNewTitle] = useState("");
   const [importing, setImporting] = useState(false);
   const [imported, setImported] = useState<CatalogueImportResult | null>(null);
@@ -992,12 +997,15 @@ export function AdminConsole({
       setStatus("Your session expired. Reload the page and sign in again.");
       return;
     }
-    const published = await adminPublish(t, kind);
+    let published;
+    try { published = await studioRequest(`/content/${kind}/publish`, {}); }
+    catch (e) { setBusy(false); setStatus(e instanceof Error ? e.message : "Publication blocked."); return; }
+    let mappingNotice: string | null = null;
     if (kind === "role_catalogue" && hasDraft.skills) {
-      await adminPublish(t, "skill_model");
+      try { await studioRequest(`/content/skill_model/publish`, {}); } catch(e) { mappingNotice=`Role published. Skill mapping still needs approval: ${e instanceof Error?e.message:"open reviews"}`; }
     }
     setBusy(false);
-    setStatus(published ? null : "Nothing to publish — save a draft first.");
+    setStatus(mappingNotice ?? (published ? "Published the approved revision." : "Nothing to publish — save a draft first."));
     if (published) {
       setHasDraft((h) => ({ ...h, [slotFor(kind)]: false }));
       // Tabs that hold their own copy of the content have to hear about a
@@ -1341,10 +1349,11 @@ export function AdminConsole({
             Content &amp; assessments
           </h1>
           <p className="mt-1 max-w-2xl text-[0.88rem] text-slate-600">
-            Saved as a draft; nothing reaches students until you publish.
+            Saved as a draft; live publication requires two admin approvals.
           </p>
         </div>
         <p className="text-xs text-slate-400">
+          <span className="mb-3 flex flex-wrap gap-4"><Link href="/admin/studio">Role studio →</Link><AdminReviewLink /></span>
           Published v{doc?.published?.version ?? "—"}
           {doc?.published?.publishedAt
             ? ` · ${new Date(doc.published.publishedAt).toLocaleDateString()}`
@@ -1583,6 +1592,7 @@ export function AdminConsole({
             const detail = details.find((d) => d.roleId === role.id);
             return (
               <Collapsible
+                defaultOpen={role.id===initialRoleId}
                 key={role.id}
                 summary={
                   <span className="flex flex-wrap items-baseline gap-x-2">
@@ -2163,6 +2173,7 @@ export function AdminConsole({
             {busy ? "Working…" : "Save draft"}
           </button>
         )}
+        <button type="button" disabled={busy} className="rounded-lg border border-violet-300 px-4 py-2 text-sm font-semibold text-violet-800" onClick={async()=>{setBusy(true);try{await studioRequest(`/content/${kind}/review`,{});setStatus("Review requested. Open the review inbox to see approvals and feedback.");}catch(e){setStatus(e instanceof Error?e.message:"Review could not be requested.");}finally{setBusy(false);}}}>Request two-admin review</button>
         <button
           type="button"
           disabled={busy || !draftPending}

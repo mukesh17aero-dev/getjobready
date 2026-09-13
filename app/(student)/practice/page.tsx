@@ -1,3 +1,4 @@
+import {simulationRequest,type CourseSummary} from '@/lib/simulation-api';
 import { getServerSession } from "@/lib/supabase-server";
 import { getJourneyState } from "@/lib/api";
 import { routeStatus, stages } from "@/lib/stages";
@@ -17,8 +18,7 @@ import { Check, Eye, Spark } from "@/components/icons";
 // so the shape of what the assessment produces is visible without a number
 // being claimed about somebody we have not measured.
 //
-// Simulation Missions and the Career Passport are still under development
-// and say so; neither opens from here yet.
+// Published simulation curricula open here; the Career Passport remains in development.
 
 export const metadata = { title: "Practice" };
 export const dynamic = "force-dynamic";
@@ -27,6 +27,8 @@ export default async function PracticeLandingPage() {
   const session = await getServerSession();
   const state = session ? await getJourneyState(session.access_token) : null;
   const signedIn = Boolean(session);
+  const courses=session?await simulationRequest<CourseSummary[]>('',undefined,session.access_token).catch(()=>[]):[];
+  const simulation=courses.find(c=>c.roleId===state?.progress?.role?.id)||courses[0];
   const journey = state ? stages(state) : null;
   const readiness = state && journey ? routeStatus("readiness", state, journey) : null;
   const role = state?.progress?.role?.title ?? null;
@@ -49,14 +51,14 @@ export default async function PracticeLandingPage() {
     },
     {
       id: "missions", title: "Simulation Missions", subtitle: "Decisions that carry weight", icon: <Eye size={22} />,
-      status: "Under development",
-      outcome: "Practise the decisions the job is made of.", intro: "Short scenarios that put you inside the job rather than describing it: a decision to make, consequences that follow, and marking against what a competent person would have done.",
-      why: "Real situations with consequences build the judgement a job needs. A marked decision is evidence in a way a certificate of attendance is not, and missions are scored against the same skills as the assessment, so practice moves the number that matters.",
-      artifactLabel: "What a mission gives you", artifact: <div className={s.summaryCard}><h2>A situation, a decision, a consequence</h2><p className={s.emptyIntro}>Each mission puts you inside one moment of the job and marks what you chose to do.</p><div className={s.outline}><span>The situation</span><i /><i /><span>Your decision</span><i /><i /><span>What followed, and the mark</span><i /></div><small className={s.exampleLabel}>Still under development · scored against the same skills as the readiness assessment</small></div>,
-      leaveWith: "Marked decisions that count towards the same skills as your readiness score.",
-      action: null,
-      points: ["Inside the job, not a description of it", "Consequences follow each decision", "Marked against what a competent person would do"],
-      steps: ["Choose a mission for your role.", "Make the decisions the situation asks for.", "See what followed and how it was marked."],
+      status: simulation?simulation.status:signedIn?"Under development":"Preview available",
+      outcome: "Practise the decisions the job is made of.", intro: "Learn from a workplace example, use the reference cards to produce real work, and get specific coaching on your response.",
+      why: "Practise the skills your role asks for through guided work, an independent task and a fresh situation. Feedback helps you improve your answer before reassessment.",
+      artifactLabel: simulation&&simulation.status!=='Not started'?"Your simulation progress":"What a mission gives you", artifact: <div className={s.summaryCard}><h2>{simulation&&simulation.status!=='Not started'?simulation.title:"An example, your work, a better next attempt"}</h2>{simulation&&simulation.status!=='Not started'&&<><p><strong>{simulation.status} · {simulation.percent}% complete</strong></p><progress aria-label="Simulation completion" value={simulation.percent} max={100} style={{width:'100%'}}/><p>{simulation.completed} of {simulation.total} learning and practice steps complete.</p></>}<p className={s.emptyIntro}>Each mission gives you a workplace situation, the records you need and a clear piece of work to produce.</p><div className={s.outline}><span>The situation</span><i /><i /><span>Your decision</span><i /><i /><span>Feedback and your next step</span><i /></div><small className={s.exampleLabel}>{simulation?`${simulation.title} · lessons, practical work and fresh reassessment`:'Curriculum preparation in progress'}</small></div>,
+      leaveWith: "Saved workplace responses, constructive coaching and fresh reassessment questions. Course completion is tracked separately from verified readiness.",
+      action: simulation?{href:`/practice/missions?role=${encodeURIComponent(simulation.roleId)}`,label:simulation.status==='Completed'?"Review my practice":simulation.status==='Not started'?"Start my practice plan":"Continue my practice"}:{href:"/practice/missions",label:"Preview a simulation"},
+      points: ["Role-specific reference cards and practical tasks", "Guided, independent and transfer practice", "Feedback tied to the work you submit"],
+      steps: ["Learn from an example for your role.", "Produce the work the situation asks for.", "Use the feedback to improve, then try a fresh task."],
     },
     {
       id: "passport", title: "Career Passport", subtitle: "What you proved, in one place", icon: <Spark size={22} />,

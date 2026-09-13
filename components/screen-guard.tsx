@@ -30,13 +30,14 @@ import { useEffect, useState } from "react";
 
 function watermarkUrl(identity: string): string {
   // Two rotated repetitions per tile so a crop of any corner still carries it.
+  const safeIdentity=identity.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="180">
     <text x="12" y="60" transform="rotate(-24 12 60)"
       font-family="system-ui, sans-serif" font-size="13" fill="#0f172a"
-      fill-opacity="0.075">${identity}</text>
+      fill-opacity="0.075">${safeIdentity}</text>
     <text x="150" y="150" transform="rotate(-24 150 150)"
       font-family="system-ui, sans-serif" font-size="13" fill="#0f172a"
-      fill-opacity="0.075">${identity}</text>
+      fill-opacity="0.075">${safeIdentity}</text>
   </svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
@@ -112,8 +113,7 @@ export function ScreenGuard({
       {concealed && (
         <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-slate-900/70 p-6 text-center">
           <p className="max-w-xs text-[0.88rem] font-medium leading-relaxed text-white">
-            Paused while you are away. Come back to the tab and it picks up
-            where you left it.
+            Assessment content is hidden while this window is out of focus. Return to continue.
           </p>
         </div>
       )}

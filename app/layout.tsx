@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
+import { FloatingMedia } from "@/components/floating-media";
 import { Ambience } from "@/components/ambience";
 import { AppHeader } from "@/components/app-header";
 import { FootprintTracker } from "@/components/footprint-tracker";
@@ -90,6 +91,7 @@ export default function RootLayout({
         <AppHeader />
         <FootprintTracker />
         {children}
+        <FloatingMedia />
       </body>
     </html>
   );
