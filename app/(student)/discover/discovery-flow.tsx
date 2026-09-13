@@ -4,10 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   getDiscovery,
-  getWhyRoleFits,
   selectDiscoveryRole,
   type DiscoveryState,
-  type RoleBrief,
 } from "@/lib/api";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { SignUpPrompt, type GatedAction } from "@/components/signup-gate";
@@ -116,30 +114,6 @@ export function DiscoveryFlow({
     initial?.attempt?.selectedRole ?? null,
   );
   const [busy, setBusy] = useState(false);
-  // The written read-out for the role that leads the page: the one they
-  // chose, else the ranking's top match once it has earned the word. Asked
-  // for whenever that role or the ranking behind it changes.
-  const [why, setWhy] = useState<{ roleId: string; brief: RoleBrief } | null>(null);
-  const directionId =
-    selectedRole && selectedRole !== "none"
-      ? selectedRole
-      : recommending
-        ? (matches[0]?.roleId ?? null)
-        : null;
-  const rankingStamp = JSON.stringify(matches.map((m) => [m.roleId, m.score]));
-  useEffect(() => {
-    if (!directionId || signedOut) return;
-    let live = true;
-    void (async () => {
-      const t = await token();
-      if (!t) return;
-      const result = await getWhyRoleFits(t, directionId);
-      if (live) setWhy(result.ok ? { roleId: directionId, brief: result.brief } : null);
-    })();
-    return () => {
-      live = false;
-    };
-  }, [directionId, rankingStamp, signedOut]);
   const [error, setError] = useState<string | null>(null);
   // Role reality and comparison are overlays over the matches, never
   // separate pages: opening one never loses the results behind it.
@@ -740,7 +714,6 @@ export function DiscoveryFlow({
                 ?.title ?? rolePage.id.replace(/_/g, " ")
             }
             note={matchNoteFor(rolePage.id)}
-            why={(recommended ?? []).find((r) => r.roleId === rolePage.id)}
             backLabel={rolePage.label}
             onBack={() => {
               window.history.pushState(null, "", roleUrl(null));
@@ -806,8 +779,6 @@ export function DiscoveryFlow({
           industriesPicked={chosenWorlds.length}
           roles={signedOut ? [...browseRoles].sort((a, b) => Number(b.id === previewRoleId) - Number(a.id === previewRoleId)) : browseRoles}
           recommended={recommended}
-          confidence={attempt?.matches?.coverage ?? null}
-          why={why && why.roleId === directionId ? why.brief : null}
           chosenRoleId={selectedRole}
           choosing={busy}
           compareIds={compareIds}

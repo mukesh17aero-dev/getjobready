@@ -23,8 +23,6 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import Link from "next/link";
-import { RoleBrief } from "@/components/role-brief";
-import type { RoleBrief as RoleBriefData } from "@/lib/api";
 import "./discovery-modern.css";
 import ws from "./discovery-workspace.module.css";
 import { ArrowRight } from "@/components/icons";
@@ -88,8 +86,6 @@ export function RoleList({
   onBack,
   onPickIndustries,
   industriesPicked = 0,
-  confidence = null,
-  why = null,
 }: {
   /** Guests can explore one fixed sample from the published catalogue. */
   signedOut?: boolean;
@@ -125,16 +121,11 @@ export function RoleList({
   /** Narrow the list to chosen industries - available, never compulsory. */
   onPickIndustries?: () => void;
   industriesPicked?: number;
-  /** 0-1, how much of what the ranking would want to know it actually has. */
-  confidence?: number | null;
-  /** The written read-out for the direction, when the server has one. */
-  why?: RoleBriefData | null;
 }) {
   const [tab, setTab] = useState<Tab>("explore");
   const [search, setSearch] = useState("");
   const [industry, setIndustry] = useState("all");
   const [saved, setSaved] = useState<string[]>([]);
-  const [whyOpen, setWhyOpen] = useState(false);
   const tabs = useRef<Array<HTMLButtonElement | null>>([]);
 
   // After the first paint, so the server-rendered list and the browser agree
@@ -204,12 +195,12 @@ export function RoleList({
 
   return (
     <div className={ws.frame}>
-      <button type="button" onClick={onBack} className={ws.back}>← Back to Discover</button>
+      <button type="button" onClick={onBack} className={ws.back}>← Back to home</button>
       <header className={ws.heading}>
         <div>
-          <p className={ws.eyebrow}>YOUR DISCOVERY WORKSPACE</p>
+          {/* One line. The label above it named the page somebody had just
+              opened, and the line below described the tabs directly under it. */}
           <h1>Find work you can see yourself doing.</h1>
-          <p>Explore the day, understand the trade-offs, and choose your direction.</p>
         </div>
         {onPickIndustries && (
           <button type="button" className={ws.textButton} onClick={onPickIndustries}>
@@ -230,49 +221,56 @@ export function RoleList({
                 ? direction.match
                   ? `You chose this direction yourself. From what you read, toured, compared and asked here, it also ranks as a ${direction.match.band === "strong" ? "strong" : direction.match.band === "adjacent" ? "close" : "stretch"} fit.`
                   : "You chose this direction yourself. The next step is to find out where you stand on the job's own work."
-                : direction.match!.why[0] ?? direction.role.summary}
+                : direction.role.summary}
             </p>
-            <small>
-              {confidence != null && confidence > 0
-                ? `Confidence: ${confidence >= 0.75 ? "high" : confidence >= 0.45 ? "medium" : "low"}, going by how many industries you named and roles you read, toured, compared and asked about. An interest recommendation, not an assessment result.`
-                : direction.kind === "chosen"
+            {/* The engine's own reasons, where a sentence saying "this is not
+                an assessment result" used to be. Naming what the
+                recommendation was actually built from says the same thing and
+                is worth reading: the reasons are all "you toured this twice",
+                never a claim about ability. Only the engine's words - nothing
+                here is written for the occasion. */}
+            {/* What this was built from, in terms of what they gave us.
+                The engine's own reasons are not shown: every one of them is
+                an observation about behaviour - how long a page was open,
+                how often they came back, what they compared. We rank with
+                those and we do not read them back to the person. What is
+                theirs to see is what they chose and what they told us. */}
+            {direction.match ? (
+              <details className={ws.whySuits}>
+                <summary>
+                  Why this role suits you
+                  <span aria-hidden="true">{"\u2304"}</span>
+                </summary>
+                <p>
+                  Based on what you have told us: the{" "}
+                  {industriesPicked > 0 ? `${industriesPicked} ` : ""}industries you chose, the
+                  roles you picked out to look at, and the skills and aims on your profile.
+                </p>
+                {direction.match.uncertainty ? <small>{direction.match.uncertainty}</small> : null}
+              </details>
+            ) : (
+              <small>
+                {direction.kind === "chosen"
                   ? "Nothing is recorded yet to rank this by. Reading, touring and comparing roles here builds that up."
-                  : "An interest recommendation from what you chose here, not an assessment result."}
-              {direction.match?.uncertainty ? ` ${direction.match.uncertainty}` : ""}
-            </small>
+                  : "Built from what you read, toured, compared and asked here."}
+              </small>
+            )}
           </div>
-          <div>
+          <div className={ws.directionActions}>
             <Link href={`/practice/readiness?role=${encodeURIComponent(direction.role.id)}`} className={ws.primary}>
               Check your role readiness →
             </Link>
-            <button type="button" className={ws.textButton} onClick={() => onOpen(direction.role.id)}>
-              {direction.kind === "chosen" ? "Open the role" : "See why this role fits"}
+            {/* Going to the role page is an action like the one above it, so
+                it looks like one. */}
+            <button type="button" className={ws.secondary} onClick={() => onOpen(direction.role.id)}>
+              {direction.kind === "chosen" ? "Open the role →" : "See why this role fits →"}
             </button>
             {direction.kind === "chosen" && onUnchoose && (
-              <button type="button" className={ws.textButton} disabled={choosing} onClick={onUnchoose}>
+              <button type="button" className={ws.unselect} disabled={choosing} onClick={onUnchoose}>
                 Unselect this direction
               </button>
             )}
-            {why && why.roleId === direction.role.id && (
-              <button
-                type="button"
-                className={ws.textButton}
-                aria-expanded={whyOpen}
-                aria-controls="why-this-role"
-                onClick={() => setWhyOpen((open) => !open)}
-              >
-                {whyOpen ? "Hide why this role fits you ↑" : "Why this role fits you ↓"}
-              </button>
-            )}
           </div>
-          {why && why.roleId === direction.role.id && whyOpen && (
-            <div id="why-this-role" className={ws.whyPanel}>
-              <RoleBrief brief={why} />
-              <p className={ws.quiet} style={{ marginTop: 14 }}>
-                Written from what you read, toured, compared and asked here, and the words you wrote. Interest, not an assessment.
-              </p>
-            </div>
-          )}
         </section>
       ) : null}
       {!direction && (

@@ -749,6 +749,70 @@ export type JobFitState = { checks: JobFitCheck[]; axes: FitAxis[] };
 export type JobFitResult =
   { ok: true; check: JobFitCheck } | { ok: false; reason: string };
 
+// ---- The skill check attached to one posting ----
+//
+// The same readiness questions an admin published, chosen by the skill they
+// measure, for the skills this posting asks for. Nothing is authored on the
+// fly; what comes back is a situation, the workplace it belongs to and the
+// skill it is about.
+
+export type SkillCheckQuestion = {
+  id: string;
+  skill: string;
+  /** The line from the posting that sent us here. */
+  need: string;
+  workplace: string;
+  buddy: string;
+  title: string;
+  brief: string;
+  minutes: number;
+};
+
+export type SkillMark = { skill: string; score: number; why: string };
+
+export type SkillCheckReview = {
+  marks: SkillMark[];
+  perQuestion: Array<{ id: string; did: string; better: string }>;
+  strengths: string[];
+  workOn: string[];
+  summary: string;
+  confidence: "low" | "medium";
+  basis: { answered: number; asked: number };
+};
+
+export type SkillCheck = {
+  skills: Array<{ skill: string; need: string }>;
+  questions: SkillCheckQuestion[];
+  answers: Record<string, string>;
+  review: SkillCheckReview | null;
+  startedAt: string;
+  reviewedAt: string | null;
+};
+
+export type SkillCheckResult =
+  | { ok: true; check: SkillCheck }
+  | { ok: false; reason: string };
+
+export const getSkillCheck = (token: string, checkId: string) =>
+  apiCall<SkillCheckResult>(token, `/v1/job-fit/${checkId}/skill-check`);
+
+export const saveSkillCheckAnswer = (
+  token: string,
+  checkId: string,
+  questionId: string,
+  response: string,
+) =>
+  apiCall<{ ok: true; answered: number }>(
+    token,
+    `/v1/job-fit/${checkId}/skill-check/answer`,
+    { method: "PUT", body: { questionId, response } },
+  );
+
+export const reviewSkillCheck = (token: string, checkId: string) =>
+  apiCall<
+    { ok: true; review: SkillCheckReview; fresh: boolean } | { ok: false; reason: string }
+  >(token, `/v1/job-fit/${checkId}/skill-check/review`, { method: "POST", body: {} });
+
 export const getJobFit = (token: string) =>
   apiCall<JobFitState>(token, "/v1/job-fit");
 
@@ -774,9 +838,28 @@ export type ProfileEntry = {
   bullets: string[];
 };
 
+export type ProfileVoice = "formal" | "genz";
+
+/** What a recruiter's search, then the recruiter, will see - counted by the backend. */
+export type ProfileCheckItem = {
+  id: string;
+  label: string;
+  status: "pass" | "fix" | "info";
+  detail: string;
+  /** An instruction Scribe can follow on its own. */
+  fix?: string;
+  /** A question only the person can answer - their fact, their claim. */
+  ask?: string;
+  /** When the answer belongs in their record rather than in the draft. */
+  link?: { href: string; label: string };
+};
+export type ProfileChecklist = { items: ProfileCheckItem[]; passed: number; counted: number };
+
 export type ProfileDraft = {
   /** Which of the two the writer decided this person is. */
   audience?: "student" | "professional";
+  /** How it was asked to sound. */
+  voice?: ProfileVoice;
   /** Uploaded by them. The writer never touches this. */
   photo?: string;
   headline?: string;
@@ -801,6 +884,8 @@ export type ProfileState = {
   /** How much the writer had to work with. An empty profile is an empty record. */
   sourceCount?: number;
   provenCount?: number;
+  /** The recruiter-search read of whatever is being worked on. */
+  checklist?: ProfileChecklist;
 };
 
 export type ProfileWriteResult =
@@ -809,10 +894,10 @@ export type ProfileWriteResult =
 export const getProfessionalProfile = (token: string) =>
   apiCall<ProfileState>(token, "/v1/professional-profile");
 
-export const writeProfessionalProfile = (token: string) =>
+export const writeProfessionalProfile = (token: string, voice: ProfileVoice = "formal") =>
   apiCall<ProfileWriteResult>(token, "/v1/professional-profile/write", {
     method: "POST",
-    body: {},
+    body: { voice },
   });
 
 /** One turn of Scribe: what changed, what it refused, what it took on trust. */
@@ -840,10 +925,12 @@ export const reviseProfessionalProfile = (
    * again - which is a loop, not caution.
    */
   history: Array<{ ask: string; reply: string; followUp: string | null }> = [],
+  /** Switch the voice with this revision; otherwise the draft's own stands. */
+  voice?: ProfileVoice,
 ) =>
   apiCall<ProfileReviseResult>(token, "/v1/professional-profile/revise", {
     method: "POST",
-    body: { ask, history: history.slice(-4) },
+    body: { ask, history: history.slice(-4), ...(voice ? { voice } : {}) },
   });
 
 export const acceptProfileSection = (

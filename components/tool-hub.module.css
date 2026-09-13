@@ -45,3 +45,6 @@
 .toolLaunch{margin-top:18px;scroll-margin-block:96px 24px;border-radius:12px}
 .toolLaunch .primary,.toolLaunch .comingSoon{margin-top:0}
 .toolLaunch:focus-visible{outline:3px solid #7acbbb;outline-offset:5px}
+/* The second way out of a tool panel: start a fresh one, beside picking up
+   what is already saved. Outlined, so the first action stays the first. */
+.alsoStart{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:46px;font-size:12.5px;font-weight:600;color:var(--color-teal-700);background:var(--color-surface);border:1px solid var(--color-teal-700);border-radius:9px;padding:12px 15px;margin-top:9px}

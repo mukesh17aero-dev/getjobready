@@ -1,11 +1,21 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { checkJobFit, type JobFitCheck, type NextAction, type ReqState } from "@/lib/api";
+import {
+  checkJobFit,
+  getSkillCheck,
+  reviewSkillCheck,
+  saveSkillCheckAnswer,
+  type JobFitCheck,
+  type NextAction,
+  type ReqState,
+  type SkillCheck,
+} from "@/lib/api";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { SignUpPrompt, type GatedAction } from "@/components/signup-gate";
 import { FitRadar } from "@/components/fit-chart";
+import { AssessmentQuestion } from "@/components/assessment-question";
 import s from "./job-fit-studio.module.css";
 
 // The Job Fit Analyzer, as approved in public/previews/ascend-job-readiness.html:
@@ -18,11 +28,11 @@ import s from "./job-fit-studio.module.css";
 // number defensible: anybody who doubts it can see the lines it was built
 // from and exactly what each one rests on.
 //
-// The preview also proposed mapping each requirement to a catalogue skill and
-// carrying it through a role assessment into a per-skill report. The API does
-// not return that yet, so this page shows what the check does return - each
-// requirement, what backs it, and the one thing to do next - and hands over
-// to the readiness assessment for the assessed evidence.
+// The readiness stage is where a claim becomes evidence. It used to be an
+// explainer with a link to the role assessment - a different role, a full
+// sitting, and this posting left behind. It now asks the questions here: the
+// same published readiness situations, picked by the skill they measure for
+// the skills this posting actually asks for, answered in place and marked.
 
 type Stage = "jd" | "skills" | "readiness" | "report";
 const STAGES: Array<{ id: Stage; name: string }> = [
@@ -52,7 +62,7 @@ const STATE_CHIP: Record<ReqState, string> = { proof: s.earned, claim: s.amber, 
 const HEADINGS: Record<Stage, [string, string, string]> = {
   jd: ["TURN A JOB POSTING INTO A PLAN", "See what this job needs from you.", "Read the posting against your record, then find out what you can demonstrate."],
   skills: ["THE JOB, TRANSLATED INTO REQUIREMENTS", "Know what matters before you prepare.", "Every requirement shows what on your record backs it, and what does not."],
-  readiness: ["YOUR RECORD → THE RELEVANT WORK", "Find out where you stand by doing.", "The role assessment marks you on the job's own work."],
+  readiness: ["YOUR RECORD → THE RELEVANT WORK", "Find out where you stand by doing.", "A handful of real situations for the skills this posting asks for, marked on what you write."],
   report: ["FROM YOUR RECORD TO YOUR NEXT STEP", "Your readiness, made useful.", "Keep what is backed. Work on the gaps that matter for this job."],
 };
 const MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ");
@@ -73,6 +83,15 @@ export function JobFitStudio({ checks: initialChecks, signedOut = false }: { che
   const [status, setStatus] = useState("");
   const [gate, setGate] = useState<GatedAction | null>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  // The skill check for the posting on screen: the situations, what has been
+  // written, and the marks once they exist.
+  const [skillCheck, setSkillCheck] = useState<SkillCheck | null>(null);
+  const [skillCheckReason, setSkillCheckReason] = useState<string | null>(null);
+  const [loadingCheck, setLoadingCheck] = useState(false);
+  const [question, setQuestion] = useState(0);
+  const [draft, setDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [marking, setMarking] = useState(false);
   const check = checks.find(c => c.id === selectedId) ?? null;
   const isExample = signedOut;
   const counts = check ? { proof: check.requirements.filter(r => r.state === "proof").length, claim: check.requirements.filter(r => r.state === "claim").length, gap: check.requirements.filter(r => r.state === "gap").length } : { proof: 0, claim: 0, gap: 0 };
@@ -84,7 +103,80 @@ export function JobFitStudio({ checks: initialChecks, signedOut = false }: { che
     setTimeout(() => { titleRef.current?.focus({ preventScroll: true }); titleRef.current?.scrollIntoView({ block: "start", behavior: "instant" }); }, 0);
   }
   const canOpen = (id: Stage) => id === "jd" || Boolean(check);
-  function openCheck(c: JobFitCheck) { setSelectedId(c.id); setTab("overview"); go("report"); }
+  function openCheck(c: JobFitCheck) { setSelectedId(c.id); setTab("overview"); setSkillCheck(null); setSkillCheckReason(null); loadedFor.current = null; setQuestion(0); setDraft(""); go("report"); }
+
+  // ---- The skill check ----
+  //
+  // Built on the server the first time this stage opens and written down, so
+  // coming back to finish two answers finds the same situations. The ref
+  // keeps it to one fetch per posting while the state settles.
+  const loadedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (stage !== "readiness" || signedOut || !check) return;
+    if (loadedFor.current === check.id) return;
+    loadedFor.current = check.id;
+    let cancelled = false;
+    void (async () => {
+      const t = await token();
+      if (cancelled) return;
+      if (!t) { setError("Your session expired. Reload the page and sign in again."); return; }
+      setLoadingCheck(true);
+      setSkillCheckReason(null);
+      const result = await getSkillCheck(t, check.id);
+      if (cancelled) return;
+      setLoadingCheck(false);
+      if (!result) { setSkillCheckReason("Could not reach the question bank just now. Try again in a moment."); return; }
+      if (!result.ok) { setSkillCheckReason(result.reason); return; }
+      setSkillCheck(result.check);
+      // Open on the first situation they have not written anything for.
+      const next = result.check.questions.findIndex(q => !(result.check.answers[q.id] ?? "").trim());
+      const at = next === -1 ? 0 : next;
+      setQuestion(at);
+      setDraft(result.check.answers[result.check.questions[at]?.id ?? ""] ?? "");
+    })();
+    return () => { cancelled = true; };
+  }, [stage, signedOut, check]);
+
+  const questions = skillCheck?.questions ?? [];
+  const current = questions[question] ?? null;
+  const answeredCount = skillCheck
+    ? questions.filter(q => (skillCheck.answers[q.id] ?? "").trim().length > 0).length
+    : 0;
+  const review = skillCheck?.review ?? null;
+
+  /** Keep what is typed, then move. Saving is per situation, never in bulk. */
+  async function keepAnswer(): Promise<boolean> {
+    if (!check || !skillCheck || !current) return false;
+    const text = draft.trim();
+    if (text === (skillCheck.answers[current.id] ?? "").trim()) return true;
+    setSaving(true); setError(null);
+    const t = await token();
+    if (!t) { setSaving(false); setError("Your session expired. Reload the page and sign in again."); return false; }
+    const saved = await saveSkillCheckAnswer(t, check.id, current.id, text);
+    setSaving(false);
+    if (!saved) { setError("That answer did not save. Nothing else was lost - try again."); return false; }
+    setSkillCheck(c => (c ? { ...c, answers: { ...c.answers, [current.id]: text } } : c));
+    return true;
+  }
+  async function goToQuestion(next: number) {
+    if (next < 0 || next >= questions.length) return;
+    if (!(await keepAnswer())) return;
+    setQuestion(next);
+    setDraft(skillCheck?.answers[questions[next]!.id] ?? "");
+  }
+  async function markAnswers() {
+    if (!check || !skillCheck) return;
+    if (!(await keepAnswer())) return;
+    setMarking(true); setError(null); setStatus("");
+    const t = await token();
+    if (!t) { setMarking(false); setError("Your session expired. Reload the page and sign in again."); return; }
+    const result = await reviewSkillCheck(t, check.id);
+    setMarking(false);
+    if (!result) { setError("Could not reach the marker. Your answers are saved - try again in a moment."); return; }
+    if (!result.ok) { setStatus(result.reason); return; }
+    setSkillCheck(c => (c ? { ...c, review: result.review, reviewedAt: new Date().toISOString() } : c));
+    setStatus("");
+  }
 
   async function run() {
     if (signedOut) {
@@ -134,10 +226,40 @@ export function JobFitStudio({ checks: initialChecks, signedOut = false }: { che
         <aside><section className={`${s.card} ${s.roleCard}`}><span className={s.chip}>SUGGESTED READINESS PATH</span><div className={s.roleIcon} aria-hidden="true">◈</div><p className={s.eyebrow}>THE ROLE THIS POSTING IS</p><h2>{check.roleTitle}</h2><p>{check.verdict}</p><div className={s.miniSkills}><span>{counts.proof} proven</span><span>{counts.claim} claimed</span><span>{counts.gap} nothing yet</span></div><div className={s.scope}><b>What this check can tell you</b>Where your record already backs what this job asks, and where an interviewer would hear the difference.</div><div className={s.scope}><b>What remains open</b>{counts.claim + counts.gap > 0 ? check.requirements.filter(r => r.state !== "proof").map(r => r.need).join(" · ") : "Every requirement here rests on something you were seen doing."}</div>{check.inScope === false && <div className={s.scope}><b>Outside what Ascend prepares you for</b>It prepares people for early-career non-technical roles. The marks are still honest about what you have; they are measured against a job we cannot coach you into.</div>}<button type="button" className={s.primary} onClick={() => go("readiness")}>See my readiness path →</button></section>
           <section className={s.secondaryCard}><h3>Skills first. Role title second.</h3><p>The requirements come from the posting itself, even when an employer uses a different job title.</p></section></aside></div></>}
 
-      {stage === "readiness" && check && <>{exampleBanner}<div className={s.readinessGrid}><section className={s.card}><div className={s.cardHead}><h2>A small sample of the actual work.</h2><span>{check.roleTitle}</span></div>
-        <div className={s.sequence}><div><i aria-hidden="true">◎</i><div><h3>Try relevant workplace situations</h3><p>Twenty minutes on the job&apos;s own work, marked the way the job would mark it.</p></div></div><div><i aria-hidden="true">✧</i><div><h3>See what your decisions demonstrate</h3><p>Feedback is tied to the response you gave, not to what your resume says.</p></div></div><div><i aria-hidden="true">↗</i><div><h3>Return to this job&apos;s report</h3><p>Your requirement list stays attached, including the lines the assessment cannot measure.</p></div></div></div>
-        <div className={s.notice}>A fit check reads a posting against the record you already have. The assessment is the only thing here that turns a claim into evidence.</div></section>
-      <aside className={s.card}><span className={s.chip}>YOUR STARTING POINT</span><div className={s.readinessState}><p className={s.eyebrow}>ROLE READINESS</p><strong>{counts.proof === check.requirements.length ? "Every line is backed" : counts.proof === 0 ? "Nothing backed yet" : `${counts.proof} of ${check.requirements.length} lines backed`}</strong><p>{counts.proof === check.requirements.length ? "Your record already backs everything this posting asks. The assessment shows how well." : "Your resume can describe experience. The assessment shows what you can demonstrate."}</p></div><div className={s.sourceBadge}><span className={`${s.chip} ${s.neutral}`}>{counts.claim} claimed</span><span className={`${s.chip} ${s.neutral}`}>{counts.gap} nothing yet</span></div><p className={s.hint}>{counts.claim + counts.gap > 0 ? `${check.requirements.filter(r => r.state !== "proof").map(r => r.need).join(", ")} ${counts.claim + counts.gap === 1 ? "stays" : "stay"} open until something backs ${counts.claim + counts.gap === 1 ? "it" : "them"}.` : "Nothing is open on this posting."}</p></aside></div></>}
+      {stage === "readiness" && check && <>{exampleBanner}<div className={s.readinessGrid}>
+        {/* Signed out there is nothing of theirs to ask about, so the stage
+            keeps the explainer it always had - what the questions are, and
+            what answering them produces. */}
+        {isExample || skillCheckReason || (!skillCheck && !loadingCheck) ? <section className={s.card}><div className={s.cardHead}><h2>A small sample of the actual work.</h2><span>{check.roleTitle}</span></div>
+          {skillCheckReason && <div className={s.status}>{skillCheckReason}</div>}
+          <div className={s.sequence}><div><i aria-hidden="true">◎</i><div><h3>Try the situations this job asks for</h3><p>Real situations from our published role assessments, picked by the skill rather than the role, for the skills this posting actually names.</p></div></div><div><i aria-hidden="true">✧</i><div><h3>See what your answers demonstrate</h3><p>Each skill is marked on what you wrote, quoting the line that decided it.</p></div></div><div><i aria-hidden="true">↗</i><div><h3>Stay on this job&apos;s report</h3><p>The marks sit beside your requirement list. Nothing sends you somewhere else.</p></div></div></div>
+          <div className={s.notice}>A fit check reads a posting against the record you already have. These situations are the part that turns a claim into something you were seen doing.</div>
+          {isExample && <button type="button" className={s.primary} onClick={() => setGate({ what: "the skill check on your own posting", why: "The situations are chosen from what your posting asks for and marked on what you write, so there has to be a posting of yours and somewhere to keep the answers." })}>Try these situations →</button>}
+        </section>
+        : loadingCheck ? <section className={s.card}><div className={s.cardHead}><h2>Finding the right situations.</h2><span>{check.roleTitle}</span></div><p className={s.hint}>Matching what this posting asks for to the skills we have published work for.</p></section>
+        : review ? <section className={s.card}><div className={s.cardHead}><h2>What your answers showed.</h2><span>{review.basis.answered} of {review.basis.asked} answered</span></div>
+          <div className={s.marks}>{review.marks.map(m => <div className={s.mark} key={m.skill}><div><strong>{m.skill}</strong><b>{m.score}<small>/100</small></b></div><div className={s.markTrack}><i style={{ width: `${m.score}%` }} /></div><p>{m.why}</p></div>)}</div>
+          {review.summary && <p className={s.markSummary}>{review.summary}</p>}
+          {review.strengths.length > 0 && <div className={s.markList}><span className={s.chip}>WHAT HELD UP</span><ul>{review.strengths.map(x => <li key={x}>{x}</li>)}</ul></div>}
+          {review.workOn.length > 0 && <div className={s.markList}><span className={`${s.chip} ${s.amber}`}>WHAT TO WORK ON</span><ul>{review.workOn.map(x => <li key={x}>{x}</li>)}</ul></div>}
+          {review.perQuestion.length > 0 && <details className={s.details}><summary>Situation by situation <span>+</span></summary>{review.perQuestion.map(p => { const q = questions.find(x => x.id === p.id); return <div key={p.id} className={s.perQuestion}><strong>{q?.title ?? "A situation"}</strong><p>{p.did}</p><p><b>Stronger:</b> {p.better}</p></div>; })}</details>}
+          <p className={s.hint}>A check of {review.basis.answered} written {review.basis.answered === 1 ? "answer" : "answers"}, at {review.confidence} confidence. It is not a qualification, and it does not change the readiness figure - that stays arithmetic over your requirement list.</p>
+        </section>
+        : current ? <section className={s.card}><div className={s.cardHead}><h2>{current.title}</h2><span>{question + 1} of {questions.length}</span></div>
+          <div className={s.progress}><span style={{ width: `${((question + 1) / questions.length) * 100}%` }} /></div>
+          <div className={s.scenarioSkills}><span>{current.skill}</span><span>{current.workplace}</span><span>about {current.minutes} min</span></div>
+          <p className={s.hint}>This job asks for: {current.need}</p>
+          <AssessmentQuestion brief={current.brief} />
+          <label className={s.field}><span>What would you do, and what would you say?</span><textarea rows={8} value={draft} disabled={saving || marking} placeholder="Write it the way you would actually handle it…" onChange={e => setDraft(e.target.value)} /><small>Saved as you move between situations.</small></label>
+          <div className={s.questionActions}><button type="button" className={s.secondary} disabled={question === 0 || saving} onClick={() => void goToQuestion(question - 1)}>← Previous</button>{question < questions.length - 1 ? <button type="button" className={s.primary} disabled={saving} onClick={() => void goToQuestion(question + 1)}>{saving ? "Saving…" : "Save and next →"}</button> : <button type="button" className={s.primary} disabled={saving} onClick={() => void keepAnswer()}>{saving ? "Saving…" : "Save this answer"}</button>}</div>
+        </section> : null}
+
+      <aside className={s.card}><span className={s.chip}>YOUR STARTING POINT</span><div className={s.readinessState}><p className={s.eyebrow}>ROLE READINESS</p><strong>{counts.proof === check.requirements.length ? "Every line is backed" : counts.proof === 0 ? "Nothing backed yet" : `${counts.proof} of ${check.requirements.length} lines backed`}</strong><p>{counts.proof === check.requirements.length ? "Your record already backs everything this posting asks. These situations show how well." : "Your resume can describe experience. These situations show what you can demonstrate."}</p></div>
+        {skillCheck && !isExample && <>
+          <div className={s.checkSkills}><span className={s.eyebrow}>SKILLS THIS POSTING ASKS FOR</span>{skillCheck.skills.map(sk => { const done = questions.filter(q => q.skill === sk.skill && (skillCheck.answers[q.id] ?? "").trim()).length; const total = questions.filter(q => q.skill === sk.skill).length; const marked = review?.marks.find(m => m.skill === sk.skill); return <button type="button" key={sk.skill} onClick={() => { const at = questions.findIndex(q => q.skill === sk.skill); if (at >= 0 && !review) void goToQuestion(at); }}><span><strong>{sk.skill}</strong><small>{sk.need}</small></span><b>{marked ? `${marked.score}/100` : `${done}/${total}`}</b></button>; })}</div>
+          {!review && <div className={s.checkProgress}><strong>{answeredCount} of {questions.length} answered</strong><button type="button" className={s.primary} disabled={answeredCount < 2 || marking || saving} onClick={() => void markAnswers()}>{marking ? "Marking your answers…" : "Mark my answers →"}</button><small>{answeredCount < 2 ? "Answer at least two situations. One answer cannot say anything honest about a skill." : "Marking is final for this posting - the answers stay as they are afterwards."}</small></div>}
+        </>}
+        <div className={s.sourceBadge}><span className={`${s.chip} ${s.neutral}`}>{counts.claim} claimed</span><span className={`${s.chip} ${s.neutral}`}>{counts.gap} nothing yet</span></div><p className={s.hint}>{counts.claim + counts.gap > 0 ? `${check.requirements.filter(r => r.state !== "proof").map(r => r.need).join(", ")} ${counts.claim + counts.gap === 1 ? "stays" : "stay"} open until something backs ${counts.claim + counts.gap === 1 ? "it" : "them"}.` : "Nothing is open on this posting."}</p></aside></div></>}
 
       {stage === "report" && check && <>{exampleBanner}<section className={s.reportTop}><div><span className={s.chip}>READINESS FOR THIS POSTING · FROM YOUR RECORD</span><h2>{check.verdict}</h2><p>{check.roleTitle} · {check.requirements.length} requirements{!signedOut && ` · checked ${shortDate(check.createdAt)}`}</p></div><div className={s.reportMetric}><strong>{check.readiness}<small> / 100</small></strong><span>Readiness for this posting</span></div><div className={s.reportMetric}><strong>{counts.proof}<small> / {check.requirements.length}</small></strong><span>Requirements backed</span></div></section>
         <div className={s.reportTabs} role="tablist" aria-label="Report sections">{([["overview", "Overview"], ["evidence", "Requirements & evidence"], ["actions", "Next steps"]] as Array<["overview" | "evidence" | "actions", string]>).map(([id, name]) => <button type="button" key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}>{name}</button>)}<small>Not a chance of being hired</small></div>
@@ -150,7 +272,7 @@ export function JobFitStudio({ checks: initialChecks, signedOut = false }: { che
         <div className={s.reportFoot}><span>Readiness for this posting, from your own record. It is not a chance of being hired; nobody can tell you that.</span></div></>}
 
       {status && <p className={s.status} role="status" aria-live="polite">{status}</p>}
-      <footer className={s.footer}><div><strong>{stage === "jd" ? "Understand the job before judging your fit." : stage === "skills" ? "Follow the requirements into role readiness." : stage === "readiness" ? "Your job description stays connected." : "Readiness grows through assessed work."}</strong><small>{stage === "jd" ? "No readiness figure without your record behind it." : stage === "skills" ? "Unbacked requirements stay visible throughout." : stage === "readiness" ? "The assessment opens on the role this posting is." : "Run the check again when your record has changed."}</small></div><div>{stageIndex > 0 && <button type="button" className={s.textButton} onClick={() => go(STAGES[stageIndex - 1].id)}>← Back</button>}{stage === "jd" ? <button type="button" className={s.primary} disabled={busy} onClick={() => void run()}>{busy ? "Reading the posting…" : "Check my fit →"}</button> : stage === "skills" ? <button type="button" className={s.primary} onClick={() => go("readiness")}>See my readiness path →</button> : stage === "readiness" ? <><button type="button" className={s.secondary} onClick={() => { setTab("overview"); go("report"); }}>See my report</button><Link href="/practice/readiness" className={s.primary}>Start the role assessment →</Link></> : <Link href="/practice/readiness" className={s.primary}>Check where you stand for this role →</Link>}</div></footer>
+      <footer className={s.footer}><div><strong>{stage === "jd" ? "Understand the job before judging your fit." : stage === "skills" ? "Follow the requirements into role readiness." : stage === "readiness" ? "Answer what you can. Nothing is marked until you ask." : "Readiness grows through assessed work."}</strong><small>{stage === "jd" ? "No readiness figure without your record behind it." : stage === "skills" ? "Unbacked requirements stay visible throughout." : stage === "readiness" ? "These are published situations, picked for the skills this posting names." : "Run the check again when your record has changed."}</small></div><div>{stageIndex > 0 && <button type="button" className={s.textButton} onClick={() => go(STAGES[stageIndex - 1].id)}>← Back</button>}{stage === "jd" ? <button type="button" className={s.primary} disabled={busy} onClick={() => void run()}>{busy ? "Reading the posting…" : "Check my fit →"}</button> : stage === "skills" ? <button type="button" className={s.primary} onClick={() => go("readiness")}>See my readiness path →</button> : stage === "readiness" ? <><button type="button" className={s.secondary} onClick={() => { setTab("overview"); go("report"); }}>See my report</button>{review ? <button type="button" className={s.primary} onClick={() => { setTab("overview"); go("report"); }}>Back to the report →</button> : <Link href="/practice/readiness" className={s.secondary}>Or take the full role assessment</Link>}</> : <Link href="/practice/readiness" className={s.primary}>Check where you stand for this role →</Link>}</div></footer>
     </main></div>
   </div>;
 }

@@ -413,8 +413,8 @@
     /* The ambient aurora behind every screen (components/ambience.tsx).
        Present enough over the light ground that a page never reads as a
        flat white sheet, quiet enough that cards keep their contrast … */
-    --ambience-violet: rgb(13 148 136 / 0.16);
-    --ambience-teal: rgb(52 211 153 / 0.14);
+    --ambience-violet: rgb(13 148 136 / 0.055);
+    --ambience-teal: rgb(52 211 153 / 0.05);
   }
 
   :root[data-theme="dark"],

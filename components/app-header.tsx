@@ -16,15 +16,147 @@ import { AuthModal } from "@/components/auth-modal";
 import { applyTheme } from "@/lib/theme";
 import type { AuthMode } from "@/components/auth-form";
 
-// The five persistent destinations from the Blueprint. Every route in the app
-// belongs to exactly one destination (`match`), so the bar always shows where
-// you are — modules open inside destinations, never as separate islands.
-const DESTINATIONS = [
-  { label: "Home", href: "/", match: ["/", "/start", "/resume", "/journey"] },
+// The persistent destinations. Every route in the app belongs to exactly one
+// of them (`match`), so the bar always shows where you are — modules open
+// inside destinations, never as separate islands.
+//
+// Two of the four areas Home offers had no way in from the bar: the resume,
+// the LinkedIn profile and the job-fit check all counted as "Home", and the
+// interview tools counted as "Practice" while the Practice hub never linked
+// to them. Both were reachable only by going Home first and knowing which
+// card to press.
+//
+// They are named here as the app names them. "Apply" and "Interview" on
+// their own promised something else - somewhere to apply for jobs, and an
+// interview about to start - so Practice carries the two kinds of readiness
+// in a menu, and the application tools keep the name their own page uses.
+type Destination = {
+  label: string;
+  href: string;
+  match: string[];
+  /** When present the label opens a menu rather than navigating. */
+  items?: Array<{ label: string; href: string }>;
+};
+
+const DESTINATIONS: Destination[] = [
+  { label: "Home", href: "/", match: ["/", "/start", "/journey"] },
   { label: "Discover", href: "/discover", match: ["/discover"] },
-  { label: "Practice", href: "/practice", match: ["/practice", "/interview"] },
+  {
+    label: "Practice",
+    href: "/practice",
+    match: ["/practice", "/interview"],
+    items: [
+      { label: "Role readiness", href: "/practice" },
+      { label: "Interview readiness", href: "/interview" },
+    ],
+  },
+  // One word, because the bar is a bar.
+  {
+    label: "Identity",
+    href: "/resume",
+    match: ["/resume", "/profile/professional", "/job-fit"],
+  },
   { label: "Opportunities", href: "/opportunities", match: ["/opportunities"] },
 ];
+
+/**
+ * A destination that holds more than one thing, opened as a menu.
+ *
+ * Positioned fixed rather than absolute: the nav strip scrolls sideways on a
+ * phone, and a scroll container clips in both directions - an absolutely
+ * placed menu inside it would be cut off at the first item. Measured from
+ * the button and clamped to the viewport, it sits over everything instead.
+ */
+function NavMenu({
+  label,
+  items,
+  active,
+  className,
+}: {
+  label: string;
+  items: NonNullable<Destination["items"]>;
+  active: boolean;
+  className: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [at, setAt] = useState<{ left: number; top: number } | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const rect = buttonRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const width = 212;
+      setAt({
+        left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)),
+        top: rect.bottom + 8,
+      });
+    };
+    place();
+    function onPointerDown(e: MouseEvent) {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      buttonRef.current?.focus();
+    }
+    // A menu measured from a button that has since moved points at nothing,
+    // so it closes rather than drifting.
+    const close = () => setOpen(false);
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", close);
+    window.addEventListener("scroll", close, true);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("resize", close);
+      window.removeEventListener("scroll", close, true);
+    };
+  }, [open]);
+
+  return (
+    <div ref={wrapRef} className="contents">
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-current={active ? "page" : undefined}
+        onClick={() => setOpen((v) => !v)}
+        className={`${className} gap-1.5`}
+      >
+        {label}
+        <span aria-hidden className="text-[0.6em] leading-none opacity-70">
+          {"\u25be"}
+        </span>
+      </button>
+      {open && at && (
+        <div
+          role="menu"
+          aria-label={label}
+          style={{ left: at.left, top: at.top, width: 212 }}
+          className="fixed z-30 overflow-hidden rounded-xl border border-slate-200 bg-surface shadow-lg"
+        >
+          {items.map((item) => (
+            <Link
+              key={item.href}
+              role="menuitem"
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className="flex min-h-11 items-center border-b border-slate-100 px-3.5 text-sm font-semibold text-brand-ink last:border-b-0 hover:bg-teal-50"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function isActive(pathname: string, match: string[]): boolean {
   return match.some((m) =>
@@ -522,22 +654,34 @@ export function AppHeader() {
           {/* Home is for everybody now. "/" used to render the pitch when
               signed out, so a Home link led back to the page you were already
               on; it is the router for everyone today, signed in or not. */}
-          {DESTINATIONS.map(({ label, href, match }) => {
+          {DESTINATIONS.map(({ label, href, match, items }) => {
             const active = isActive(pathname, match);
+            const look = `inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-2.5 text-sm transition-colors sm:min-h-0 sm:py-1.5 sm:px-3 ${
+              active
+                ? night
+                  ? "font-semibold text-white"
+                  : "font-semibold text-brand-violet-deep"
+                : night
+                  ? "text-white/55 hover:text-white/90"
+                  : "text-slate-600 hover:text-slate-900"
+            }`;
+            if (items) {
+              return (
+                <NavMenu
+                  key={href}
+                  label={label}
+                  items={items}
+                  active={active}
+                  className={look}
+                />
+              );
+            }
             return (
               <Link
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-2.5 text-sm transition-colors sm:min-h-0 sm:py-1.5 sm:px-3 ${
-                  active
-                    ? night
-                      ? "font-semibold text-white"
-                      : "font-semibold text-brand-violet-deep"
-                    : night
-                      ? "text-white/55 hover:text-white/90"
-                      : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={look}
               >
                 {label}
               </Link>

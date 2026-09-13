@@ -1,6 +1,10 @@
 import { assessmentQuestionCards } from "@/lib/assessment-presentation";
 import { RichText } from "@/components/rich-text";
 import { assessmentTerms } from "@/lib/assessment-glossary";
+// The styles come with the component. It renders a scene brief wherever a
+// brief needs rendering - the sitting, and the job-fit skill check - and a
+// caller should not have to know which stylesheet to import.
+import "./assessment-workspace.css";
 
 export function AssessmentQuestion({ brief, responseText = "" }: { brief: string; responseText?: string }) {
   const { question, cards } = assessmentQuestionCards(brief);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { FeatureLandingBody } from "@/components/feature-landing";
 import { DISCOVER } from "@/lib/features";
 import { DiscoveryFlow } from "./discovery-flow";
@@ -26,7 +27,8 @@ export function DiscoverEntry({
   targetRole: string | null;
   initialRole: string | null;
 }) {
-  // Open on the approved Discovery workspace; the overview stays reachable via Back.
+  const router = useRouter();
+  // Open on the approved Discovery workspace.
   const [started, setStarted] = useState(true);
 
   if (started) {
@@ -36,11 +38,10 @@ export function DiscoverEntry({
         signedOut={signedOut}
         initialRole={initialRole}
         onLeave={() => {
-          // Back out of the roles is back to the walkthrough, not out of
-          // Discovery altogether - the panel is where this started.
-          window.history.replaceState(null, "", "/discover");
-          setStarted(false);
-          window.scrollTo({ top: 0 });
+          // Out of Discovery altogether. Back used to mean the walkthrough
+          // panel, which read as "Back to Discover" while standing in
+          // Discover - a door leading to the room you are already in.
+          router.push("/");
         }}
       />
     );

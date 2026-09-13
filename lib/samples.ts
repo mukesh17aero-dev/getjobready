@@ -1,5 +1,5 @@
 import type { InterviewHome } from "@/lib/interview-api";
-import type { AtsCheck, ResumeData, ResumeReview } from "@/lib/resume-api";
+import type { AtsCheck, ResumeChecklist, ResumeData, ResumeReview } from "@/lib/resume-api";
 import type {
   AssessmentReview,
   JobFitCheck,
@@ -229,6 +229,26 @@ export const SAMPLE_RESUME: ResumeData = {
 // produces. A one-line verdict is not something anybody can act on or check -
 // the point of showing this before an account is that somebody can decide
 // whether the feedback would be worth having.
+
+/** The screener-and-recruiter read of the example resume, as the backend counts it. */
+export const SAMPLE_CHECKLIST: ResumeChecklist = {
+  passed: 9,
+  counted: 11,
+  items: [
+    { id: "contact", label: "Contact line", status: "pass", detail: "Email and phone are both on the page, in the body where a parser reads them." },
+    { id: "keywords", label: "The role's own words", status: "fix", detail: "Only 5 of 8 words this role is screened on appear. Still missing: CRM, written customer communication, SLA.", fix: "Where my record truthfully supports them, use the role's exact words: CRM, written customer communication, SLA. Do not add any I have not done." },
+    { id: "dates", label: "Dates on every entry", status: "pass", detail: "Every experience entry carries a period, so nothing gets dropped from the ordering." },
+    { id: "numbers", label: "Measured lines", status: "pass", detail: "5 of 7 bullets carry a figure, which is what makes a line believable." },
+    { id: "verbs", label: "Bullets open with what you did", status: "pass", detail: "All 7 bullets start with an action - Handled, Built, Resolved - which is what a scanning eye catches first." },
+    { id: "summary", label: "Opening paragraph", status: "pass", detail: "52 words - long enough to say who you are and why this role, short enough to be read." },
+    { id: "depth", label: "Two to four bullets per entry", status: "fix", detail: "One entry carries only one line - starting with Placement cell volunteer. One line leaves the work vague.", ask: "What else did you do at the placement cell? One more line is enough." },
+    { id: "voice", label: "No 'I' or 'my'", status: "pass", detail: "Nothing on the page is written in the first person - the resume convention recruiters expect." },
+    { id: "filler", label: "No filler words", status: "pass", detail: "None of the words a screener has learned to skim past - results-driven, passionate, dynamic - are on the page." },
+    { id: "length", label: "Bullets fit two lines", status: "pass", detail: "No bullet runs past two lines, so each one reads as one achievement." },
+    { id: "skills", label: "Skills a screener can match", status: "pass", detail: "8 skills, grouped, which is the section screening software weighs most." },
+    { id: "pages", label: "Fits two pages", status: "pass", detail: "About 410 words - inside what two printed pages hold." },
+  ],
+};
 
 export const SAMPLE_ATS: AtsCheck = {
   readable: true,
@@ -582,8 +602,25 @@ export const SAMPLE_PROFILE: ProfileState = {
     ],
     openTo: "Open to Customer Success and Operations roles in Bengaluru",
   },
+  checklist: {
+    passed: 9,
+    counted: 10,
+    items: [
+      { id: "headline", label: "Headline a search can find", status: "pass", detail: "77 of 220 characters, and it carries the title a recruiter would search for." },
+      { id: "opening", label: "The two lines before 'see more'", status: "pass", detail: "The opening carries the role or a real specific, so the click to 'see more' is earned." },
+      { id: "skills", label: "Skills a search can filter on", status: "fix", detail: "4 skills. LinkedIn allows fifty and recruiters filter on them - list every one your record can back, then pin the three that matter most for the role.", fix: "Add any more skills my record genuinely shows, in the words a job advert would use. Nothing I have not done.", link: { href: "/profile", label: "Add skills you can back up" } },
+      { id: "bullets", label: "Experience says what you did", status: "pass", detail: "All 5 bullets open with an action, which is what a scanning reader catches." },
+      { id: "openTo", label: "Open-to line names a role and a place", status: "pass", detail: "It names the role and where, so LinkedIn's Open to Work feature can match you." },
+      { id: "placeholders", label: "Nothing left to fill in", status: "pass", detail: "No [X] placeholders remain, so every line can be copied across as it is." },
+      { id: "generic", label: "No skills everybody lists", status: "pass", detail: "No 'Communication', 'Teamwork' or 'MS Office' - the ones every profile lists and nobody can check." },
+      { id: "adjectives", label: "No adjectives about yourself", status: "pass", detail: "Nothing calls you passionate, hardworking or results-driven. The reader decides what you are from what you did." },
+      { id: "firstPerson", label: "About in the first person", status: "pass", detail: "Written as 'I', which is how a LinkedIn About is read - it is you speaking, not a resume." },
+      { id: "aboutLength", label: "About length", status: "pass", detail: "402 characters - readable in one scroll, well inside LinkedIn's limit." },
+    ],
+  },
   suggested: {
     audience: "student",
+    voice: "formal",
     headline:
       "Customer Success Associate · Escalations, CRM, 50+ queries a day · Bengaluru",
     headlineOptions: [

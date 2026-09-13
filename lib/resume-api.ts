@@ -50,7 +50,8 @@ export type ExportTemplate = "classic" | "compact" | "sidebar";
 export const exportTemplate = (template: ResumeTemplate): ExportTemplate =>
   template === "compact" || template === "minimal" ? "compact" : template === "sidebar" ? "sidebar" : "classic";
 
-export type GapQuestion = { field: string; question: string };
+/** One thing that would make the draft stronger, and where the answer goes. */
+export type GapQuestion = { field: string; question: string; about: string };
 
 export type GapCheckResult = {
   targetRole: string;
@@ -110,12 +111,31 @@ export type AtsCheck = {
   found: string[];
 };
 
+/**
+ * What a screener and a recruiter will see, counted from the document by
+ * the backend. Items a rewrite can close carry a Scribe instruction.
+ */
+export type ChecklistItem = {
+  id: string;
+  label: string;
+  status: "pass" | "fix" | "info";
+  detail: string;
+  /** An instruction Scribe can follow on its own. */
+  fix?: string;
+  /** A question only the person can answer - their fact, their claim. */
+  ask?: string;
+  /** When the answer belongs in their record rather than in the document. */
+  link?: { href: string; label: string };
+};
+export type ResumeChecklist = { items: ChecklistItem[]; passed: number; counted: number };
+
 export type GenerateResult = {
   /** The parse-back of the real Word file, run on every build. */
   ats?: AtsCheck;
   resume: ResumeData;
   targetRole: string;
   keywords: string[];
+  checklist?: ResumeChecklist;
 };
 
 // Same shape lib/api.ts declares - re-declared here so this slice stands
@@ -131,6 +151,8 @@ export type ResumeCareerProfile = {
 };
 
 type TargetBody = {
+  /** The draft already built, so the questions land on its actual lines. */
+  resume?: ResumeData;
   targetRole?: string;
   jobDescription?: string;
   /** Which look to record with the build; the backend defaults to classic. */
@@ -319,6 +341,26 @@ export type ResumeReview = {
   fromRules: boolean;
 };
 
+/**
+ * The screener-and-recruiter read of a resume, counted from its own words.
+ * No model call, so the draft screen can ask for it whenever it has a resume
+ * and no checklist - after a reload, or on a version opened from the shelf.
+ */
+export const resumeChecklistFor = (
+  token: string,
+  body: {
+    resume: ResumeData;
+    targetRole?: string;
+    jobDescription?: string;
+    general?: boolean;
+  },
+) =>
+  call<{ checklist: ResumeChecklist; targetRole: string; keywords: string[] }>(
+    token,
+    "/v1/resume/checklist",
+    { method: "POST", body },
+  );
+
 /** An honest read of the built resume against the bar for its role. */
 export const reviewResume = (
   token: string,
@@ -329,7 +371,7 @@ export const reviewResume = (
     general?: boolean;
   },
 ) =>
-  call<{ review: ResumeReview; targetRole: string; keywords: string[] }>(
+  call<{ review: ResumeReview; targetRole: string; keywords: string[]; checklist?: ResumeChecklist }>(
     token,
     "/v1/resume/review",
     { method: "POST", body },
@@ -346,6 +388,8 @@ export const refineResume = (
     resume: ResumeData;
     comment: string;
     targetRole?: string;
+    jobDescription?: string;
+    general?: boolean;
     /** The conversation so far, oldest first. */
     history?: Array<{ ask: string; reply: string }>;
   },
@@ -362,4 +406,5 @@ export const refineResume = (
     declined: string | null;
     /** The rewritten file, read back the way a screening system reads it. */
     ats?: AtsCheck;
+    checklist?: ResumeChecklist;
   }>(token, "/v1/resume/refine", { method: "POST", body });

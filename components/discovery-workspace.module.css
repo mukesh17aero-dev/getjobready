@@ -24,3 +24,66 @@
 @container(max-width:900px){.twoCol{grid-template-columns:minmax(0,1.5fr) minmax(240px,1fr);gap:14px}.heading h1{font-size:29px}.cards{gap:12px}.cardBody{padding:15px}.cardArt{padding:12px}.cardArt svg{width:75px}.cardArt strong{font-size:12px}.cardBody h2{font-size:17px}}
 @container(max-width:640px){.twoCol{grid-template-columns:1fr}.panel{padding:18px}.panel .sectionTabs{gap:13px}.panel .sectionTabs button{font-size:13px}.decision .feelings{gap:6px}.heading{margin-bottom:19px;align-items:flex-start;gap:12px}.heading h1{font-size:27px;letter-spacing:-.8px}.heading>div{min-width:0}.heading p:not(.eyebrow){font-size:12px;margin-top:9px}.heading>.textButton{font-size:10px;max-width:90px;line-height:1.5;flex-shrink:0}.recommendation{padding:18px;align-items:stretch;flex-direction:column;gap:14px}.recommendation h2{font-size:20px}.recommendation>div:last-child{justify-items:stretch}.recommendation .primary{font-size:11px}.recommendation .textButton{justify-content:center}.guide{padding:16px;flex-direction:column;align-items:stretch;gap:13px;margin-bottom:18px}.guide>div:first-child{gap:12px}.compass{width:44px;height:44px;font-size:24px}.guide h2{font-size:17px}.guide p{font-size:11px}.guideAction{text-align:left;display:flex;align-items:center;gap:12px}.guideAction small{margin:0;max-width:110px;font-size:9px}.guideAction .primary{font-size:11px;flex-shrink:0}.sectionTabs{gap:19px;margin-bottom:14px}.sectionTabs button{font-size:12px}.filterbar{display:grid;grid-template-columns:1fr auto;gap:10px}.search{grid-column:1/-1;max-width:none}.filterbar select{font-size:11px;max-width:235px;width:100%}.filterbar>small{font-size:10px}.cards{grid-template-columns:1fr;gap:12px}.cardArt{display:none}.cardBody{padding:16px 18px 9px}.cardBody h2{min-height:0;font-size:19px}.cardBody>p:not(.eyebrow){min-height:0;margin:8px 0 10px;font-size:12px}.cardBody .eyebrow{margin-bottom:6px}.cardMeta{padding-top:10px}.cardActions{margin-top:12px}.cardBottom{margin-top:0}.pager{font-size:10px;gap:8px}.pager button{padding:0 9px;font-size:10px}.pager>div{gap:6px}.empty{padding:27px 16px}}
 @media(prefers-reduced-motion:reduce){.roleCard{transition:none}}
+/* One column of things you can do with this direction, in descending
+   weight: the readiness check, the role page, why it was recommended, and
+   last the one that undoes the choice. Four items that all looked like the
+   same teal link told nobody which was which - including that the last one
+   throws the choice away.
+
+   Named rather than :last-child, because the last child stops being the
+   buttons the moment the why panel opens underneath them. */
+.directionActions{flex-shrink:0;display:grid;justify-items:stretch;gap:6px;min-width:206px}
+.directionActions .primary{width:100%;margin-top:0}
+.directionActions .secondary{width:100%}
+.whyToggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:34px;padding:0;border:0;background:none;font-family:inherit;font-size:12px;font-weight:600;line-height:1.3;color:var(--accent)}
+.whyToggle>span{display:block;font-size:14px;line-height:1;transition:transform .15s ease}
+.whyToggle[aria-expanded="true"]>span{transform:rotate(180deg)}
+.unselect{min-height:30px;padding:0;border:0;background:none;font-family:inherit;font-size:11px;line-height:1.3;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.unselect:hover{color:var(--ink)}
+/* The panel is prose, not a stack of centred controls. */
+.recommendation>.whyPanel{display:block;justify-items:initial;flex-shrink:1}
+/* Tighter through the whole card: it was set for three lines of copy and a
+   single button, and now carries four controls. */
+.recommendation{gap:20px}
+.recommendation h2{margin:8px 0 6px}
+.recommendation p{line-height:1.55}
+.recommendation small{margin-top:6px;line-height:1.5}
+@media (prefers-reduced-motion:reduce){.whyToggle>span,.whySuits>summary>span{transition:none}}
+/* What the recommendation was built from, in the engine's own words.
+   A list of "you toured this twice" says what it is more honestly than a
+   sentence insisting it is not an assessment, and is worth reading. */
+.whySuits{margin-top:11px}
+.whySuits>summary{display:inline-flex;align-items:center;gap:7px;cursor:pointer;list-style:none;min-height:32px;font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--accent)}
+.whySuits>summary::-webkit-details-marker{display:none}
+.whySuits>summary>span{font-size:13px;letter-spacing:0;transition:transform .15s ease}
+.whySuits[open]>summary>span{transform:rotate(180deg)}
+.whySuits>p{font-size:12px;line-height:1.55;color:var(--muted);margin:4px 0 8px}
+.whySuits ul{display:grid;gap:4px;margin:0;padding:0;list-style:none}
+.whySuits li{position:relative;padding-left:14px;font-size:12px;line-height:1.55;color:var(--muted)}
+.whySuits li::before{content:"";position:absolute;left:0;top:7px;width:4px;height:4px;border-radius:50%;background:var(--accent)}
+.whySuits>small{display:block;margin-top:7px}
+/* Both columns start at the top edge.
+   The card was centring its two halves against each other, which was fine
+   when the left was three lines and the right was one button. With reasons
+   on the left and four controls on the right it left a band of empty space
+   above and below whichever half was shorter.
+
+   The action column is reached by its own name here rather than by
+   :last-child, which outranked it and went on centring the controls inside
+   a column that is meant to stretch. */
+.recommendation{align-items:flex-start}
+.recommendation>div:first-child{flex:1 1 auto;min-width:0}
+.recommendation>.directionActions{flex:0 0 auto;justify-items:stretch;gap:6px;min-width:206px}
+/* Below the width where two columns fit, one column.
+   At around 760px the action column no longer fitted beside the text, so it
+   wrapped onto its own line and sat there at 206px against a full-width
+   card - aligned to neither edge. Stacking before that happens is the
+   honest version of the same layout.
+
+   The stretch is also a repair: `align-items:flex-start` above is what the
+   two columns need, and it was overriding the stacked layout's stretch, so
+   on a phone the buttons were 206px inside a 320px card. */
+@container(max-width:820px){
+  .recommendation{flex-direction:column;align-items:stretch;gap:16px}
+  .recommendation>.directionActions{min-width:0}
+}

@@ -50,6 +50,11 @@ export function ApplyWorkspace({ name, photo, role, work, resume, professional, 
   const unavailable = signedIn && !available[selected];
   const savedHref = selected === "resume" && resume ? `/resume/build?record=${encodeURIComponent(resume.at)}` : tool.href;
   const action = currentWork?.action ?? { href: savedHref, label: saved ? selected === "resume" ? "Open saved resume" : selected === "linkedin" ? "Open your LinkedIn profile" : "Open your job-fit check" : selected === "resume" ? "Build your resume" : selected === "linkedin" ? "Build your LinkedIn profile" : "Check a job posting" };
+  // Starting fresh, beside picking up what is saved. When the first action is
+  // already "start one", there is nothing to offer twice.
+  const startFresh = action.href === tool.href || !(saved || currentWork)
+    ? null
+    : { href: tool.href, label: selected === "resume" ? "Build a new resume" : selected === "linkedin" ? "Write a new profile" : "Check another posting" };
   function status(id: ToolId) {
     if (!signedIn) return "Example";
     if (!available[id]) return "Unable to load";
@@ -112,11 +117,10 @@ export function ApplyWorkspace({ name, photo, role, work, resume, professional, 
           <div className={styles.guidance}><span className={styles.guidanceLabel}><Spark size={15} />{currentWork ? "PICK UP WHERE YOU LEFT OFF" : "MAKE YOUR NEXT MOVE"}</span><h2>{tool.outcome}</h2><p className={styles.intro}>{tool.intro}</p>
             <ToolLaunch activation={activation}>
               <Link href={action.href} className={styles.primary}>{action.label}<ArrowRight size={17} /></Link>
+              {startFresh && <Link href={startFresh.href} className={styles.alsoStart}>{startFresh.label}<ArrowRight size={15} /></Link>}
             </ToolLaunch>
             <div className={styles.why}><span>WHY THIS MATTERS</span><p>{tool.why}</p></div>
             <div className={styles.reason}><span>{currentWork ? "Why pick this up" : saved ? "Your work is saved" : "What you’ll leave with"}</span><p>{currentWork ? pickupReason(currentWork.reason) : saved ? "Open your saved work to review it and decide what you want to do next." : selected === "resume" ? "A resume you can review, refine and download." : selected === "linkedin" ? "A headline, About section and experience you can copy to LinkedIn." : "A clear view of what you can show for this posting and what to work on next."}</p></div>
-            {saved && selected === "resume" && <Link className={styles.secondary} href="/resume/build">Create another resume <ArrowRight size={13} /></Link>}
-            {saved && selected === "fit" && <Link className={styles.secondary} href="/job-fit">Check another posting <ArrowRight size={13} /></Link>}
             <ul className={styles.benefits}>{tool.points.map(point => <li key={point}><Check size={14} />{point}</li>)}</ul>
             <details className={styles.how} key={selected}><summary>How this tool works <span>+</span></summary><ol>{tool.steps.map(step => <li key={step}>{step}</li>)}</ol></details>
           </div>

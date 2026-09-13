@@ -6,7 +6,7 @@ import { supabaseBrowser } from "@/lib/supabase-browser";
 import { SignUpPrompt, type GatedAction } from "@/components/signup-gate";
 import { track as trackEvent } from "@/lib/footprints";
 import { whenLabel } from "@/lib/when";
-import { SAMPLE_ATS, SAMPLE_RESUME as EXAMPLE_RESUME, SAMPLE_REVIEW } from "@/lib/samples";
+import { SAMPLE_ATS, SAMPLE_CHECKLIST, SAMPLE_RESUME as EXAMPLE_RESUME, SAMPLE_REVIEW } from "@/lib/samples";
 import {
   A4Frame,
   EssentialsModal,
@@ -33,11 +33,14 @@ import {
   readResumeUpload,
   refineResume,
   resumeCompleteness,
+  resumeChecklistFor,
   resumeGapCheck,
   reviewResume,
   saveResumeProfile,
   type AtsCheck,
-  type GapCheckResult,
+  type ChecklistItem,
+  type GapQuestion,
+  type ResumeChecklist,
   type ResumeCareerProfile,
   type ResumeData,
   type ResumeReview,
@@ -50,8 +53,10 @@ import { PLANS, PLAN_KEY, isPlan, type PlanId } from "@/lib/plans";
 import s from "./resume-studio.module.css";
 
 // Resume Studio, as approved in public/previews/ascend-resume-complete.html:
-// six stages - start, choose a plan, details, your draft, feedback, export -
-// on top of the same API the builder has always used. Nothing here writes,
+// five stages - start, choose a plan, your draft, feedback, export - on top
+// of the same API the builder has always used. There is no questions stage:
+// the draft comes first, and what would make it stronger is asked beside it,
+// three things at most, each optional. Nothing here writes,
 // reads, revises, reviews or exports a resume except through that API.
 //
 // Two things the founder asked for on top of the preview:
@@ -66,11 +71,10 @@ import s from "./resume-studio.module.css";
 //   else's, so the part that is hard to picture - the read-back - is there to
 //   look at before they decide.
 
-type Stage = "start" | "plan" | "details" | "draft" | "review" | "export";
+type Stage = "start" | "plan" | "draft" | "review" | "export";
 const STAGES: Array<{ id: Stage; name: string }> = [
   { id: "start", name: "Start" },
   { id: "plan", name: "Choose a plan" },
-  { id: "details", name: "Details" },
   { id: "draft", name: "Your draft" },
   { id: "review", name: "Feedback" },
   { id: "export", name: "Export" },
@@ -79,15 +83,15 @@ const STAGES: Array<{ id: Stage; name: string }> = [
 type Purpose = "role" | "general" | "improve";
 type Track = "student" | "early_career";
 const EXAMPLE_ROLE = "Customer Success Associate";
-const EXAMPLE_QUESTIONS = [
-  ["Your experience", "What did you take responsibility for in your latest role or project?", "Focus on what you did yourself."],
-  ["Customer situations", "Describe a customer issue you resolved and how it ended.", "One real example helps more than a general claim."],
-  ["Your impact", "What did you track or measure in your work?", "Use numbers only when you can support them."],
+// What the example draft would be asked beside it - the same shape a live
+// build gets, so a visitor sees the ask is small and optional.
+const EXAMPLE_PROMPTS: GapQuestion[] = [
+  { field: "placement_outcome", question: "What came of the placement drive - how many offers, or did it run without a hitch?", about: "the placement cell entry" },
+  { field: "pos_system", question: "Which billing or point-of-sale system did you use at the store?", about: "the store job" },
 ];
 const HEADINGS: Record<Stage, [string, string]> = {
   start: ["Start", "Start with what you have. Shape it for where you want to go."],
   plan: ["Choose a plan", "One payment. 30 days to build and refine. No automatic renewal."],
-  details: ["Details", "Your saved record is enough to start. Add only what helps."],
   draft: ["Your draft", "Read the draft, check the facts and refine the words."],
   review: ["Feedback", "See the key signals, improve one thing and choose a useful next step."],
   export: ["Export", "Choose a format for the way you plan to use it."],
@@ -139,18 +143,30 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   const [busy, setBusy] = useState<null | "checking" | "building" | "reviewing" | "revising" | "exporting" | "saving">(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState("");
-  const [gap, setGap] = useState<GapCheckResult | null>(null);
-  const [question, setQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [extraSkills, setExtraSkills] = useState("");
-  const [acknowledged, setAcknowledged] = useState<Set<string>>(new Set());
+  // What would make the draft stronger: three questions at most, asked
+  // beside the draft after it exists, each optional. Answers go in through
+  // Scribe, so the grounding guard and the claims record apply to them.
+  const [prompts, setPrompts] = useState<GapQuestion[] | null>(null);
+  const [promptAnswers, setPromptAnswers] = useState<Record<string, string>>({});
+  const [askingPrompts, setAskingPrompts] = useState(false);
+  // A check being worked on, and what the person typed for the ones only they
+  // can answer. A check a rewrite cannot close is handed to them, never left
+  // as a sentence with nothing to press.
+  const [fixing, setFixing] = useState<string | null>(null);
+  const [checkAnswers, setCheckAnswers] = useState<Record<string, string>>({});
   const [essentialsOpen, setEssentialsOpen] = useState(false);
   const [result, setResult] = useState<{ resume: ResumeData; targetRole: string } | null>(opened?.resume ? { resume: opened.resume, targetRole: opened.role } : null);
   const [ats, setAts] = useState<AtsCheck | null>(null);
+  // What a screener and a recruiter will see, counted by the backend from
+  // the draft itself. Refreshed with every build, rewrite and review.
+  const [checklist, setChecklist] = useState<ResumeChecklist | null>(null);
   const [review, setReview] = useState<ResumeReview | null>(opened?.review ?? null);
   const [revisions, setRevisions] = useState<Revision[]>([]);
   const [request, setRequest] = useState("");
-  const [editor, setEditor] = useState<"scribe" | "summary">("scribe");
+  // One panel at a time in the column beside the draft: Scribe, what would
+  // make it stronger, the checks, or the summary by hand. Stacked, they ran
+  // past the bottom of the page and the checks were never seen.
+  const [editor, setEditor] = useState<"scribe" | "strengthen" | "checks" | "summary">("scribe");
   const [summaryDraft, setSummaryDraft] = useState("");
   const [pane, setPane] = useState<"document" | "edit">("document");
   const [format, setFormat] = useState<"docx" | "pdf">("docx");
@@ -179,11 +195,17 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   const general = !targeted;
   const chosenRole = () => (targeted ? roleInput.trim() : "");
   const readyToBuild = Boolean(trackChoice) && (purpose === "general" || (purpose === "role" && Boolean(roleInput.trim())) || (purpose === "improve" && upload !== null));
-  const needsEssentials = !text("fullName") || profileSkills.length === 0;
+  // Only the name is insisted on: a resume without one is not a resume.
+  // Everything else is written from the record, and asked for beside the
+  // draft only when it would make a line stronger.
+  const needsEssentials = !text("fullName");
   const isExample = !result;
   const shown = result ?? { resume: EXAMPLE_RESUME, targetRole: EXAMPLE_ROLE };
   const shownReview = result ? review : SAMPLE_REVIEW;
   const shownAts = result ? ats : SAMPLE_ATS;
+  const shownChecklist = result ? checklist : SAMPLE_CHECKLIST;
+  const shownPrompts = result ? prompts : EXAMPLE_PROMPTS;
+  const checklistFixes = (shownChecklist?.items ?? []).filter(item => item.status === "fix" && item.fix).map(item => item.fix!);
   const completeness = result ? resumeCompleteness(result.resume) : { ready: true, missing: [] };
   const previewResume = useMemo<ResumeData>(() => {
     const sample = trackChoice === "student" ? STUDENT_SAMPLE : SAMPLE_RESUME;
@@ -277,10 +299,7 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
       if (saved) setProfile(saved);
     }
     const body = buildBody();
-    const check = await resumeGapCheck(t, body);
-    if (!check) { setBusy(null); setError("Something went wrong just then. Give it another try."); return; }
-    trackEvent({ family: "decision", event: "resume_target_confirmed", module: "resume", target: body.targetRole || "no particular role", meta: { locked: targeted && roleInput.trim() === lockedRole?.title, gaps: check.missing.length, general, fromUpload: Boolean(upload) } });
-    if (check.missing.length > 0) { setBusy(null); setGap(check); setQuestion(0); setAnswers({}); setExtraSkills(""); setAcknowledged(new Set()); go("details"); return; }
+    trackEvent({ family: "decision", event: "resume_target_confirmed", module: "resume", target: body.targetRole || "no particular role", meta: { locked: targeted && roleInput.trim() === lockedRole?.title, general, fromUpload: Boolean(upload) } });
     await build(t, body);
   }
   async function build(t: string, body: ReturnType<typeof buildBody>) {
@@ -289,34 +308,21 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
     setBusy(null);
     if (!generated) { setError("The draft didn't come back this time. Nothing was lost - try again."); return; }
     setResult({ resume: generated.resume, targetRole: generated.targetRole });
-    setAts(generated.ats ?? null); setReview(null); setRevisions([]); setExported(false); setPane("document");
+    setAts(generated.ats ?? null); setChecklist(generated.checklist ?? null); setReview(null); setRevisions([]); setExported(false); setPane("document");
     trackEvent({ family: "engagement", event: "resume_generated", module: "resume", target: generated.targetRole, meta: { keywordsUsed: generated.resume.keywordsUsed.length } });
+    setPrompts(null); setPromptAnswers({});
     go("draft");
   }
-
-  // ---- Details: the deviation guard, as the gap dialog has always had it ----
-  const known = profileSkills.map(item => item.toLowerCase());
-  const isKnown = (skill: string) => { const lower = skill.toLowerCase(); return known.some(k => k.includes(lower) || lower.includes(k)); };
-  const typedSkills = splitList(extraSkills);
-  const answerText = Object.values(answers).join(" ").toLowerCase();
-  const mentioned = (gap?.keywords ?? []).filter(kw => answerText.includes(kw.toLowerCase()) && !isKnown(kw));
-  const flagged = [...typedSkills.filter(item => !isKnown(item)), ...mentioned.filter(kw => !typedSkills.some(item => item.toLowerCase() === kw.toLowerCase()))];
-  const unconfirmed = flagged.filter(item => !acknowledged.has(item.toLowerCase()));
-  async function submitGaps() {
-    if (!gap) { const t = await withToken(); if (t) await runBuild(t); return; }
-    if (unconfirmed.length > 0) { setError("Tick or clear the flagged skills first."); return; }
-    setError(null); setBusy("building");
-    const t = await withToken(); if (!t) { setBusy(null); return; }
-    const confirmed = flagged.filter(item => acknowledged.has(item.toLowerCase()));
-    const filled: Record<string, string> = {};
-    for (const [key, value] of Object.entries(answers)) if (value.trim()) filled[key] = value.trim();
-    const previous = prefs["resumeExtras"] && typeof prefs["resumeExtras"] === "object" ? (prefs["resumeExtras"] as Record<string, unknown>) : {};
-    const mergedSkills = [...profileSkills, ...confirmed.filter(item => !profileSkills.some(k => k.toLowerCase() === item.toLowerCase()))];
-    const saved = await saveResumeProfile(t, { education: profile?.education ?? [], experience: profile?.experience ?? [], projects: profile?.projects ?? [], achievements: profile?.achievements ?? [], preferences: { ...prefs, skills: mergedSkills.join(", "), resumeExtras: { ...previous, ...filled } } });
-    if (!saved) { setBusy(null); setError("Your answers didn't save. Give it another try."); return; }
-    setProfile(saved); setGap(null);
-    await build(t, buildBody());
+  // An answer goes in through Scribe: the same grounding guard, the same
+  // record of what they claimed, and the line changes in front of them.
+  async function answerPrompt(item: GapQuestion) {
+    const answer = (promptAnswers[item.field] ?? "").trim();
+    if (!answer) return;
+    setPrompts(list => (list ?? []).filter(p => p.field !== item.field));
+    setEditor("scribe");
+    await askScribe(`Answering your question "${item.question}"${item.about ? ` about ${item.about}` : ""}: ${answer}. Put it into the resume where it belongs, exactly as strong as I said it.`);
   }
+  function skipPrompt(field: string) { setPrompts(list => (list ?? []).filter(p => p.field !== field)); }
 
   // ---- Draft: Scribe, and a summary you can change by hand ----
   async function askScribe(instruction?: string) {
@@ -325,12 +331,13 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
     setBusy("revising"); setError(null);
     const t = await withToken(); if (!t) { setBusy(null); return; }
     const before = result.resume;
-    const revised = await refineResume(t, { resume: before, comment: ask, targetRole: result.targetRole, history: revisions.slice(-6).map(r => ({ ask: r.ask, reply: r.reply })) });
+    const revised = await refineResume(t, { resume: before, comment: ask, targetRole: result.targetRole, ...(general ? { general: true } : {}), ...(targeted && jdInput.trim() ? { jobDescription: jdInput.trim() } : {}), history: revisions.slice(-6).map(r => ({ ask: r.ask, reply: r.reply })) });
     setBusy(null);
     if (!revised) { setError("That revision didn't go through. Your resume is unchanged."); return; }
     const didChange = JSON.stringify(revised.resume) !== JSON.stringify(before);
     setResult({ resume: revised.resume, targetRole: result.targetRole });
     if (revised.ats) setAts(revised.ats);
+    if (revised.checklist) setChecklist(revised.checklist);
     if (revised.added.length > 0) void keepClaims(t, revised.added);
     setRevisions(list => [...list, { ask, reply: revised.reply, changed: revised.changed, didChange, added: revised.added, ...(revised.followUp ? { followUp: revised.followUp } : {}), declined: revised.declined, before }]);
     setRequest(""); setReview(null); setExported(false);
@@ -357,6 +364,45 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
     setRevisions(list => list.filter((_, i) => i !== index)); setReview(null); setStatus("Last change undone.");
   }
 
+  // ---- The draft stage fetches what it is missing ----
+  //
+  // Both of these used to be filled in only by the reply to a build, so a
+  // reload, or a version opened from the shelf, left the two panels empty
+  // until the Feedback stage happened to fill them.
+  useEffect(() => {
+    if (stage !== "draft" || !result || checklist || signedOut) return;
+    let cancelled = false;
+    void (async () => {
+      const t = await token();
+      if (!t || cancelled) return;
+      const read = await resumeChecklistFor(t, { resume: result.resume, targetRole: result.targetRole, ...(general ? { general: true } : {}), ...(targeted && jdInput.trim() ? { jobDescription: jdInput.trim() } : {}) });
+      if (!cancelled && read) setChecklist(read.checklist);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage, result, checklist, signedOut]);
+
+  // Which draft the questions were asked about, so the effect fires once per
+  // resume rather than once per render while the state is still settling.
+  const askedAbout = useRef<ResumeData | null>(null);
+  useEffect(() => {
+    if (stage !== "draft" || !result || prompts !== null || signedOut) return;
+    if (askedAbout.current === result.resume) return;
+    askedAbout.current = result.resume;
+    let cancelled = false;
+    void (async () => {
+      const t = await token();
+      if (!t || cancelled) return;
+      setAskingPrompts(true);
+      const check = await resumeGapCheck(t, { resume: result.resume, targetRole: result.targetRole, ...(general ? { general: true } : {}), ...(targeted && jdInput.trim() ? { jobDescription: jdInput.trim() } : {}) });
+      if (cancelled) return;
+      setAskingPrompts(false);
+      setPrompts(check && !check.ready ? check.missing.slice(0, 3) : []);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage, result, prompts, signedOut]);
+
   // ---- Feedback: read back when the stage opens, never while drafting ----
   useEffect(() => {
     if (stage !== "review" || !result || review || busy === "reviewing" || signedOut) return;
@@ -369,6 +415,7 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
       setBusy(null);
       if (!read) { setError("I could not read your resume back just now. Your draft is safe - this is only the feedback on it."); return; }
       setReview(read.review);
+      if (read.checklist) setChecklist(read.checklist);
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -401,7 +448,7 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   }
   function openVersion(entry: LedgerEntry) {
     if (!entry.resume) return;
-    setResult({ resume: entry.resume, targetRole: entry.role }); setSelectedTemplate(asTemplate(entry.template)); setRevisions([]); setReview(entry.review ?? null); setAts(null); setExported(false);
+    setResult({ resume: entry.resume, targetRole: entry.role }); setSelectedTemplate(asTemplate(entry.template)); setRevisions([]); setReview(entry.review ?? null); setAts(null); setChecklist(null); setExported(false);
     go("draft");
   }
 
@@ -409,15 +456,58 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   function canOpen(id: Stage) {
     if (signedOut) return true;
     if (id === "start" || id === "plan") return true;
-    if (id === "details") return Boolean(gap);
     return Boolean(result);
   }
+  const needsAccountForScribe = () => askForAccount("Scribe, on your own resume", "Scribe rewrites your own draft from your own record. This one is an example, so there is nothing of yours for it to work on yet.");
+  async function fixOne(item: ChecklistItem) {
+    if (isExample) { needsAccountForScribe(); return; }
+    if (!item.fix) return;
+    setFixing(item.id); setEditor("scribe"); setPane("edit");
+    await askScribe(item.fix);
+    setFixing(null);
+  }
+  // Their own fact, handed to the writer as their claim - the same guard and
+  // the same record of what they said as any other instruction.
+  async function answerCheck(item: ChecklistItem) {
+    const answer = (checkAnswers[item.id] ?? "").trim();
+    if (!answer || !item.ask) return;
+    if (isExample) { needsAccountForScribe(); return; }
+    setFixing(item.id); setEditor("scribe"); setPane("edit");
+    await askScribe(`Answering "${item.ask}": ${answer}. Put it into the resume where it belongs, exactly as strong as I said it.`);
+    setFixing(null);
+    setCheckAnswers(a => ({ ...a, [item.id]: "" }));
+  }
+  function fixAll() {
+    if (isExample) { askForAccount("Scribe, on your own resume", "Scribe rewrites your own draft from your own record. This one is an example, so there is nothing of yours for it to work on yet."); return; }
+    if (checklistFixes.length === 0) return;
+    const instruction = checklistFixes.length === 1 ? checklistFixes[0]! : `Make these changes, adding no fact I have not given you: ${checklistFixes.map((fix, i) => `(${i + 1}) ${fix}`).join(" ")}`;
+    setEditor("scribe"); setPane("edit"); go("draft");
+    void askScribe(instruction);
+  }
+  const checkPanel = shownChecklist && <section className={s.checkPanel} aria-label="What a screener and a recruiter will see">
+    <div className={s.checkHead}><div><span className={s.smallLabel}>WHAT A SCREENER AND A RECRUITER SEE</span><h2>{shownChecklist.passed === shownChecklist.counted ? "Every check passes." : `${shownChecklist.passed} of ${shownChecklist.counted} checks pass.`}</h2></div><span className={s.checkRing} data-all={shownChecklist.passed === shownChecklist.counted} role="img" aria-label={`${shownChecklist.passed} of ${shownChecklist.counted} checks pass`}><b>{shownChecklist.passed}</b><small>/{shownChecklist.counted}</small></span></div>
+    <p className={s.quiet}>Counted from the words on the page: what screening software matches on, and what a recruiter catches in a six-second scan. Not a hiring score.</p>
+    {/* What is missing comes first, together. Interleaved with the passes
+        it read as a jumble, and the thing to do next was buried. */}
+    {(() => {
+      const row = (item: ChecklistItem) => <li key={item.id} data-status={item.status}><span aria-hidden="true">{item.status === "pass" ? "✓" : item.status === "fix" ? "!" : "·"}</span><div><strong>{item.label}</strong><p>{item.detail}</p>
+        {item.ask && <div className={s.checkAsk}><label htmlFor={`check-${item.id}`}>{item.ask}</label><div><input id={`check-${item.id}`} value={checkAnswers[item.id] ?? ""} disabled={busy !== null} placeholder="Only what is true" onChange={e => setCheckAnswers(a => ({ ...a, [item.id]: e.target.value }))} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); void answerCheck(item); } }} /><button type="button" disabled={busy !== null || !(checkAnswers[item.id] ?? "").trim()} onClick={() => void answerCheck(item)}>{fixing === item.id ? "Adding…" : "Add"}</button></div></div>}
+        {(item.fix || item.link) && <div className={s.checkRowActions}>{item.fix && <button type="button" disabled={busy !== null} onClick={() => void fixOne(item)}>{fixing === item.id ? "Asking Scribe…" : "Fix with Scribe"} <Arrow /></button>}{item.link && <Link href={item.link.href} className={s.checkLink}>{item.link.label} <Arrow /></Link>}</div>}
+      </div></li>;
+      const open = shownChecklist.items.filter(item => item.status !== "pass");
+      const done = shownChecklist.items.filter(item => item.status === "pass");
+      return <>
+        {open.length > 0 && <><p className={`${s.smallLabel} ${s.checkGroup}`}>WORTH FIXING · {open.length}</p><ul className={s.checkList}>{open.map(row)}</ul></>}
+        {done.length > 0 && <><p className={`${s.smallLabel} ${s.checkGroup}`}>ALREADY PASSING · {done.length}</p><ul className={s.checkList}>{done.map(row)}</ul></>}
+      </>;
+    })()}
+    {checklistFixes.length > 0 && <div className={s.checkActions}><button type="button" className={s.secondary} disabled={busy !== null} onClick={fixAll}>{busy === "revising" ? "Asking Scribe…" : `Fix ${checklistFixes.length === 1 ? "this" : `these ${checklistFixes.length}`} with Scribe`} <Arrow /></button><small>Only the items a rewrite can close. The rest need a fact from you - a number, a phone, a date.</small></div>}
+  </section>;
   const exampleBanner = isExample && <div className={s.exampleBanner}><span><b>This is an example.</b> A finished resume and the feedback it was given, so you can see what you get. Yours is written from your own record.</span><button type="button" onClick={() => go("start")}>Build mine <Arrow /></button></div>;
   const building = busy === "building" || busy === "checking";
   const footer: Record<Stage, [string, string, string]> = {
     start: ["Start with what is already yours.", "You can change the look and add more detail later.", planChosen ? (purpose === "improve" ? "Work on my resume" : "Build my resume") : "Continue"],
     plan: [`${chosenPlan.name} · ₹${chosenPlan.price} total`, "30-day pass · one-time payment · no automatic renewal", signedOut ? `Continue with ${chosenPlan.name}` : `Continue with ${chosenPlan.name}`],
-    details: ["No pressure to answer everything.", "Skip anything that does not apply to you.", "Use these details and build my draft"],
     draft: ["Happy with the words?", "See the feedback before you export.", "Review my resume"],
     review: ["You choose what to improve.", "Feedback helps you decide; it is not a hiring score.", "Continue to export"],
     export: ["Your resume stays part of your journey.", "Every version is kept with its feedback.", exported ? "Back to my resume" : format === "docx" ? "Download Word file" : "Print or save as PDF"],
@@ -425,7 +515,6 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   function primaryAction() {
     if (stage === "start") return continueFromStart();
     if (stage === "plan") return void continueWithPlan();
-    if (stage === "details") return signedOut ? go("start") : void submitGaps();
     if (stage === "draft") return go("review");
     if (stage === "review") return go("export");
     if (exported) return go("draft");
@@ -472,24 +561,30 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
         <p className={s.usageNote}>One AI draft creates a new resume version; one AI improvement is one successful Scribe revision. Manual edits, switching layouts and downloading saved files do not use AI allowances.</p>
         <div className={s.questions}><details><summary>What happens after 30 days?</summary><p>Your AI allowance expires; existing work remains available to view and download.</p></details><details><summary>Can I upgrade?</summary><p>Pay the difference during your current pass. Keep the original expiry and carry existing usage into the higher plan.</p></details><details><summary>Does Pro mean unlimited?</summary><p>It includes the listed career tools with clear allowances, including two 10-minute AI interviews. It does not include unlimited AI or every future feature.</p></details></div></>}
 
-      {stage === "details" && <div className={s.detailsGrid}><aside className={s.questionRail}><span className={s.smallLabel}>✦ OPTIONAL DETAILS</span><h2>You do not need to start again.</h2><p>Your saved experience, education and skills come with you.</p>{gap && <div className={s.questionGroups}>{gap.missing.map((item, index) => <button type="button" key={item.field} aria-pressed={question === index} onClick={() => setQuestion(index)}>{item.question.length > 38 ? `${item.question.slice(0, 38).trimEnd()}…` : item.question}{answers[item.field]?.trim() && <Tick />}</button>)}</div>}<p className={s.quiet}>{signedOut ? "These are example prompts. A live build asks only what your record needs." : `These fill what a ${gap?.targetRole || "resume"} still misses. Skip any that do not apply.`}</p></aside>
-        <section className={s.card}>{signedOut || !gap ? <>{exampleBanner}<div className={s.sectionHeading}><span className={s.eyebrow}>EXAMPLE QUESTIONS</span><span>all optional</span></div>{EXAMPLE_QUESTIONS.map(([group, ask, hint]) => <div key={ask}><h2 className={s.questionTitle}>{ask}</h2><p className={s.quiet}>{group} · {hint}</p></div>)}{!signedOut && !gap && <p className={s.softBox}>Your record already covers what this resume needs. Build it from the Start stage.</p>}</> : <>
-          <div className={s.sectionHeading}><span className={s.eyebrow}>QUESTION {question + 1} OF {gap.missing.length}</span><span>{Object.values(answers).filter(v => v.trim()).length} answered · all optional</span></div><div className={s.progress}><span style={{ width: `${((question + 1) / gap.missing.length) * 100}%` }} /></div>
-          <h2 className={s.questionTitle}>A little detail can make a difference.</h2>
-          <label className={s.field}>{gap.missing[question].question}<textarea rows={5} value={answers[gap.missing[question].field] ?? ""} placeholder="Your own words are enough…" onChange={e => setAnswers(a => ({ ...a, [gap.missing[question].field]: e.target.value }))} /></label>
-          <div className={s.questionActions}><button type="button" disabled={question === 0} onClick={() => setQuestion(q => Math.max(0, q - 1))}>← Previous</button>{question < gap.missing.length - 1 ? <button type="button" onClick={() => setQuestion(q => q + 1)}>Next or skip <Arrow /></button> : <span className={s.quiet}>Last question. Use the button below when you are ready.</span>}</div>
-          <label className={s.field}>Any other skills this resume should show? (optional)<input value={extraSkills} onChange={e => setExtraSkills(e.target.value)} placeholder="Google Sheets, Hindi typing" /></label><p className={s.quiet}>Comma separated. Only claim what you could back up in an interview.</p>
-          {flagged.length > 0 && <div className={s.flagged}><strong>Worth a second look</strong>{flagged.map(skill => <label key={skill}><input type="checkbox" checked={acknowledged.has(skill.toLowerCase())} onChange={() => setAcknowledged(prev => { const next = new Set(prev); const key = skill.toLowerCase(); if (next.has(key)) next.delete(key); else next.add(key); return next; })} /><span><b>{skill}</b> is new. Confirm it is true and you could back it up in an interview.</span></label>)}<p>Confirmed skills go on the resume; unticked ones stay off it.</p></div>}
-        </>}</section></div>}
-
       {stage === "draft" && <>{exampleBanner}<div className={s.documentToolbar}><span><i />{isExample ? "Example resume" : revisions.length ? `Your draft · ${revisions.length} ${revisions.length === 1 ? "change" : "changes"}` : "Your draft · ready to review"}</span><label>Layout<select value={template} onChange={e => setTemplate(asTemplate(e.target.value))}>{availableTemplates.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div>
         <div className={s.mobileTabs} role="group" aria-label="Workspace view"><button type="button" aria-pressed={pane === "document"} onClick={() => setPane("document")}>Document</button><button type="button" aria-pressed={pane === "edit"} onClick={() => setPane("edit")}>Edit with Scribe</button></div>
         <div className={s.editorGrid} data-pane={pane}><div className={s.document}><div className={`${s.documentFrame} ${s.sheetScroll}`}><A4Frame><ResumeSheet resume={shown.resume} template={template} roleLine={shown.targetRole} track={trackChoice ?? undefined} onPages={setSheetPages} watermark={isExample ? "Example" : "Draft"} /></A4Frame></div><p className={s.pagesNote}>{sheetPages === 1 ? "One A4 page. " : `${sheetPages} A4 pages - ask Scribe to tighten it if you would rather it fit one. `}Check every name, date and claim before sharing.</p></div>
-          <aside className={s.editor}><div className={s.editorTabs} role="group" aria-label="Editing mode"><button type="button" aria-pressed={editor === "scribe"} onClick={() => setEditor("scribe")}>✦ Scribe</button><button type="button" aria-pressed={editor === "summary"} onClick={() => { setEditor("summary"); setSummaryDraft(shown.resume.summary); }}>Edit summary</button></div>
-            {editor === "scribe" ? <><div className={s.assistantMark}>✦</div><h2>Your words. A little sharper.</h2><p>Tell Scribe what to change in plain words. It says when a change would work against you.</p><div className={s.promptChips}>{SCRIBE_EXAMPLES.slice(0, 3).map(item => <button type="button" key={item} onClick={() => setRequest(item)}>{item} ↗</button>)}</div><label className={s.field}>What would you like to change?<textarea rows={3} value={request} disabled={busy !== null} placeholder="Ask in your own words…" onChange={e => setRequest(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (isExample) askForAccount("Scribe, on your own resume", "Scribe rewrites your own draft from your own record. This one is an example, so there is nothing of yours for it to work on yet."); else void askScribe(); } }} /></label><button type="button" className={s.secondary} disabled={!request.trim() || busy !== null} onClick={() => isExample ? askForAccount("Scribe, on your own resume", "Scribe rewrites your own draft from your own record. This one is an example, so there is nothing of yours for it to work on yet.") : void askScribe()}>{busy === "revising" ? "Rewriting…" : "Ask Scribe"} <Arrow /></button>
+          <aside className={s.editor}><div className={`${s.editorTabs} ${s.editorTabsTrio}`} role="group" aria-label="What to work on"><button type="button" aria-pressed={editor === "scribe" || editor === "summary"} onClick={() => setEditor("scribe")}>✦ Change the words</button><button type="button" aria-pressed={editor === "strengthen"} onClick={() => setEditor("strengthen")}>Add details{(shownPrompts?.length ?? 0) > 0 && <i>{shownPrompts!.length}</i>}</button><button type="button" aria-pressed={editor === "checks"} onClick={() => setEditor("checks")}>Recruiter checks{shownChecklist && <i data-all={shownChecklist.passed === shownChecklist.counted}>{shownChecklist.passed}/{shownChecklist.counted}</i>}</button></div>
+            {editor === "strengthen" ? <section className={s.strengthen} aria-label="What would make this stronger"><span className={s.smallLabel}>✦ MAKE IT STRONGER</span>{askingPrompts ? <p className={s.quiet}>Reading your draft for anything a real detail would improve…</p> : (shownPrompts?.length ?? 0) === 0 ? <><h2>Nothing more to ask.</h2><p className={s.quiet}>{shownPrompts === null ? "Build a draft and anything a real detail would improve appears here." : "Your record already gives this resume what it needs. Anything else you want on the page, tell Scribe."}</p></> : <><h2>{shownPrompts!.length === 1 ? "One thing" : `${shownPrompts!.length} things`} a real detail would improve.</h2><p className={s.quiet}>All optional. Skip any, and the line stays as it is. Nothing is added that you do not say.</p><ol>{shownPrompts!.map(item => <li key={item.field}><p><strong>{item.question}</strong>{item.about && <small>Goes into {item.about}</small>}</p><div><input value={promptAnswers[item.field] ?? ""} disabled={busy !== null} placeholder="A number, a date, a tool - only what is true" aria-label={item.question} onChange={e => setPromptAnswers(a => ({ ...a, [item.field]: e.target.value }))} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); if (isExample) askForAccount("your resume", "This is an example. Yours is written from your own record, which is the point at which it needs an account."); else void answerPrompt(item); } }} /><button type="button" disabled={busy !== null || !(promptAnswers[item.field] ?? "").trim()} onClick={() => isExample ? askForAccount("your resume", "This is an example. Yours is written from your own record, which is the point at which it needs an account.") : void answerPrompt(item)}>Add</button><button type="button" disabled={busy !== null} onClick={() => isExample ? askForAccount("your resume", "This is an example. Yours is written from your own record, which is the point at which it needs an account.") : skipPrompt(item.field)}>Skip</button></div></li>)}</ol></>}</section>
+            : editor === "checks" ? (checkPanel || <><h2>No checks yet.</h2><p className={s.quiet}>Build a draft and what a screener and a recruiter will see is counted here.</p></>)
+            : editor === "scribe" ? <><div className={s.scribeHead}><span className={s.assistantMark} aria-hidden="true">✦</span><div><h2>Scribe</h2><p>Tell it what to change, in your own words. It says when a change would work against you.</p></div></div>
+              {/* Suggestions, plainly labelled and shaped as pills: inside the
+                  box they read as part of the input, and bordered boxes above
+                  it read as more fields to fill. */}
+              <div className={s.suggested}>
+                <p className={s.smallLabel}>SUGGESTED PROMPTS · TAP TO USE ONE</p>
+                <div>{SCRIBE_EXAMPLES.slice(0, 3).map(item => <button type="button" key={item} disabled={busy !== null} onClick={() => setRequest(item)}><span aria-hidden="true">+</span>{item}</button>)}</div>
+              </div>
+              <label className={s.field} htmlFor="scribe-ask">Or ask in your own words
+                <textarea id="scribe-ask" rows={3} value={request} disabled={busy !== null} placeholder="Tell Scribe what to change…" onChange={e => setRequest(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (isExample) askForAccount("Scribe, on your own resume", "Scribe rewrites your own draft from your own record. This one is an example, so there is nothing of yours for it to work on yet."); else void askScribe(); } }} />
+              </label>
+              <button type="button" className={s.secondary} disabled={!request.trim() || busy !== null} onClick={() => isExample ? askForAccount("Scribe, on your own resume", "Scribe rewrites your own draft from your own record. This one is an example, so there is nothing of yours for it to work on yet.") : void askScribe()}>{busy === "revising" ? "Rewriting…" : "Ask Scribe"} <Arrow /></button>
               {revisions.length > 0 && <ol className={s.thread}>{revisions.map((rev, i) => <li key={`${rev.ask}-${i}`}><p className={s.ask}>{rev.ask}</p><div className={s.proposal}><span className={s.smallLabel}>SCRIBE</span><p>{rev.reply}</p>{rev.declined && rev.declined !== rev.reply && <p className={s.quiet}><b>Not changed:</b> {rev.declined}</p>}{rev.added.length > 0 && <p className={s.quiet}>Added from what you told me: {rev.added.join("; ")}. Make sure you can stand behind it in the interview.</p>}{rev.followUp && <p><b>{rev.followUp}</b></p>}{rev.didChange && <div><button type="button" onClick={() => undoRevision(i)}>↶ Undo this change</button></div>}</div></li>)}</ol>}
-            </> : <><h2>Edit your summary</h2><label className={s.field}>Summary<textarea rows={9} value={summaryDraft} onChange={e => setSummaryDraft(e.target.value)} /></label><button type="button" className={s.secondary} onClick={() => isExample ? askForAccount("your resume", "This is an example. Yours is written from your own record, which is the point at which it needs an account.") : applySummary()}>Apply to draft <Arrow /></button></>}
-            <div className={s.tip}><span>✦ KEEP IT TRUE</span><p>New numbers, responsibilities and skills need your confirmation. Nothing goes on the page that your record cannot back.</p></div></aside></div></>}
+              {/* The other way to change the words: your own hands. It was a
+                  fourth tab, which made it look like a fourth thing to do. */}
+              <button type="button" className={s.handEdit} onClick={() => { setEditor("summary"); setSummaryDraft(shown.resume.summary); }}>Rather write the opening paragraph yourself? <Arrow /></button>
+            </> : <><button type="button" className={s.handEdit} onClick={() => setEditor("scribe")}><span aria-hidden="true">←</span> Back to Scribe</button><h2>Write it yourself</h2><p className={s.quiet}>Your own words for the opening paragraph. Nothing is rewritten - it goes on the page exactly as you type it.</p><label className={s.field}>{shown.resume.summaryHeading || "Summary"}<textarea rows={9} value={summaryDraft} onChange={e => setSummaryDraft(e.target.value)} /></label><button type="button" className={s.secondary} onClick={() => isExample ? askForAccount("your resume", "This is an example. Yours is written from your own record, which is the point at which it needs an account.") : applySummary()}>Apply to draft <Arrow /></button></>}
+            {editor === "scribe" && <div className={s.tip}><span>✦ KEEP IT TRUE</span><p>New numbers, responsibilities and skills need your confirmation. Nothing goes on the page that your record cannot back.</p></div>}</aside></div></>}
 
       {stage === "review" && <div className={s.feedback}>{exampleBanner}{busy === "reviewing" ? <section className={s.card}><span className={s.smallLabel}>READING YOUR RESUME BACK</span><h2 className={s.emptyTitle}>Someone is reading it now, the way a recruiter would.</h2><ReviewProgress /></section> : !shownReview ? <section className={s.emptyNotice}><span className={s.smallLabel}>FEEDBACK</span><h2 className={s.emptyTitle}>Your feedback could not be written just now.</h2><p className={s.quiet}>Your draft is safe. Try again in a moment.</p><div className={s.questionActions}><button type="button" onClick={() => { setError(null); setReview(null); }}>Try again <Arrow /></button></div></section> : <>
         <div className={s.summaryGrid}><section className={s.overview}><span className={s.smallLabel}>HOW YOUR RESUME READS</span><h2>{standingLabel(shownReview.standing.level, shown.targetRole)}</h2><p>{shownReview.standing.why}</p><div className={s.standing} role="img" aria-label={`Resume standing: ${shownReview.standing.level}. Not a readiness score.`}>{(["early", "competitive", "strong"] as const).map((level, i) => <span key={level} data-active={shownReview.standing.level === level}><i /><b>{["Developing", "Competitive", "Strong"][i]}</b></span>)}</div><small>Resume review · not a hiring probability</small></section>
@@ -497,6 +592,7 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
           <section className={s.readiness}><span className={s.smallLabel}>ROLE READINESS</span><strong>Not assessed</strong><p>A short role assessment shows what you can do.</p><b>{shown.targetRole || "Choose a role in Discovery"}</b><small>A readiness score cannot be read from resume wording.</small></section></div>
         <div className={s.insights}><section className={`${s.card} ${s.working}`}><div className={s.sectionHeading}><h2>✓ Keep these strengths</h2><span>{shownReview.strengths.length} signals</span></div>{shownReview.strengths.map(point => <p key={point}>{point}</p>)}</section>
           <section className={s.card}><div className={s.sectionHeading}><h2>✦ Improve this next</h2><span>{shownReview.gaps.length} priorities</span></div>{shownReview.gaps.map((item, i) => <div className={s.improvement} key={item.what}><span>{i === 0 ? "START HERE" : "THEN CONSIDER"}</span><h3>{item.what}</h3><p>{item.how}</p><button type="button" onClick={() => { setRequest(`${item.what}: ${item.how}`); setEditor("scribe"); setPane("edit"); go("draft"); }}>Improve with Scribe <Arrow /></button></div>)}</section></div>
+        {checkPanel}
         {(shownReview.roleIdeas?.length ?? 0) > 0 && <section className={s.roleIdeas}><div className={s.sectionHeading}><div><p className={s.eyebrow}>WHERE YOUR EXPERIENCE COULD FIT</p><h2>You have a story. Give it a direction.</h2></div><span>From what you have done</span></div><div className={s.roleCards}>{shownReview.roleIdeas!.map(idea => <article key={idea.role}><h3>{idea.role}</h3><p>{idea.why}</p><div className={s.roleReadiness}><span>Role readiness</span><b>Not assessed</b></div><Link href="/discover">Explore this role <Arrow /></Link></article>)}</div><small>Directions to explore, not a verdict. A real recommendation comes from what you choose in Discovery.</small></section>}
         <section className={s.nextAction}><span className={s.nextIcon}>✦</span><div><span className={s.smallLabel}>TURN YOUR STORY INTO SOMETHING YOU CAN SHOW</span><h2>{shownReview.nextStep.route === "interview" ? "Practise telling these stories out loud." : shownReview.nextStep.route === "profile" ? "Fill in what the resume is still missing." : `Try the work of a ${shown.targetRole || "role you choose"}.`}</h2><p>{shownReview.nextStep.why}</p></div><Link href={NEXT_STEP_HREF[shownReview.nextStep.route] ?? "/practice"} className={s.primary}>{NEXT_STEP_LABEL[shownReview.nextStep.route] ?? "Prove these skills →"}</Link></section>
         <details className={s.fullReview}><summary>See the evidence and full feedback <span>+</span></summary><h3>What the resume shows</h3><ul>{shownReview.coverage.covered.map(item => <li key={item}>{item}</li>)}</ul><h3>What is not yet shown</h3>{shownReview.coverage.missing.length ? <ul>{shownReview.coverage.missing.map(item => <li key={item}>{item}</li>)}</ul> : <p>Nothing this role looks for is missing from the wording.</p>}{shownAts && <><h3>How screening software read it</h3>{shownAts.readable && shownAts.problems.length === 0 ? <p>Every section, date and number came through.</p> : <ul>{shownAts.problems.map(problem => <li key={problem.what}><b>{problem.what}</b> {problem.why}</li>)}</ul>}</>}{shownReview.fromRules && <p>The model was unavailable, so this read came from the text alone.</p>}</details>
