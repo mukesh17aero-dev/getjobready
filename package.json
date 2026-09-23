@@ -11,8 +11,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "clean:conflicts": "node scripts/clean-conflicts.mjs",
-    "pretypecheck": "node scripts/clean-conflicts.mjs",
-    "prebuild": "node scripts/clean-conflicts.mjs"
+    "pretypecheck": "node scripts/clean-conflicts.mjs && node scripts/check-architecture.mjs",
+    "prebuild": "node scripts/clean-conflicts.mjs && node scripts/check-architecture.mjs",
+    "check:arch": "node scripts/check-architecture.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",

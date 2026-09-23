@@ -1,8 +1,8 @@
 import { getServerSession } from "@/lib/supabase-server";
 import { getJourneyState } from "@/lib/api";
-import { journeyPercent, stages } from "@/lib/stages";
-import { FeatureLanding } from "@/components/feature-landing";
-import { JOURNEY } from "@/lib/features";
+import { journeyPercent, stages } from "@/features/journey";
+import { FeatureLanding } from "@/features/welcome";
+import { JOURNEY } from "@/features/welcome";
 
 // The whole package: seven stages in the order they are meant to be walked,
 // drawn as a line at the top so the shape is visible before any of the detail.

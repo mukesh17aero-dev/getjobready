@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { watchAnswer } from "../../lib/integrity-signals";
+import { watchAnswer } from "@/features/assessment";
 
 class Page extends EventTarget { hidden = false; focused = true; hasFocus() { return this.focused; } }
 let page: Page;

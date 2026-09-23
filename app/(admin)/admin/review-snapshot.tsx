@@ -1,7 +1,7 @@
 'use client';
 
 import {useState, type ReactNode} from 'react';
-import type {RolePackage} from '@/lib/admin-studio-api';
+import type {RolePackage} from '@/features/admin';
 import {IntroductionPreview} from './role-introduction';
 import {ModulePreview} from './role-studio';
 import s from './studio.module.css';

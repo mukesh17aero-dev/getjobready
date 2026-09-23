@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { emptyInteraction, interactionComplete, interactionText } from "../../lib/assessment-presentation";
+import { emptyInteraction, interactionComplete, interactionText } from "@/features/assessment";
 import type { SceneInteraction } from "../../lib/api";
 
 const routing: SceneInteraction = { kind: "routing", messageLabel: "Your message", choices: [{ id: "dispatch", label: "Dispatch team" }, { id: "customer", label: "Customer" }] };
@@ -30,25 +30,25 @@ describe("assessment response presentation", () => {
 
 describe("question card presentation", () => {
   it("separates the prompt from context without interpreting the facts", async () => {
-    const { assessmentQuestionCards } = await import("../../lib/assessment-presentation");
+    const { assessmentQuestionCards } = await import("@/features/assessment");
     expect(assessmentQuestionCards("What would you do?\n\n### Message\nDelivery is late.\n\n### Policy\nDo not promise an unconfirmed date.")).toEqual({ question: "What would you do?", cards: [{ title: "Message", body: "Delivery is late." }, { title: "Policy", body: "Do not promise an unconfirmed date." }] });
   });
   it("keeps all legacy paragraphs and makes repeated conversion idempotent", async () => {
-    const { formatAssessmentQuestion, assessmentQuestionCards } = await import("../../lib/assessment-presentation");
+    const { formatAssessmentQuestion, assessmentQuestionCards } = await import("@/features/assessment");
     const text = "The customer paid ₹450.\n\nThe refund policy is 14 days.\n\nWrite what you would say.";
     const updated = formatAssessmentQuestion(text);
     expect(formatAssessmentQuestion(updated)).toBe(updated);
     expect(assessmentQuestionCards(updated).cards.map(card => card.body).join("\n\n")).toBe(text);
   });
   it("removes live-helper offers while preserving a supplied AI draft and the checking task", async () => {
-    const { formatAssessmentQuestion } = await import("../../lib/assessment-presentation");
+    const { formatAssessmentQuestion } = await import("@/features/assessment");
     const updated = formatAssessmentQuestion("You can ask Priya for help. The AI assistant is available.\n\nThe assistant draft says ₹450. The policy says ₹400. Check the numbers and write your own reply.");
     expect(updated).not.toContain("can ask Priya");
     expect(updated).not.toContain("assistant is available");
     expect(updated).toContain("The assistant draft says ₹450. The policy says ₹400. Check the numbers and write your own reply.");
   });
   it("updates dependent authoring instructions without changing identities or skill mappings", async () => {
-    const { formatAssessmentScene } = await import("../../lib/assessment-presentation");
+    const { formatAssessmentScene } = await import("@/features/assessment");
     const revised = formatAssessmentScene({ id: "q", title: "Check the reply", day: "1", minutes: 2, answer: "artefact", support: "buddy", brief: "Find them, fix the draft, and paste the corrected version as your answer.", fields: ["Paste your corrected email here."], measures: ["Clear communication"], criteria: ["Uses the AI assistant to help with drafting but applies their own judgement to the interpretation"] });
     expect(revised.id).toBe("q");
     expect(revised.measures).toEqual(["Clear communication"]);

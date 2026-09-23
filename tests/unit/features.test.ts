@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CATEGORIES, isOpen, STATUS_LABEL } from "@/lib/features";
+import { CATEGORIES, isOpen, STATUS_LABEL } from "@/features/welcome";
 
 // The landing pages list things that are not built yet on purpose, so the one
 // rule that must never break is that an unbuilt feature cannot be opened. A

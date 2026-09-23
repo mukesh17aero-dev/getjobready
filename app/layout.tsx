@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
-import { FloatingMedia } from "@/components/floating-media";
-import { Ambience } from "@/components/ambience";
-import { AppHeader } from "@/components/app-header";
-import { FootprintTracker } from "@/components/footprint-tracker";
+import { FloatingMedia } from "@/components/ui/floating-media";
+import { Ambience } from "@/features/shell";
+import { AppHeader } from "@/features/shell";
+import { FootprintTracker } from "@/features/shell";
 import { THEME_BOOTSTRAP } from "@/lib/theme";
 import "./globals.css";
 

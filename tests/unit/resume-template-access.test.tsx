@@ -1,9 +1,9 @@
 import {describe,it,expect} from "vitest";
 import {createElement} from "react";
 import {renderToStaticMarkup} from "react-dom/server";
-import {previewTemplate,previewTemplates} from "@/lib/resume-template-access";
+import {previewTemplate,previewTemplates} from "@/features/resume";
 import {ResumeStudio} from "@/app/(student)/resume/build/resume-studio";
-import type {PlanId} from "@/lib/plans";
+import type {PlanId} from "@/features/resume";
 
 function render(plan:PlanId|null,signedOut=false){
  return renderToStaticMarkup(createElement(ResumeStudio,{target:null,signedOut,profile:{version:1,createdAt:"2026-09-11",education:[],experience:[],projects:[],achievements:[],preferences:plan?{resumePlan:plan}:{}}}));

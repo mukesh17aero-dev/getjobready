@@ -1,6 +1,6 @@
-import { FeatureGrid } from "@/components/feature-grid";
-import { RequestAccess } from "@/components/request-access";
-import { EMPLOYER } from "@/lib/features";
+import { FeatureGrid } from "@/features/welcome";
+import { RequestAccess } from "@/features/welcome";
+import { EMPLOYER } from "@/features/welcome";
 
 // The employer home. Same shape as the college one, and linkable directly for
 // the same reason - a hiring manager arrives from an intro, not from the

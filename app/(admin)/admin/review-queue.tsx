@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { studioRequest, type ReviewInbox, type ReviewRequest } from '@/lib/admin-studio-api';
+import { studioRequest, type ReviewInbox, type ReviewRequest } from '@/features/admin';
 import { ReviewSnapshot } from './review-snapshot';
 import s from './studio.module.css';
 const contentLabel = (resource: string) => resource.replace(/^content:/, '').replaceAll('_', ' ').replace(/^./, c => c.toUpperCase());

@@ -1,6 +1,6 @@
 import { getServerSession } from "@/lib/supabase-server";
 import { getProfessionalProfile } from "@/lib/api";
-import { SAMPLE_PROFILE } from "@/lib/samples";
+import { SAMPLE_PROFILE } from "@/features/profile";
 import { ProfessionalStudio } from "./professional-studio";
 
 // The LinkedIn Profile Builder.

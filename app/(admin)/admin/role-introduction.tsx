@@ -1,5 +1,5 @@
 'use client';
-import type {RoleIntroduction} from '@/lib/admin-studio-api';
+import type {RoleIntroduction} from '@/features/admin';
 import {RenderedVideo} from './video-renderer';
 import s from './studio.module.css';
 export function IntroductionPreview({intro}:{intro:RoleIntroduction}){return <section className={s.scene}><span className={s.eyebrow}>First lesson · Meet the role</span><h3>{intro.title}</h3><p>{intro.objective}</p><p>{intro.lesson.explanation}</p><div className={s.cards}><article className={s.card}><h3>Role responsibilities</h3><ul>{intro.responsibilities.map(x=><li key={x}>{x}</li>)}</ul></article><article className={s.card}><h3>Recruiter preparation</h3><ul>{intro.recruiterExpectations.map(x=><li key={x}>{x}</li>)}</ul><p>General guidance; expectations vary by employer.</p></article></div><h3>Worked example</h3><p>{intro.lesson.workedExample}</p>{intro.video.renderId?<RenderedVideo id={intro.video.renderId}/>:intro.video.assetUrl?<video controls src={intro.video.assetUrl}><track kind="captions" src={intro.video.captionsUrl} srcLang="en" label="English" default/></video>:<p>Storyboard ready · render the introduction using the selector above.</p>}</section>;}

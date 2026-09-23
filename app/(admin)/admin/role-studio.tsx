@@ -5,11 +5,11 @@ import {YouTubeEditor, YouTubePreview} from './youtube-resource';
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import {AdminReviewLink} from "./review-notifications";
-import { studioRequest, type StudioCatalogue, type StoredPackage, type SkillModule, type WorkTask } from '@/lib/admin-studio-api';
+import { studioRequest, type StudioCatalogue, type StoredPackage, type SkillModule, type WorkTask } from '@/features/admin';
 import s from './studio.module.css';
 import {VideoRenderer,RenderedVideo} from './video-renderer';
 import {GenerationPanel} from './generation-panel';
-import type {GenerationPlan, GenerationResult} from '@/lib/admin-studio-api';
+import type {GenerationPlan, GenerationResult} from '@/features/admin';
 const tabs = ['Overview', 'Role details', 'Skills', 'Assessment', 'Curriculum', 'Simulations', 'Review'] as const;
 export function TaskPreview({ task }: {
     task: WorkTask;

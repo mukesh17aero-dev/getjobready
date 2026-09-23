@@ -1,5 +1,5 @@
 // A display copy of the latest saved resume, read without changing it.
-import type { ResumeData } from "@/lib/resume-api";
+import type { ResumeData } from "@/features/resume";
 export type ResumeSnapshot = {
   role: string; at: string; name: string; summaryHeading: string; summary: string;
   skills: { group: string; items: string[] }[];

@@ -7,7 +7,7 @@ import {
   isAskingForAPromise,
   replyTo,
   type RoleKnowledge,
-} from "@/components/discovery-assistant";
+} from "@/features/discovery";
 import type { RoleDetail } from "@/lib/api";
 
 const role: RoleDetail = {

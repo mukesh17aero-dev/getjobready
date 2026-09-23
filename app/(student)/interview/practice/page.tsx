@@ -1,7 +1,7 @@
 import { getServerSession } from "@/lib/supabase-server";
-import { getInterviewHome, type InterviewHome } from "@/lib/interview-api";
+import { getInterviewHome, type InterviewHome } from "@/features/interview";
 import { InterviewFlow } from "./interview-flow";
-import { SAMPLE_INTERVIEW } from "@/lib/samples";
+import { SAMPLE_INTERVIEW } from "@/features/interview";
 
 // What a signed-out visitor honestly has: no chosen role, no interview under
 // way, nothing practised before. Every field is the truth about them.

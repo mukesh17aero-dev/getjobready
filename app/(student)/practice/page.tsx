@@ -1,11 +1,11 @@
-import {simulationRequest,type CourseSummary} from '@/lib/simulation-api';
+import {simulationRequest,type CourseSummary} from '@/features/simulation';
 import { getServerSession } from "@/lib/supabase-server";
 import { getJourneyState } from "@/lib/api";
-import { routeStatus, stages } from "@/lib/stages";
-import { SAMPLE_READINESS } from "@/lib/samples";
-import { ToolHub, type HubTool } from "@/components/tool-hub";
-import s from "@/components/tool-hub.module.css";
-import { Check, Eye, Spark } from "@/components/icons";
+import { routeStatus, stages } from "@/features/journey";
+import { SAMPLE_READINESS } from "@/features/assessment";
+import { ToolHub, type HubTool } from "@/features/journey";
+import s from "@/features/journey/tool-hub.module.css";
+import { Check, Eye, Spark } from "@/components/ui/icons";
 
 // Practice the role, in the same shape as Professional Presence: one tool in
 // view at a time, where this person stands with it under the tab, what they

@@ -13,9 +13,9 @@ import {
   type SkillCheck,
 } from "@/lib/api";
 import { supabaseBrowser } from "@/lib/supabase-browser";
-import { SignUpPrompt, type GatedAction } from "@/components/signup-gate";
-import { FitRadar } from "@/components/fit-chart";
-import { AssessmentQuestion } from "@/components/assessment-question";
+import { SignUpPrompt, type GatedAction } from "@/components/auth/signup-gate";
+import { FitRadar } from "@/features/job-fit";
+import { AssessmentQuestion } from "@/features/assessment";
 import s from "./job-fit-studio.module.css";
 
 // The Job Fit Analyzer, as approved in public/previews/ascend-job-readiness.html:

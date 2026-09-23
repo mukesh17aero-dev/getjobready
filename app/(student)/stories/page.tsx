@@ -5,9 +5,9 @@ import {
   getStoryBank,
   type StoryBank as Bank,
 } from "@/lib/api";
-import { SAMPLE_STORIES } from "@/lib/samples";
-import { BackLink } from "@/components/back-link";
-import { StoryBank } from "@/components/story-bank";
+import { SAMPLE_STORIES } from "@/features/story-bank";
+import { BackLink } from "@/components/ui/back-link";
+import { StoryBank } from "@/features/story-bank";
 
 // The Story Bank - CLOSED TO USERS while it is finished.
 //

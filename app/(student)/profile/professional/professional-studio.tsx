@@ -16,10 +16,10 @@ import {
   type ProfileVoice,
 } from "@/lib/api";
 import { supabaseBrowser } from "@/lib/supabase-browser";
-import { SignUpPrompt, type GatedAction } from "@/components/signup-gate";
-import { Avatar } from "@/components/avatar";
-import { RememberHub } from "@/components/remember-hub";
-import { ArrowRight, Check, Spark } from "@/components/icons";
+import { SignUpPrompt, type GatedAction } from "@/components/auth/signup-gate";
+import { Avatar } from "@/components/ui/avatar";
+import { RememberHub } from "@/features/journey";
+import { ArrowRight, Check, Spark } from "@/components/ui/icons";
 import s from "./professional-studio.module.css";
 
 // The LinkedIn Profile Builder, as approved in the /preview-professional-studio

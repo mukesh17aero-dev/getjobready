@@ -1,5 +1,5 @@
-import { NetworkWelcome } from "@/components/network-welcome";
-import type { Audience } from "@/components/audience-hero";
+import { NetworkWelcome } from "@/features/welcome";
+import type { Audience } from "@/features/welcome";
 
 // The front door, reachable whether or not someone is signed in.
 //

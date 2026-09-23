@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { pickupReason } from "@/lib/home-presentation";
+import { pickupReason } from "@/features/journey";
 it("keeps one sentence from a recommendation without appending the rest", () => {
   expect(pickupReason("Add your completed customer service work to your record. The gaps remain until you do.")).toBe("Add your completed customer service work to your record.");
 });

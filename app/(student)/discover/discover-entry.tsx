@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FeatureLandingBody } from "@/components/feature-landing";
-import { DISCOVER } from "@/lib/features";
+import { FeatureLandingBody } from "@/features/welcome";
+import { DISCOVER } from "@/features/welcome";
 import { DiscoveryFlow } from "./discovery-flow";
 import type { DiscoveryState } from "@/lib/api";
 

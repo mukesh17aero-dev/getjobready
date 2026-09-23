@@ -2,7 +2,7 @@
 /* Signed private previews bypass Next’s public image optimiser. */
 /* eslint-disable @next/next/no-img-element */
 import {useEffect,useState} from 'react';
-import {studioRequest,type StoredPackage,type VideoJob,type VideoPreviewResult} from '@/lib/admin-studio-api';
+import {studioRequest,type StoredPackage,type VideoJob,type VideoPreviewResult} from '@/features/admin';
 import s from './studio.module.css';
 export function RenderedVideo({id}:{id:string}){
  const [preview,setPreview]=useState<VideoPreviewResult|null>(null),[error,setError]=useState('');

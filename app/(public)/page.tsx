@@ -1,8 +1,8 @@
 import { getServerSession } from "@/lib/supabase-server";
 import { adminAccess, getCareerRecord, getJourneyState } from "@/lib/api";
-import type { Audience } from "@/components/audience-hero";
-import { FeatureGrid } from "@/components/feature-grid";
-import { COLLEGE, EMPLOYER } from "@/lib/features";
+import type { Audience } from "@/features/welcome";
+import { FeatureGrid } from "@/features/welcome";
+import { COLLEGE, EMPLOYER } from "@/features/welcome";
 import { StartRouter } from "@/app/(student)/start/start-router";
 
 // Home is the router, signed in or not.

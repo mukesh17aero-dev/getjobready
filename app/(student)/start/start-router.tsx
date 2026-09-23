@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { CareerProfile, JourneyState, HomeWorkItem } from "@/lib/api";
-import { progressOf } from "@/lib/next-step";
-import { toFields } from "@/lib/profile";
-import { storySoFar } from "@/lib/stages";
-import { pickupReason } from "@/lib/home-presentation";
-import { Avatar } from "@/components/avatar";
-import { RememberHub } from "@/components/remember-hub";
-import { ArrowRight, Check, Spark, Mic, Eye } from "@/components/icons";
+import { progressOf } from "@/features/journey";
+import { toFields } from "@/features/profile";
+import { storySoFar } from "@/features/journey";
+import { pickupReason } from "@/features/journey";
+import { Avatar } from "@/components/ui/avatar";
+import { RememberHub } from "@/features/journey";
+import { ArrowRight, Check, Spark, Mic, Eye } from "@/components/ui/icons";
 import styles from "./student-home.module.css";
 
 // The signed-in home, as approved in the /preview-home-focus concept: who you

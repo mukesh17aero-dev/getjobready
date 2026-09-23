@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { getServerSession } from "@/lib/supabase-server";
 import { listAssessmentRuns, type PastRun } from "@/lib/api";
-import { SAMPLE_READINESS } from "@/lib/samples";
-import { BackLink } from "@/components/back-link";
+import { SAMPLE_READINESS } from "@/features/assessment";
+import { BackLink } from "@/components/ui/back-link";
 
 // Every readiness assessment this person has finished.
 //

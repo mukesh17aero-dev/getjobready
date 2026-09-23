@@ -2,8 +2,8 @@
 /* YouTube thumbnails are fetched directly from the provider’s known image host. */
 /* eslint-disable @next/next/no-img-element */
 import {useState} from 'react';
-import {studioRequest,type SkillModule,type YouTubeCandidate} from '@/lib/admin-studio-api';
-import {youtubeEmbedUrl,playbackTime} from '@/lib/youtube-playback';
+import {studioRequest,type SkillModule,type YouTubeCandidate} from '@/features/admin';
+import {youtubeEmbedUrl,playbackTime} from '@/components/ui/youtube-playback';
 import s from './studio.module.css';
 export function YouTubeSuggestions({roleId,module,onChange}:{roleId:string;module:SkillModule;onChange:(m:SkillModule)=>void}){
  const [candidates,setCandidates]=useState<YouTubeCandidate[]>(module.youtubeCandidates||[]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[preview,setPreview]=useState('');

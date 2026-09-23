@@ -3,13 +3,13 @@
 import { useRef, useState, type KeyboardEvent } from "react";
 import Link from "next/link";
 import type { HomeWorkItem, ProfileState, JobFitCheck } from "@/lib/api";
-import { pickupReason } from "@/lib/home-presentation";
-import { Avatar } from "@/components/avatar";
-import { ToolLaunch } from "@/components/tool-launch";
-import { RememberHub } from "@/components/remember-hub";
-import { ArrowRight, Check, Spark } from "@/components/icons";
+import { pickupReason } from "@/features/journey";
+import { Avatar } from "@/components/ui/avatar";
+import { ToolLaunch } from "@/features/journey";
+import { RememberHub } from "@/features/journey";
+import { ArrowRight, Check, Spark } from "@/components/ui/icons";
 import type { ResumeSnapshot } from "./resume-excerpt";
-import styles from "@/components/tool-hub.module.css";
+import styles from "@/features/journey/tool-hub.module.css";
 
 // Professional Presence: the hub for the resume, the LinkedIn profile and the
 // job-fit check, as approved in the /preview-apply-workspace concept. One tool

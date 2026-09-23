@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useState} from 'react';
-import {simulationRequest,type CourseView,type DailyPlanTask,type DailyPlan} from '@/lib/simulation-api';
+import {simulationRequest,type CourseView,type DailyPlanTask,type DailyPlan} from '@/features/simulation';
 import s from './simulation.module.css';
 export type PlanPreferences={minutes:number;days:number;targetDate:string;timeZone:string;personalized:boolean};
 export const commitmentLabel=(minutes:number)=>minutes<60?`${minutes} minutes`:`${Math.floor(minutes/60)} ${Math.floor(minutes/60)===1?'hour':'hours'}${minutes%60?` ${minutes%60} minutes`:''}`;

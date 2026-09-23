@@ -17,7 +17,7 @@ import {
   type InterviewQuestion,
   type InterviewQuestionSet,
 } from "@/lib/api";
-import { Collapsible } from "@/components/collapsible";
+import { Collapsible } from "@/components/ui/collapsible";
 import { RoleBatch, type BatchOutcome } from "./role-batch";
 
 const INPUT =

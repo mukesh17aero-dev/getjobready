@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import type { ArcScene, InteractionResponse, SceneInteraction } from "@/lib/api";
-import { AssessmentQuestion } from "@/components/assessment-question";
-import { AssessmentInteraction } from "@/components/assessment-interaction";
+import { AssessmentQuestion } from "@/features/assessment";
+import { AssessmentInteraction } from "@/features/assessment";
 
 const input = "mt-1 block min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800";
 const button = "min-h-11 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40";

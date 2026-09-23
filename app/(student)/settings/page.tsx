@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/supabase-server";
-import { BackLink } from "@/components/back-link";
+import { BackLink } from "@/components/ui/back-link";
 import { DeleteProfile } from "./delete-profile";
 
 export const metadata = { title: "Settings" };

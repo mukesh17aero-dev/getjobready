@@ -8,23 +8,23 @@ import {
   type DiscoveryState,
 } from "@/lib/api";
 import { supabaseBrowser } from "@/lib/supabase-browser";
-import { SignUpPrompt, type GatedAction } from "@/components/signup-gate";
+import { SignUpPrompt, type GatedAction } from "@/components/auth/signup-gate";
 import { flushFootprints, track } from "@/lib/footprints";
-import { RememberHub } from "@/components/remember-hub";
-import { payRange } from "@/components/role-preview";
+import { RememberHub } from "@/features/journey";
+import { payRange } from "@/features/discovery";
 import {
   ItineraryPicker,
   RoleList,
   TOUR_ROLES,
-} from "@/components/discovery-browse";
-import type { TourNote } from "@/components/role-tour";
-import { RoleTourStage } from "@/components/role-tour-stage";
-import { RolePage } from "@/components/role-page";
-import { RoleCompare } from "@/components/role-compare";
-import { Dialog } from "@/components/dialog";
-import { ConfirmDialog } from "@/components/confirm-dialog";
-import { IndustryBriefPanel } from "@/components/industry-brief";
-import { Check, ChevronRight } from "@/components/icons";
+} from "@/features/discovery";
+import type { TourNote } from "@/features/discovery";
+import { RoleTourStage } from "@/features/discovery";
+import { RolePage } from "@/features/discovery";
+import { RoleCompare } from "@/features/discovery";
+import { Dialog } from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { IndustryBriefPanel } from "@/features/discovery";
+import { Check, ChevronRight } from "@/components/ui/icons";
 
 // The 3–5 minute Discovery flow (MVP deliverable 4). The server chooses each
 // question from the published bank based on what has been answered so far, so

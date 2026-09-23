@@ -2,7 +2,9 @@ import { getServerSession } from "@/lib/supabase-server";
 import { getCareerRecord, getJourneyState, getJobFit, getProfessionalProfile } from "@/lib/api";
 import { ApplyWorkspace } from "./apply-workspace";
 import { resumeSnapshot, snapshotFromResume } from "./resume-excerpt";
-import { SAMPLE_JOB_FIT, SAMPLE_PROFILE, SAMPLE_RESUME } from "@/lib/samples";
+import { SAMPLE_JOB_FIT } from "@/features/job-fit";
+import { SAMPLE_PROFILE } from "@/features/profile";
+import { EXAMPLE_RESUME } from "@/features/resume";
 
 // Professional Presence: the hub, not the resume tool. Three things live
 // under this heading - the resume, the LinkedIn profile and the job fit check
@@ -32,7 +34,7 @@ export default async function ResumeLandingPage() {
   // profile and a job-fit check that belong to nobody - so what the tool
   // produces can be seen before an account is asked for.
   if (!session) return <ApplyWorkspace name={SAMPLE_PROFILE.name ?? ""} role={null} work={null}
-    resume={snapshotFromResume(SAMPLE_RESUME, SAMPLE_JOB_FIT.roleTitle)} professional={SAMPLE_PROFILE} check={SAMPLE_JOB_FIT}
+    resume={snapshotFromResume(EXAMPLE_RESUME, SAMPLE_JOB_FIT.roleTitle)} professional={SAMPLE_PROFILE} check={SAMPLE_JOB_FIT}
     signedIn={false} available={{ resume: true, linkedin: true, fit: true }} />;
   return <ApplyWorkspace name={name} photo={photo} role={journey?.progress?.role?.title ?? null}
     work={journey?.work ?? null} resume={resumeSnapshot(record?.profile?.preferences.resumeLedger)}

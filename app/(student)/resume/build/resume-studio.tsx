@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { supabaseBrowser } from "@/lib/supabase-browser";
-import { SignUpPrompt, type GatedAction } from "@/components/signup-gate";
+import { SignUpPrompt, type GatedAction } from "@/components/auth/signup-gate";
+import { FormAlert, type MissingField } from "@/components/ui/form-alert";
+import { RequiredMark } from "@/components/ui/required-mark";
 import { track as trackEvent } from "@/lib/footprints";
 import { whenLabel } from "@/lib/when";
-import { SAMPLE_ATS, SAMPLE_CHECKLIST, SAMPLE_RESUME as EXAMPLE_RESUME, SAMPLE_REVIEW } from "@/lib/samples";
+import { SAMPLE_ATS, SAMPLE_CHECKLIST, EXAMPLE_RESUME, SAMPLE_REVIEW } from "@/features/resume";
 import {
   A4Frame,
   EssentialsModal,
@@ -25,7 +27,7 @@ import {
   uploadRead,
   type LedgerEntry,
   type Revision,
-} from "@/components/resume-builder";
+} from "@/features/resume";
 import {
   downloadResumeDocx,
   exportTemplate,
@@ -46,10 +48,10 @@ import {
   type ResumeReview,
   type ResumeTarget,
   type ResumeTemplate,
-} from "@/lib/resume-api";
-import { resumePage } from "@/lib/resume-pagination";
-import { previewTemplate, previewTemplates } from "@/lib/resume-template-access";
-import { PLANS, PLAN_KEY, isPlan, type PlanId } from "@/lib/plans";
+} from "@/features/resume";
+import { resumePage } from "@/features/resume";
+import { previewTemplate, previewTemplates } from "@/features/resume";
+import { PLANS, PLAN_KEY, isPlan, type PlanId } from "@/features/resume";
 import s from "./resume-studio.module.css";
 
 // Resume Studio, as approved in public/previews/ascend-resume-complete.html:
@@ -195,6 +197,15 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   const general = !targeted;
   const chosenRole = () => (targeted ? roleInput.trim() : "");
   const readyToBuild = Boolean(trackChoice) && (purpose === "general" || (purpose === "role" && Boolean(roleInput.trim())) || (purpose === "improve" && upload !== null));
+  // What the person still has to answer on the start stage, so the alert at
+  // the top can send them straight to it instead of describing it.
+  const missingNow: MissingField[] = stage !== "start" ? [] : [
+    ...(!trackChoice ? [{ id: "resume-track", label: "Where are you right now?" }] : []),
+    ...(purpose === "role" && !roleInput.trim() ? [{ id: "resume-role", label: "Target role" }] : []),
+    ...(purpose === "improve" && upload === null ? [{ id: "resume-upload", label: "The resume to improve" }] : []),
+  ];
+  const wrongTrack = Boolean(error) && !trackChoice;
+  const wrongRole = Boolean(error) && purpose === "role" && !roleInput.trim();
   // Only the name is insisted on: a resume without one is not a resume.
   // Everything else is written from the record, and asked for beside the
   // draft only when it would make a line stronger.
@@ -245,7 +256,10 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
     setUpload({ filename: read.filename, text: read.text, read: read.read, parsed: read.parsed });
   }
   function continueFromStart() {
-    if (!readyToBuild) { setError(!trackChoice ? "Tell us where you are right now first." : purpose === "role" ? "Name the role you are aiming at." : "Choose the resume to improve first."); return; }
+    if (!readyToBuild) {
+      setError(!trackChoice ? "Tell us where you are right now first." : purpose === "role" ? "Name the role you are aiming at." : "Choose the resume to improve first.");
+      return;
+    }
     setError(null);
     if (!planChosen) { go("plan"); return; }
     void beginBuild();
@@ -530,13 +544,15 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
       <nav className={s.journeyNav} aria-label="Resume stages">{STAGES.map(item => <button type="button" key={item.id} aria-current={stage === item.id ? "step" : undefined} disabled={!canOpen(item.id)} onClick={() => go(item.id)}>{item.name}</button>)}</nav>
       <header className={s.heading}><div><h1 ref={titleRef} tabIndex={-1}>Resume Studio</h1><p>{HEADINGS[stage][1]}</p></div><span className={s.stageCount}>{STAGES[stageIndex].name} · {stageIndex + 1} of {STAGES.length}</span></header>
 
+      <FormAlert message={error} missing={missingNow} className="mb-4" />
+
       {building ? <section className={`${s.card} ${s.buildState}`}><div className={s.buildGlyph} aria-hidden="true">✦</div><span className={s.smallLabel} style={{ justifyContent: "center", marginTop: 18 }}>{busy === "checking" ? "GETTING YOUR DETAILS TOGETHER" : "WRITING YOUR DRAFT"}</span><h2>Bringing your story together.</h2><p>Your draft is written from your saved record and nothing else.</p><div className={s.buildRows}><span>Read your experience and skills</span><span>Shape the draft for your direction</span><span>Prepare the document for your review</span></div><p className={s.quiet}>This takes a minute or so. Stay on this page.</p></section> : <>
 
       {stage === "start" && <div className={s.setupGrid}><div className={s.setupLeft}><section className={s.card}><div className={s.sectionHeading}><h2>What are you making?</h2></div>
         <div className={s.purposes} role="group" aria-label="Resume purpose">{([{ id: "role", name: "For a role", copy: "Give it a clear direction", icon: "◎" }, { id: "general", name: "General resume", copy: "Bring your story together", icon: "▤" }, { id: "improve", name: "Improve existing", copy: "Start with your document", icon: "↥" }] as Array<{ id: Purpose; name: string; copy: string; icon: string }>).map(item => <button type="button" key={item.id} aria-pressed={purpose === item.id} onClick={() => choosePurpose(item.id)}><span className={s.purposeIcon}>{item.icon}</span><strong>{item.name}</strong><small>{item.copy}</small></button>)}</div>
         {purpose === "improve" && (upload ? <div className={s.softBox}><strong>Working from {upload.filename}</strong><p>{uploadRead(upload.read)} We keep what you wrote and work on how it reads.</p><button type="button" className={s.undo} onClick={() => setUpload(null)}>Remove</button></div> : <button type="button" className={s.upload} disabled={uploading} onClick={() => fileRef.current?.click()}><strong>{uploading ? "Reading your resume…" : "Choose an existing resume"}</strong><small>PDF or Word. We read it, keep what you wrote, and say what is missing.</small></button>)}
-        {purpose !== "general" ? <><label className={s.field}>Target role {purpose === "improve" ? "(optional)" : ""}<input value={roleInput} onChange={e => setRoleInput(e.target.value)} placeholder="e.g. Customer Success Associate" /></label>{lockedRole && roleInput.trim() !== lockedRole.title && <button type="button" className={s.undo} onClick={() => setRoleInput(lockedRole.title)}>Use {lockedRole.title}, from your Discovery</button>}<details className={s.details}><summary>Add a job posting <span>Optional</span></summary><label className={s.field}>Job description<textarea rows={3} value={jdInput} onChange={e => setJdInput(e.target.value)} /></label></details></> : <p className={s.softBox}>Create a reusable introduction to your experience. The feedback will suggest roles worth exploring.</p>}
-        <fieldset className={s.track}><legend>Where are you right now?</legend><div className={s.starterTrack}>{([{ id: "student", label: "Still studying" }, { id: "early_career", label: "Working, or have worked" }] as Array<{ id: Track; label: string }>).map(option => <label key={option.id}><input type="radio" name="resume-track" value={option.id} checked={trackChoice === option.id} onChange={() => setTrackChoice(option.id)} />{option.label}</label>)}</div></fieldset>
+        {purpose !== "general" ? <><label className={s.field} htmlFor="resume-role">Target role {purpose === "improve" ? "(optional)" : <RequiredMark />}<input id="resume-role" value={roleInput} aria-required={purpose === "role" || undefined} aria-invalid={wrongRole || undefined} data-invalid={wrongRole || undefined} onChange={e => { setRoleInput(e.target.value); if (wrongRole) setError(null); }} placeholder="e.g. Customer Success Associate" /></label>{lockedRole && roleInput.trim() !== lockedRole.title && <button type="button" className={s.undo} onClick={() => setRoleInput(lockedRole.title)}>Use {lockedRole.title}, from your Discovery</button>}<details className={s.details}><summary>Add a job posting <span>Optional</span></summary><label className={s.field}>Job description<textarea rows={3} value={jdInput} onChange={e => setJdInput(e.target.value)} /></label></details></> : <p className={s.softBox}>Create a reusable introduction to your experience. The feedback will suggest roles worth exploring.</p>}
+        <fieldset className={s.track} id="resume-track" tabIndex={-1} aria-invalid={wrongTrack || undefined} data-invalid={wrongTrack || undefined}><legend>Where are you right now?<RequiredMark /></legend><div className={s.starterTrack}>{([{ id: "student", label: "Still studying" }, { id: "early_career", label: "Working, or have worked" }] as Array<{ id: Track; label: string }>).map(option => <label key={option.id}><input type="radio" name="resume-track" value={option.id} checked={trackChoice === option.id} onChange={() => { setTrackChoice(option.id); setError(null); }} />{option.label}</label>)}</div></fieldset>
       </section>
         <section className={s.card}><div className={s.sectionHeading}><h2>Choose a look</h2><span>{hasAdditionalTemplates ? "Switch any time" : "Basic is free to preview"}</span></div><div className={s.templates} role="group" aria-label="Template selection">{TEMPLATES.map(item => {
             const locked = !allowedTemplateIds.includes(item.id);
@@ -608,7 +624,6 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
         <section className={s.nextCard}><span className={s.smallLabel}>SAVED VERSIONS</span><h2>Your versions stay together.</h2>{ledger.length === 0 ? <p>{signedOut ? "Every resume you build is kept here with its feedback, once you have an account." : "Every resume you export is kept here with its feedback."}</p> : <div className={s.versions}>{ledger.map((entry, i) => <button type="button" key={`${entry.at}-${i}`} onClick={() => openVersion(entry)}><span><strong>{entry.role}</strong><small>{entry.downloadedAt ? `Downloaded ${whenLabel(entry.downloadedAt)}` : `Built ${whenLabel(entry.at)}`}</small></span><span>{entry.downloadedAt ? "Downloaded" : "Draft"} <Arrow /></span></button>)}</div>}</section></aside></div>}
       </>}
 
-      {error && <p className={s.error} role="alert">{error}</p>}
       <p className={status ? s.status : s.srOnly} role="status" aria-live="polite">{status}</p>
       {!building && <footer className={s.actionBar}><div><strong>{footer[stage][0]}</strong><small>{footer[stage][1]}</small></div><div>{stageIndex > 0 && <button type="button" className={s.backButton} onClick={() => go(STAGES[Math.max(0, stageIndex - 1)].id)}>Back</button>}<button type="button" className={s.primary} disabled={busy !== null || (stage === "export" && !exported && !completeness.ready)} onClick={primaryAction}>{busy === "exporting" ? "Preparing…" : busy === "saving" ? "One moment…" : footer[stage][2]} <Arrow /></button></div></footer>}
     </main></div>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ArcBank } from "@/lib/api";
-import { assessmentTerms } from "@/lib/assessment-glossary";
-import { importAssessmentWording } from "@/lib/assessment-wording-import";
+import { assessmentTerms } from "@/features/assessment";
+import { importAssessmentWording } from "@/features/assessment";
 
 const bank: ArcBank = { arcs: [{ roleId: "one", roleTitle: "One", company: "Fictional", buddy: "Alex", skills: ["Accuracy"], scenes: [{ id: "s1", title: "A question", day: "Day 1", brief: "Original", minutes: 2, support: "assistant", answer: "typed", fields: [], measures: ["Accuracy"], criteria: ["Preserves the deadline"] }] }] };
 describe("student reading support", () => {

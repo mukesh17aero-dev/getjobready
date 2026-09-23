@@ -1,8 +1,8 @@
 'use client';
 
 import {useState} from 'react';
-import type {SkillModule} from '@/lib/admin-studio-api';
-import {playbackSeconds, playbackTime, youtubeEmbedUrl, youtubeVideoId} from '@/lib/youtube-playback';
+import type {SkillModule} from '@/features/admin';
+import {playbackSeconds, playbackTime, youtubeEmbedUrl, youtubeVideoId} from '@/components/ui/youtube-playback';
 import s from './studio.module.css';
 
 type Resource = SkillModule['youtube'][number];

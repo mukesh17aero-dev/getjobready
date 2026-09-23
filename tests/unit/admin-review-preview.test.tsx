@@ -2,7 +2,7 @@ import {describe, it, expect} from 'vitest';
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {ReviewSnapshot} from '@/app/(admin)/admin/review-snapshot';
-import {youtubeVideoId, playbackSeconds, youtubeEmbedUrl} from '@/lib/youtube-playback';
+import {youtubeVideoId, playbackSeconds, youtubeEmbedUrl} from '@/components/ui/youtube-playback';
 const render = (resource: string, value: unknown) => renderToStaticMarkup(createElement(ReviewSnapshot, {resource, value}));
 describe('fixed revision UI previews', () => {
  it('shows submitted role details and preserves additional fields without raw JSON', () => {

@@ -1,7 +1,7 @@
 "use client";
 
 import type { SkillModel, SkillModelReview } from "@/lib/api";
-import { HelpButton } from "@/components/help-sheet";
+import { HelpButton } from "@/components/ui/help-sheet";
 
 // The skills page is a catalogue and nothing more: the words the product uses
 // to describe a person. Which skills a role needs is set on that role's card,

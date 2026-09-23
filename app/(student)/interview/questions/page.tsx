@@ -1,7 +1,7 @@
 import { getServerSession } from "@/lib/supabase-server";
 import { getPracticeQuestions } from "@/lib/api";
-import { InterviewWorkspaceFrame } from "@/components/interview-workspace-frame";
-import { QuestionPractice } from "@/components/question-practice";
+import { InterviewWorkspaceFrame } from "@/features/interview";
+import { QuestionPractice } from "@/features/interview";
 
 // Question practice. One call: the questions, and - when there is somebody
 // to fetch for - where each one stands with them.

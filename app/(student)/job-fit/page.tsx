@@ -1,6 +1,6 @@
 import { getServerSession } from "@/lib/supabase-server";
 import { getJobFit } from "@/lib/api";
-import { SAMPLE_JOB_FIT } from "@/lib/samples";
+import { SAMPLE_JOB_FIT } from "@/features/job-fit";
 import { JobFitStudio } from "./job-fit-studio";
 
 // The Job Fit Analyzer. One call when signed in: the checks already run and

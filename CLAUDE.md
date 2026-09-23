@@ -41,9 +41,9 @@ in this order:
 3. **What is my call to action?** — exactly one primary action. Two primary
    actions is the same as none.
 
-`lib/next-step.ts` holds this as a type (`NextStep`), and `NextStepCard`
-renders it. A section that asks for something and cannot fill all three fields
-has not earned the ask — cut it or find the missing answer.
+`features/journey/next-step.ts` holds this as a type (`NextStep`). A section
+that asks for something and cannot fill all three fields has not earned the
+ask — cut it or find the missing answer.
 
 Two further tests, applied to every design decision:
 
@@ -56,16 +56,35 @@ Two further tests, applied to every design decision:
 ## Layer rules
 
 ```
-app/  ──▶  lib/          components/ ──▶ (types only)
+app/  ──▶  features/  ──▶  components/  ──▶  lib/
 ```
 
-- `app/` is a routing layer: a page fetches from the backend API (one call per
-  page where possible, Supabase JWT attached), maps the response to props, and
-  composes components. No business logic in pages.
-- `components/` are presentational: props in, JSX out. No fetching, no state
-  beyond UI state.
-- `lib/` holds the API client, the browser Supabase auth client and dumb
-  helpers. Access `NEXT_PUBLIC_*` env vars statically, never dynamically.
+One direction only. `scripts/check-architecture.mjs` enforces every rule below
+and runs before typecheck and build, so a violation fails the build rather than
+sitting in the codebase.
+
+- **`app/` is a routing layer**: a page fetches from the backend API (one call
+  per page where possible, Supabase JWT attached), maps the response to props,
+  and composes components. No business logic in pages.
+- **`features/<name>/` is the unit of ownership** — one folder per domain
+  (resume, discovery, assessment, interview, profile, job-fit, journey,
+  passport, simulation, story-bank, welcome, shell, admin). A feature holds its
+  components, its API client, its copy and its sample data together.
+  `features/<name>/index.ts` is its **only** public entry point; deep imports
+  from outside are a build failure. Inside a feature, use relative paths.
+  Adding a line to a barrel deliberately widens that feature's contract.
+- **No cycles between features.** If A needs B and B needs A, the boundary is
+  wrong — usually a shared type or helper that belongs in `lib/`.
+- **`components/` are presentational and shared**: `ui/` primitives, `layout/`,
+  `auth/`. Props in, JSX out. No fetching, no domain logic, and never an import
+  from `features/`.
+- **`lib/` holds plumbing with no domain knowledge**: the typed API client
+  (`lib/api/`, one file per backend module behind a barrel), the browser
+  Supabase client, and dumb helpers. It never imports a feature. Access
+  `NEXT_PUBLIC_*` env vars statically, never dynamically.
+- **File size is a ratchet.** 800 lines is the ceiling for new files. Files
+  already over it are recorded in `SIZE_ALLOWANCE` with their current size and
+  may only shrink.
 - Auth: Supabase in the browser for sessions; the API verifies the JWT
   server-side. 401 from the API → redirect to login. 5xx → friendly retry
   state, never a blank page.
@@ -87,8 +106,12 @@ data layer in this repo.
 - Responsive baseline 360 px; touch targets ≥ 44 px; no horizontal page scroll.
 - No placeholder code or TODOs in shipped files — cut scope instead.
 - Definition of done: `npm run typecheck && npm run lint && npm test &&
-  npm run build` all clean, and the founder has verified the behaviour in a
-  browser.
+  npm run build` all clean — this includes the architecture guard — and the
+  founder has verified the behaviour in a browser.
+- Dead code is a defect. If you build something to look at once, delete it in
+  the same session. 71 preview routes once shipped to production unnoticed.
+- Behavioural metrics (dwell time, return counts) may rank and order things.
+  They must never be shown to a user.
 
 ## Communication rules — the founder is non-technical
 

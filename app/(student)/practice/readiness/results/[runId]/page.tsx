@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { getServerSession } from "@/lib/supabase-server";
 import { getAssessmentReadout, getJourneyState } from "@/lib/api";
-import { SAMPLE_READINESS } from "@/lib/samples";
-import { AssessmentReadout } from "@/components/assessment-readout";
-import { BackLink } from "@/components/back-link";
+import { SAMPLE_READINESS } from "@/features/assessment";
+import { AssessmentReadout } from "@/features/assessment";
+import { BackLink } from "@/components/ui/back-link";
 
 // One past sitting, reopened.
 //

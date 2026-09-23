@@ -89,3 +89,10 @@
 .checkAsk input{flex:1 1 120px;min-width:0;min-height:40px;padding:0 11px;border:1.5px solid var(--color-slate-400);border-radius:9px;background:var(--color-surface);color:var(--color-slate-900);font-size:13px}
 .checkAsk input:focus{border-color:var(--color-teal-700);outline:none;box-shadow:0 0 0 3px var(--color-teal-50)}
 .checkAsk button{min-height:40px;padding:0 14px;border-radius:9px;border:1px solid var(--color-teal-700);background:var(--color-teal-700);color:#fff;font-size:12.5px;font-weight:700}
+
+/* A field the form has just complained about. Border plus ring, not colour
+   alone, so it still reads for anyone who cannot separate red from grey.
+   Scoped to a local class: CSS Modules rejects a bare attribute selector. */
+.field input[data-invalid],
+.field textarea[data-invalid]{border-color:var(--color-rose-600);box-shadow:0 0 0 3px rgb(from var(--color-rose-600) r g b / .18)}
+.track[data-invalid]{border-color:var(--color-rose-600);box-shadow:0 0 0 3px rgb(from var(--color-rose-600) r g b / .18);border-radius:10px}

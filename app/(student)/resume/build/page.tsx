@@ -1,5 +1,5 @@
 import { getServerSession } from "@/lib/supabase-server";
-import { getResumeRecord, getResumeTarget } from "@/lib/resume-api";
+import { getResumeRecord, getResumeTarget } from "@/features/resume";
 import { ResumeStudio } from "./resume-studio";
 
 export const metadata = { title: "Resume Studio" };

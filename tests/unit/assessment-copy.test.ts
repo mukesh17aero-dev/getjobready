@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { protectAssessmentCopy,protectAssessmentInputs } from "../../lib/assessment-copy";
+import { protectAssessmentCopy,protectAssessmentInputs } from "@/features/assessment";
 
 class FakeNode extends EventTarget {
   nodes = new Set<unknown>();

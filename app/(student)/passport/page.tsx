@@ -1,7 +1,7 @@
 import { getServerSession } from "@/lib/supabase-server";
 import { getPassport, getCareerRecord } from "@/lib/api";
-import { BackLink } from "@/components/back-link";
-import { PassportBook } from "@/components/passport-book";
+import { BackLink } from "@/components/ui/back-link";
+import { PassportBook } from "@/features/passport";
 import Link from "next/link";
 
 // The Career Passport - CLOSED TO USERS while it is finished.

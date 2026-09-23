@@ -1,21 +1,7 @@
 "use client";
 
-// The 10-minute practice interview, end to end: confirm the role, meet the
-// interviewer, answer by voice or by typing, and leave with a read-out.
-//
-// The server owns the interview's shape and the clock; this screen renders
-// whatever question it is handed and sends back the answer. Voice is the
-// preferred path but never the required one — a denied mic, an unsupported
-// browser or a failed upload all land on the same typing fallback.
-//
-// Three faces of one flow: a setup console (confirm the role, pick the
-// round, start), an audio-first stage (speech-bubble question, one big mic,
-// stage dots, ring timer), and the read-out.
+// The interview itself.
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { supabaseBrowser } from "@/lib/supabase-browser";
-import { SignUpPrompt, type GatedAction } from "@/components/signup-gate";
-import { ConfirmDialog } from "@/components/confirm-dialog";
 import {
   answerWithAudio,
   answerWithText,
@@ -30,444 +16,21 @@ import {
   type InterviewSessionView,
   type InterviewStage,
   type InterviewSummaryView,
-} from "@/lib/interview-api";
-import { BackLink } from "@/components/back-link";
-import { whenLabel } from "@/lib/when";
-import { InterviewTimer } from "@/components/interview-timer";
-import { InterviewSummary } from "@/components/interview-summary";
-import { InterviewWorkspaceFrame } from "@/components/interview-workspace-frame";
-// The stylesheet itself, not a re-export: a non-component value exported
-// from a server module arrives in a client component as an empty stub.
-import s from "@/components/interview-workspace.module.css";
-
-async function token(): Promise<string | null> {
-  const { data } = await supabaseBrowser().auth.getSession();
-  return data.session?.access_token ?? null;
-}
-
-const STAGES: Array<{ id: InterviewStage; label: string }> = [
-  { id: "icebreaker", label: "Getting started" },
-  { id: "introduction", label: "About you" },
-  { id: "assessment", label: "The role" },
-  { id: "close", label: "Wrapping up" },
-];
-
-const STAGE_LABEL: Record<string, string> = Object.fromEntries(
-  STAGES.map((s) => [s.id, s.label]),
-);
-
-const ROUNDS: Array<{ id: InterviewRound; title: string; line: string }> = [
-  {
-    id: "hr",
-    title: "HR round",
-    line: "Communication and how you work with people.",
-  },
-  {
-    id: "managerial",
-    title: "Managerial round",
-    line: "Real situations - judgement and pressure.",
-  },
-];
-
-// The read-out takes the best part of ten seconds to write, and three dots
-// for ten seconds reads as a page that has stopped. These are the passes it
-// actually makes, in the order it makes them, so the wait shows work rather
-// than just time.
-const READOUT_STEPS = [
-  "Reading back everything you said…",
-  "Checking each answer against what the question was really asking…",
-  "Looking for what landed, and where you talked around it…",
-  "Comparing this with your last interview…",
-  "Writing your read-out…",
-];
-
-function ReadOutProgress() {
-  const [step, setStep] = useState(0);
-  useEffect(() => {
-    const id = setInterval(
-      () => setStep((s) => Math.min(s + 1, READOUT_STEPS.length - 1)),
-      2200,
-    );
-    return () => clearInterval(id);
-  }, []);
-
-  return (
-    <div className="mt-5 w-full max-w-sm">
-      <ul aria-hidden className="grid gap-2.5 text-left">
-        {READOUT_STEPS.map((label, i) => {
-          const done = i < step;
-          const now = i === step;
-          return (
-            <li key={label} className="flex items-start gap-2.5">
-              <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center">
-                {done ? (
-                  <span className="text-[0.9rem] font-bold text-teal-700">
-                    ✓
-                  </span>
-                ) : now ? (
-                  <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-brand-teal-deep motion-reduce:animate-none" />
-                ) : (
-                  <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-                )}
-              </span>
-              <span
-                className={`text-[0.85rem] leading-relaxed ${
-                  now ? "font-semibold text-brand-ink" : "text-slate-400"
-                }`}
-              >
-                {label}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-      <p role="status" className="sr-only">
-        {READOUT_STEPS[step]}
-      </p>
-    </div>
-  );
-}
-
-// Why rehearse here rather than off a list of questions, or with a friend.
-// Three claims, each of which the room actually keeps.
-
-// Two interviewers, so nobody rehearses against the same voice every time -
-// and so anyone who finds one harder to follow has the other.
-const INTERVIEWERS: Array<{ id: "asha" | "ravi"; title: string }> = [
-  { id: "asha", title: "Asha" },
-  { id: "ravi", title: "Ravi" },
-];
-
-// Recording formats, most widely transcribable first. Safari records mp4.
-function recordingFormat(): { mime: string; filename: string } | null {
-  if (typeof MediaRecorder === "undefined") return null;
-  if (MediaRecorder.isTypeSupported("audio/webm")) {
-    return { mime: "audio/webm", filename: "answer.webm" };
-  }
-  if (MediaRecorder.isTypeSupported("audio/mp4")) {
-    return { mime: "audio/mp4", filename: "answer.mp4" };
-  }
-  return null;
-}
-
-// ---- small inline icons (stroke inherits currentColor) ----
-
-function MicIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden
-    >
-      <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3Z" />
-      <path d="M6 11a6 6 0 0 0 12 0" />
-      <path d="M12 17v4" />
-      <path d="M9 21h6" />
-    </svg>
-  );
-}
-
-function StopIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden>
-      <rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor" />
-    </svg>
-  );
-}
-
-function PlayIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden>
-      <path d="M8 5.5v13l11-6.5-11-6.5Z" fill="currentColor" />
-    </svg>
-  );
-}
-
-function PersonIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden
-    >
-      <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
-      <path d="M4.5 20c1.4-3.3 4.2-5 7.5-5s6.1 1.7 7.5 5" />
-    </svg>
-  );
-}
-
-function ChevronIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden
-    >
-      <path d="m6 9 6 6 6-6" />
-    </svg>
-  );
-}
-
-// A static voice-note motif: fixed bar heights, coloured by the parent.
-// Decoration only - the transcript beside it is the accessible content.
-function Waveform({ heights }: { heights: number[] }) {
-  return (
-    <span aria-hidden className="flex h-4 items-center gap-[3px]">
-      {heights.map((h, i) => (
-        <span
-          key={i}
-          className="w-[3px] rounded-full bg-current opacity-70"
-          style={{ height: `${h}px` }}
-        />
-      ))}
-    </span>
-  );
-}
-
-const QUESTION_WAVE = [4, 9, 6, 12, 8, 5, 11, 7];
-
-// The green room's mic check: ten bars that light up with how loudly the
-// person is actually speaking, so the microphone question is settled before
-// the clock starts. `level` is 0..1.
-function MicMeter({ level, onDark }: { level: number; onDark?: boolean }) {
-  const lit = Math.round(Math.min(1, level) * 10);
-  return (
-    <span aria-hidden className="flex items-center gap-[3px]">
-      {Array.from({ length: 10 }, (_, i) => (
-        <span
-          key={i}
-          className={`h-3.5 w-1 rounded-full transition-[background-color] duration-100 motion-reduce:transition-none ${
-            i < lit
-              ? onDark
-                ? "bg-brand-teal-soft"
-                : "bg-brand-teal-deep"
-              : onDark
-                ? "bg-white/20"
-                : "bg-slate-200"
-          }`}
-        />
-      ))}
-    </span>
-  );
-}
-
-// Three things worth knowing before the first question - shown one at a time
-// in the green room, the way a call app shows tips while you wait.
-
-// The interviewer's round face, used beside every bubble on their side.
-function InterviewerAvatar() {
-  return (
-    <span
-      aria-hidden
-      className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-violet-deep text-white"
-    >
-      <PersonIcon className="h-4 w-4" />
-    </span>
-  );
-}
-
-// The four beats of the interview as quiet dots; the current one names
-// itself so the person always knows where they are in the ten minutes.
-function StageDots({ current }: { current: InterviewStage }) {
-  const activeIdx = STAGES.findIndex((s) => s.id === current);
-  return (
-    <ol className="flex items-center" aria-label="Interview stages">
-      {STAGES.map((stage, i) => {
-        const state =
-          i < activeIdx ? "done" : i === activeIdx ? "now" : "later";
-        return (
-          <li key={stage.id} className="flex items-center">
-            {i > 0 ? (
-              <span
-                aria-hidden
-                className={`mx-1.5 h-px w-3 sm:w-5 ${
-                  i <= activeIdx ? "bg-brand-teal" : "bg-slate-200"
-                }`}
-              />
-            ) : null}
-            <span className="flex items-center gap-1.5">
-              <span
-                aria-hidden
-                className={`h-2 w-2 rounded-full ${
-                  state === "done"
-                    ? "bg-brand-teal"
-                    : state === "now"
-                      ? "bg-brand-teal-deep ring-4 ring-brand-teal/20"
-                      : "bg-slate-300"
-                }`}
-              />
-              <span
-                className={`text-[0.68rem] font-semibold ${
-                  state === "now"
-                    ? "text-teal-700"
-                    : "hidden text-slate-400 sm:inline"
-                }`}
-              >
-                {stage.label}
-                {state === "now" ? (
-                  <span className="sr-only"> (current stage)</span>
-                ) : null}
-              </span>
-            </span>
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
-
-// Completed interviews, newest first. Each row opens into the full
-// transcript and the read-out it earned - the same rows on the setup
-// console and under a fresh read-out.
-function PastInterviews({
-  history,
-  open,
-  onToggle,
-  example = false,
-}: {
-  history: InterviewHome["history"];
-  open: number | null;
-  onToggle: (index: number) => void;
-  /**
-   * Signed out, this shelf holds one worked example instead of nothing.
-   * Labelled as such on the heading and again on the card - somebody must
-   * never be able to mistake it for something they did.
-   */
-  example?: boolean;
-}) {
-  if (history.length === 0) return null;
-  return (
-    <section className="mt-8">
-      <h2 className="flex flex-wrap items-center gap-2 text-[0.8rem] font-bold uppercase tracking-wide text-brand-ink">
-        {example ? "What you get afterwards" : "Your past interviews"}
-        {example && (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-amber-800">
-            Example
-          </span>
-        )}
-      </h2>
-      {example && (
-        <p className="mt-1 text-[0.8rem] leading-snug text-slate-500">
-          One finished interview, opened up. Yours is written from your own
-          answers — this one belongs to nobody.
-        </p>
-      )}
-      {/* A grid of cards rather than a stack of rows: past interviews are
-          things to glance across, and a card each is how a shelf reads.
-          The one being read opens to the full width - a transcript in a
-          third of the page would be a letterbox. */}
-      <div className="mt-2.5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {history.map((past, i) => (
-          <div
-            key={`${past.completedAt}-${i}`}
-            className={`rounded-2xl border border-slate-200 bg-surface ${
-              open === i ? "sm:col-span-2 lg:col-span-3" : ""
-            }`}
-          >
-            <div className="flex flex-col items-start gap-2.5 px-4 py-3.5">
-              <span className="min-w-0 self-stretch">
-                <span className="block text-[0.9rem] font-semibold leading-tight text-brand-ink">
-                  {past.roleTitle}
-                </span>
-                <span className="mt-1.5 block">
-                  <span className="rounded-full bg-brand-teal-deep/10 px-2 py-0.5 text-[0.7rem] font-semibold text-teal-700">
-                    {past.round === "managerial" ? "Managerial" : "HR"} round
-                  </span>
-                </span>
-                <span className="mt-1.5 block text-[0.72rem] text-slate-400">
-                  {whenLabel(past.completedAt)}
-                </span>
-              </span>
-              <button
-                type="button"
-                onClick={() => onToggle(i)}
-                aria-expanded={open === i}
-                className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-brand-teal-deep/50 px-4 text-[0.78rem] font-bold text-teal-700 transition-colors hover:bg-teal-50 motion-reduce:transition-none"
-              >
-                {open === i ? "Hide feedback" : "View feedback"}
-                <ChevronIcon
-                  className={`h-3.5 w-3.5 transition-transform motion-reduce:transition-none ${
-                    open === i ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-            </div>
-            {open === i && (
-              <div className="border-t border-slate-100 px-4 pb-4 pt-3">
-                {/* The read-out first: it is why anyone opens this. The
-                    transcript is underneath and folded away - the questions
-                    are already quoted in the feedback, so reading them twice
-                    buries the part worth reading. */}
-                <InterviewSummary
-                  summary={past.summary}
-                  roleTitle={past.roleTitle}
-                  turns={past.turns}
-                />
-                <details className="group mt-5 border-t border-slate-200 pt-4">
-                  <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1.5 text-[0.8rem] font-semibold text-slate-500 [&::-webkit-details-marker]:hidden">
-                    Read the whole interview
-                    <ChevronIcon className="h-3.5 w-3.5 transition-transform group-open:rotate-180 motion-reduce:transition-none" />
-                  </summary>
-                  <div className="mt-3 grid gap-3">
-                    {past.turns.map((turn, ti) => (
-                      <div key={ti}>
-                        <p className="text-[0.8rem] font-semibold text-brand-ink">
-                          {turn.question}
-                        </p>
-                        {turn.answer && (
-                          <p className="mt-1 whitespace-pre-wrap rounded-xl bg-slate-50 px-3 py-2 text-[0.8rem] leading-relaxed text-slate-600">
-                            {turn.answer}
-                          </p>
-                        )}
-                        {turn.closing && (
-                          <p className="mt-1 text-[0.8rem] italic text-teal-700">
-                            {turn.closing}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </details>
-
-                {/* The last thing on the page is the thing to do next. */}
-                <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-200 pt-4">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      window.scrollTo({ top: 0, behavior: "smooth" })
-                    }
-                    className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border border-slate-300 px-5 text-sm font-bold text-brand-ink transition-colors hover:border-slate-400 motion-reduce:transition-none"
-                  >
-                    Retake interview
-                  </button>
-                  <p className="text-xs text-slate-500">
-                    Your next interview will check on these areas.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
+} from "@/features/interview";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { SignUpPrompt, type GatedAction } from "@/components/auth/signup-gate";
+import { BackLink } from "@/components/ui/back-link";
+import { FormAlert, type MissingField } from "@/components/ui/form-alert";
+import { RequiredMark } from "@/components/ui/required-mark";
+import { InterviewSummary } from "@/features/interview";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { InterviewTimer } from "@/features/interview";
+import s from "@/features/interview/interview-workspace.module.css";
+import { InterviewWorkspaceFrame } from "@/features/interview";
+import { InterviewerAvatar, MicIcon, MicMeter, PlayIcon, QUESTION_WAVE, StageDots, StopIcon, Waveform } from "./interview-chrome";
+import { MISSING_ROLE, ROUNDS, STAGE_LABEL, token } from "./interview-stages";
+import { INTERVIEWERS, ReadOutProgress, recordingFormat } from "./readout-progress";
+import { PastInterviews } from "./past-interviews";
 export function InterviewFlow({
   initial,
   exampleHistory = false,
@@ -569,6 +132,12 @@ export function InterviewFlow({
   // chose to carry on elsewhere.
   const [summaryPending, setSummaryPending] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
+  // The field the current complaint points at, so the alert above the form can
+  // send them straight to it rather than just restating the sentence.
+  const missingSetup: MissingField[] =
+    error === MISSING_ROLE
+      ? [{ id: "role-title", label: "The role you want to practise for" }]
+      : [];
   // Where they are when the write lands decides whether it opens itself.
   const viewRef = useRef(view);
   useEffect(() => {
@@ -766,7 +335,7 @@ export function InterviewFlow({
       useSelected ? initial.selectedRole?.title : roleTitle
     )?.trim();
     if (!title) {
-      setError("Tell us which role you are practising for.");
+      setError(MISSING_ROLE);
       return;
     }
     setStarting(true);
@@ -1611,6 +1180,8 @@ export function InterviewFlow({
             <div className={s.resumeLine}><span aria-hidden="true">↗</span><div><strong>Your next focus: {initial.workingOn.map((a) => a.skill.toLowerCase()).join(", ")}.</strong><p>From your last read-out. Your interviewer will check how that is coming along.</p></div></div>
           ) : null}
 
+          <FormAlert className="mb-4" message={error} missing={missingSetup} />
+
           <div className={s.setupGrid}>
             <section className={s.card}>
               <div className={s.formSection}>
@@ -1618,7 +1189,7 @@ export function InterviewFlow({
                   <><div className={s.formLabel}>The role you want to practise for</div><div className={s.inlineContext}><div><span>YOUR CHOSEN DIRECTION</span><strong>{initial.selectedRole.title}</strong></div><button type="button" className={s.textButton} onClick={() => setUseSelected(false)}>Practise for a different role</button></div></>
                 ) : (
                   <>
-                    <label className={s.field}><span>The role you want to practise for</span><input id="role-title" type="text" value={roleTitle} maxLength={120} placeholder="e.g. Customer Success Associate" onChange={(e) => setRoleTitle(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (!starting) begin(); } }} /></label>
+                    <label className={s.field} htmlFor="role-title"><span>The role you want to practise for<RequiredMark /></span><input id="role-title" type="text" value={roleTitle} maxLength={120} placeholder="e.g. Customer Success Associate" aria-required="true" aria-invalid={error === MISSING_ROLE || undefined} data-invalid={error === MISSING_ROLE || undefined} onChange={(e) => { setRoleTitle(e.target.value); if (error === MISSING_ROLE) setError(null); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (!starting) begin(); } }} /></label>
                     <p className={s.hint}>{initial.selectedRole ? <>Or go back to <button type="button" className={s.textButton} onClick={() => setUseSelected(true)}>{initial.selectedRole.title}</button>, the direction you chose in Discovery.</> : "Start with your chosen direction or enter another role."}</p>
                   </>
                 )}
@@ -1662,7 +1233,6 @@ export function InterviewFlow({
             </aside>
           </div>
 
-          {error ? <p role="alert" className={s.status}>{error}</p> : null}
         </>
       )}
 

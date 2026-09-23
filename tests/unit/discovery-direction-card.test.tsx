@@ -9,7 +9,7 @@
 import { describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { RoleList } from "@/components/discovery-browse";
+import { RoleList } from "@/features/discovery";
 
 const ROLE = {
   id: "customer_success_associate",

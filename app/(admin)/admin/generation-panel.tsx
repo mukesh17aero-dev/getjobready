@@ -1,5 +1,5 @@
 'use client';
-import type {GenerationPlan} from '@/lib/admin-studio-api';
+import type {GenerationPlan} from '@/features/admin';
 import s from './studio.module.css';
 
 type Props = {

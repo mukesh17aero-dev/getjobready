@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { resumePage } from "@/lib/resume-pagination";
+import { resumePage } from "@/features/resume";
 import { ResumeStudio } from "@/app/(student)/resume/build/resume-studio";
 
 describe("saved resume pagination", () => {

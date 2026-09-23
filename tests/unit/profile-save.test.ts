@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { profileSavePayload } from "@/lib/profile-save";
-import { emptyEducation, emptyExperience, toFields } from "@/lib/profile";
+import { profileSavePayload } from "@/features/profile";
+import { emptyEducation, emptyExperience, toFields } from "@/features/profile";
 import type { CareerProfile } from "@/lib/api";
 
 describe("saving the sectioned profile", () => {

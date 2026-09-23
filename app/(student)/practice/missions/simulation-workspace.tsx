@@ -4,8 +4,8 @@ import Link from 'next/link';
 import {ProgressSummary,SimulationProgress} from './simulation-progress';
 import {AssessmentProtection} from './assessment-protection';
 import {PlanSetup,DailyPlanView,commitmentLabel,type PlanPreferences} from './practice-plan';
-import {getLessonMedia,prefetchLessonMedia,simulationRequest,type CourseSummary,type CourseView,type LearningTask,type LearningMedia,type DailyPlanTask,type ProgressDestination} from '@/lib/simulation-api';
-import {youtubeEmbedUrl} from '@/lib/youtube-playback';
+import {getLessonMedia,prefetchLessonMedia,simulationRequest,type CourseSummary,type CourseView,type LearningTask,type LearningMedia,type DailyPlanTask,type ProgressDestination} from '@/features/simulation';
+import {youtubeEmbedUrl} from '@/components/ui/youtube-playback';
 import s from './simulation.module.css';
 import {SimulationLayout} from './simulation-layout';
 function CourseVideo({sessionId,video}:{sessionId:string;video:NonNullable<CourseView['modules'][number]['video']>}){

@@ -13,8 +13,8 @@ import {
   type ArcScene,
 } from "@/lib/api";
 
-import { assessmentQuestionCards, formatAssessmentScene } from "@/lib/assessment-presentation";
-import { importAssessmentWording } from "@/lib/assessment-wording-import";
+import { assessmentQuestionCards, formatAssessmentScene } from "@/features/assessment";
+import { importAssessmentWording } from "@/features/assessment";
 import { AssessmentInteractionEditor } from "./assessment-interaction-editor";
 
 // Authoring the first thirty days, per role.

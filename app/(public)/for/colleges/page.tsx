@@ -1,6 +1,6 @@
-import { FeatureGrid } from "@/components/feature-grid";
-import { RequestAccess } from "@/components/request-access";
-import { COLLEGE } from "@/lib/features";
+import { FeatureGrid } from "@/features/welcome";
+import { RequestAccess } from "@/features/welcome";
+import { COLLEGE } from "@/features/welcome";
 
 // The college home. Reached from the welcome screen's audience tabs, and
 // linkable directly from a deck or an email - which is how a placement officer

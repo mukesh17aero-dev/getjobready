@@ -1,8 +1,8 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
-import {protectAssessmentCopy,protectAssessmentInputs} from '@/lib/assessment-copy';
-import {ScreenGuard} from '@/components/screen-guard';
-import {simulationRequest} from '@/lib/simulation-api';
+import {protectAssessmentCopy,protectAssessmentInputs} from '@/features/assessment';
+import {ScreenGuard} from '@/features/assessment';
+import {simulationRequest} from '@/features/simulation';
 import s from './simulation.module.css';
 export function AssessmentProtection({sessionId,taskId,children}:{sessionId:string;taskId:string;children:React.ReactNode}){
  const root=useRef<HTMLDivElement>(null),dialog=useRef<HTMLDialogElement>(null),[notice,setNotice]=useState('');

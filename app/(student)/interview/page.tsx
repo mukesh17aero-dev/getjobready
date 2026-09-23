@@ -1,10 +1,11 @@
 import { getServerSession } from "@/lib/supabase-server";
 import { getPracticeQuestions, type LibraryQuestion } from "@/lib/api";
-import { getInterviewHome, type InterviewHome } from "@/lib/interview-api";
-import { SAMPLE_INTERVIEW, SAMPLE_STORIES } from "@/lib/samples";
-import { ToolHub, type HubTool } from "@/components/tool-hub";
-import s from "@/components/tool-hub.module.css";
-import { Mic, Spark, Check } from "@/components/icons";
+import { getInterviewHome, type InterviewHome } from "@/features/interview";
+import { SAMPLE_INTERVIEW } from "@/features/interview";
+import { SAMPLE_STORIES } from "@/features/story-bank";
+import { ToolHub, type HubTool } from "@/features/journey";
+import s from "@/features/journey/tool-hub.module.css";
+import { Mic, Spark, Check } from "@/components/ui/icons";
 
 // Interview practice, in the same shape as Professional Presence: one tool in
 // view at a time, where this person stands with it under the tab, what they

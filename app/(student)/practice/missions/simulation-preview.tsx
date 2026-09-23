@@ -1,9 +1,9 @@
 'use client';
 import Link from 'next/link';
 import {useCallback,useEffect,useRef,useState} from 'react';
-import {getSimulationSample,type SimulationSample,type PreviewMedia,type LearningTask} from '@/lib/simulation-api';
-import {youtubeEmbedUrl} from '@/lib/youtube-playback';
-import {protectAssessmentCopy} from '@/lib/assessment-copy';
+import {getSimulationSample,type SimulationSample,type PreviewMedia,type LearningTask} from '@/features/simulation';
+import {youtubeEmbedUrl} from '@/components/ui/youtube-playback';
+import {protectAssessmentCopy} from '@/features/assessment';
 import s from './simulation.module.css';
 import {SimulationLayout} from './simulation-layout';
 

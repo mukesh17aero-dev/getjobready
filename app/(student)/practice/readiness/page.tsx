@@ -5,8 +5,8 @@ import {
   listAssessableRoles,
   type AssessableRole,
 } from "@/lib/api";
-import { AssessmentRun } from "@/components/assessment-run";
-import { BackLink } from "@/components/back-link";
+import { AssessmentRun } from "@/features/assessment";
+import { BackLink } from "@/components/ui/back-link";
 import Link from "next/link";
 import { ReadinessStart } from "./start-screen";
 

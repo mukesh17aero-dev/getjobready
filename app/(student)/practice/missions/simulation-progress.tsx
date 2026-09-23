@@ -1,6 +1,6 @@
 'use client';
 import {useState} from 'react';
-import type {CourseView,ProgressDestination} from '@/lib/simulation-api';
+import type {CourseView,ProgressDestination} from '@/features/simulation';
 import s from './simulation.module.css';
 function scheduleLabel(course:CourseView){return course.overview.status==='Completed'?'Completed':course.dailyPlan?.scheduleStatus?.state==='behind'?'Behind schedule':course.dailyPlan&&!course.dailyPlan.fitsTarget?'Adjust target':course.dailyPlan?'On track':'Plan not set';}
 export function ProgressSummary({course,onOpen}:{course:CourseView;onOpen:()=>void}){
