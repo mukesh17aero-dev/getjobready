@@ -59,10 +59,10 @@ describe("Opportunities list", () => {
     expect(html).toContain("Employer not named");
   });
 
-  it("points every listing at practice, honestly labelled as general rather than matched to that one job", () => {
+  it("carries the exact listing identity into profile fit without requiring practice", () => {
     const html = render([job()]);
-    expect(html).toContain('href="/practice"');
-    expect(html).toContain("Practice before you apply");
-    expect(html).toContain("Not matched to this exact opening");
+    expect(html).toContain('href="/job-fit?opportunity=job-1"');
+    expect(html).toContain("See my profile fit");
+    expect(html).toContain("No practice is required");
   });
 });

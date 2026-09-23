@@ -47,19 +47,19 @@ function Card({ job }: { job: Opportunity }) {
           href={job.applyUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-10 items-center rounded-xl bg-brand-teal-deep px-4 text-[0.8rem] font-bold text-white transition-colors hover:bg-brand-teal"
+          className="inline-flex min-h-11 items-center rounded-xl border border-slate-300 px-4 text-[0.8rem] font-bold text-brand-ink transition-colors hover:border-brand-violet/60"
         >
           Apply on NewEra
         </a>
         <Link
-          href="/practice"
-          className="inline-flex min-h-10 items-center rounded-xl border border-slate-300 px-4 text-[0.8rem] font-bold text-brand-ink transition-colors hover:border-brand-violet/60"
+          href={`/job-fit?opportunity=${encodeURIComponent(job.id)}`}
+          className="inline-flex min-h-11 items-center rounded-xl bg-brand-violet px-4 text-[0.8rem] font-bold text-white transition-colors hover:bg-brand-violet-deep"
         >
-          Practice before you apply
+          See my profile fit
         </Link>
       </div>
       <p className="mt-1.5 text-[0.68rem] text-slate-400">
-        Not matched to this exact opening — real practice and an assessment you can show, before the interview.
+        Compare this job with your current profile and resume. No practice is required.
       </p>
     </li>
   );

@@ -4,3 +4,6 @@
 
 export * from "./fit-chart";
 export * from "./samples";
+
+export { JobFitStudio } from "./job-fit-studio";
+export { ProfileFitReportView } from "./profile-fit-report";

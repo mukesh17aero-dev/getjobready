@@ -11,6 +11,7 @@ import {
   reflectCareerProfile,
 } from "@/lib/api";
 import { useRouter, useSearchParams } from "next/navigation";
+import { jobFitReturn } from "@/lib/job-fit-return";
 import { useRef, useState } from "react";
 import { SignUpPrompt, type GatedAction } from "@/components/auth/signup-gate";
 import { supabaseBrowser } from "@/lib/supabase-browser";
@@ -57,8 +58,6 @@ export function ProfileForm({
   photo?: string | null;
 }) {
   const router = useRouter();
-  // Asked for at the first thing that writes, not at the door - see
-  // components/signup-gate.tsx.
   const [gate, setGate] = useState<GatedAction | null>(null);
   const params = useSearchParams();
   const isWelcome = params.get("welcome") === "1";
@@ -630,7 +629,8 @@ export function ProfileForm({
       target: settled,
       meta: { completeness: percent },
     });
-    if (result && isWelcome) router.push("/start");
+    if (result && jobFitReturn(params.get("returnTo"))) router.push(jobFitReturn(params.get("returnTo"))!);
+    else if (result && isWelcome) router.push("/start");
   }
 
   return (

@@ -10,7 +10,7 @@
 // server - it is never a model's opinion, and it is readiness against this
 // posting rather than any kind of chance of being hired.
 
-import { apiCall } from "./core";
+import { apiCall, generateCall } from "./core";
 export type ReqState = "proof" | "claim" | "gap";
 
 export type FitRequirement = {
@@ -43,6 +43,9 @@ export type JobFitCheck = {
   verdict: string;
   nextStep: string | null;
   createdAt: string;
+  profileFit?: ProfileFitReport | null;
+  opportunityId?: string | null;
+  posting?: string;
 };
 
 export type JobFitState = { checks: JobFitCheck[]; axes: FitAxis[] };
@@ -115,11 +118,25 @@ export const reviewSkillCheck = (token: string, checkId: string) =>
     { ok: true; review: SkillCheckReview; fresh: boolean } | { ok: false; reason: string }
   >(token, `/v1/job-fit/${checkId}/skill-check/review`, { method: "POST", body: {} });
 
-export const getJobFit = (token: string) =>
-  apiCall<JobFitState>(token, "/v1/job-fit");
+export const getJobFit = (token: string, checkId?: string | null) =>
+  apiCall<JobFitState>(token, `/v1/job-fit${checkId ? `?checkId=${encodeURIComponent(checkId)}` : ""}`);
 
-export const checkJobFit = (token: string, posting: string) =>
-  apiCall<JobFitResult>(token, "/v1/job-fit", {
-    method: "POST",
-    body: { posting },
-  });
+export const checkJobFit = (token: string, input: string | { opportunityId: string } | { checkId: string }) =>
+  generateCall<JobFitResult>(token, "/v1/job-fit", typeof input === "string" ? { posting: input } : input);
+
+export type ProfileFitRequirement = {
+  need: string; category: "skill" | "experience" | "education" | "qualification" | "language" | "availability";
+  facets: Array<{ text: string; sourceId: string | null; sourceLabel: string | null; quote: string | null }>;
+  status: "supported" | "partial" | "not_evidenced" | "unreviewed";
+  supported: number; total: number; contribution: number;
+};
+export type FitRecommendation = { title: string; reason: string; href: string; kind: "profile" | "interview" | "simulation" };
+export type ProfileFitReport = {
+  ruleVersion: string; promptVersion: string; model: string | null;
+  mode: "profile_comparison" | "needs_profile" | "analysis_unavailable";
+  score: number | null; confidence: "low" | "medium"; confidenceReason: string;
+  profileVersion: number | null; profileUpdatedAt: string | null;
+  sources: Array<{ id: string; section: string; label: string; text: string }>;
+  requirements: ProfileFitRequirement[]; recommendations: FitRecommendation[];
+  summary: string; method: string; limitation: string;
+};
