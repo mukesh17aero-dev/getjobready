@@ -10,7 +10,7 @@
 // candidate. Missing data is a distinct state from a zero score: the shape
 // below keeps "not connected yet" and "measured at zero" from ever colliding.
 
-import { apiCall } from "./core";
+import { API_URL, apiCall, requestHeaders } from "./core";
 
 export type PassportFeedState = "available" | "pending" | "unavailable";
 
@@ -131,9 +131,75 @@ export type PassportOverview = {
     assessedSkills: number;
     evidenceCount: number;
   };
-  sharing: { enabled: false; state: "private"; reason: string };
+  sharing: PassportSharing;
   limitations: string[];
+};
+
+export type ActivePassportShare = { token: string; expiresAt: string };
+export type PassportSharing = {
+  /** True once there is real evidence to show — an empty passport cannot be shared. */
+  enabled: boolean;
+  /** The one currently live share link, if any. */
+  active: ActivePassportShare | null;
+  reason: string;
 };
 
 export const getPassportOverview = (token: string) =>
   apiCall<{ overview: PassportOverview }>(token, "/v1/passport/overview");
+
+export type SharePassportResult =
+  | { ok: true; token: string; expiresAt: string }
+  | { ok: false; reason: string };
+
+/**
+ * Freezes the current overview and issues (or replaces) a revocable link.
+ * Not apiCall: a refusal (no evidence yet) comes back with a specific reason
+ * worth showing the candidate, not apiCall's generic null-on-failure.
+ */
+export async function sharePassport(token: string): Promise<SharePassportResult> {
+  try {
+    const res = await fetch(`${API_URL}/v1/passport/share`, {
+      method: "POST",
+      cache: "no-store",
+      headers: requestHeaders({ token }),
+    });
+    const body = (await res.json().catch(() => null)) as
+      | { ok: true; token: string; expiresAt: string }
+      | { error: string }
+      | null;
+    if (res.ok && body && "ok" in body) return body;
+    return { ok: false, reason: body && "error" in body ? body.error : "Could not share your passport right now. Try again in a moment." };
+  } catch {
+    return { ok: false, reason: "Could not reach the server. Try again in a moment." };
+  }
+}
+
+/**
+ * Not apiCall: a successful revoke returns 204 with no body, which apiCall's
+ * JSON parse would read as a failure. The status code is the whole answer.
+ */
+export async function revokePassportShare(token: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_URL}/v1/passport/share`, {
+      method: "DELETE",
+      cache: "no-store",
+      headers: requestHeaders({ token }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/** Public: what anyone holding a share link sees. No account, no token. */
+export async function getSharedPassport(shareToken: string): Promise<{ overview: PassportOverview } | null> {
+  try {
+    const res = await fetch(`${API_URL}/v1/passport/share/${encodeURIComponent(shareToken)}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as { overview: PassportOverview };
+  } catch {
+    return null;
+  }
+}

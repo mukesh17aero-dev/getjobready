@@ -7,6 +7,7 @@ import type {
   PassportSkillComparison,
   PassportTraining,
 } from "@/lib/api";
+import { PassportShare } from "./passport-share";
 
 // The Career Passport, as a private record rather than a certificate.
 //
@@ -331,10 +332,17 @@ export function PassportOverview({
   overview,
   name,
   photo,
+  /**
+   * False for the public link an employer opens: the frozen page they see
+   * offers no way to create or revoke a share — that control belongs only
+   * to the candidate, on their own copy of this same component.
+   */
+  shareControls = true,
 }: {
   overview: PassportOverviewData;
   name: string;
   photo?: string | null;
+  shareControls?: boolean;
 }) {
   const candidate = overview.candidate.data;
   const journeyDash = overview.sources.journey === "available" ? `${overview.summary.completedModules} / ${overview.summary.totalModules}` : "—";
@@ -366,7 +374,7 @@ export function PassportOverview({
           <p className="mt-1 text-[0.72rem] text-white/60">{candidate.location}</p>
         )}
         <p className="mt-3 inline-block rounded-full border border-white/25 px-2.5 py-0.5 text-[0.62rem] font-semibold tracking-wide text-white/80">
-          Private · Not shared with employers
+          {overview.sharing.active ? "Shared · Link is live" : "Private · Not shared with employers"}
         </p>
       </div>
 
@@ -434,15 +442,17 @@ export function PassportOverview({
         <Evidence evidence={overview.evidence} />
       </SectionCard>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed border-slate-300 bg-brand-mist p-4">
-        <div>
-          <h3 className="text-[0.85rem] font-semibold text-brand-ink">Candidate controlled. Shared when ready.</h3>
-          <p className="mt-0.5 max-w-md text-[0.78rem] text-slate-600">{overview.sharing.reason}</p>
+      {shareControls ? (
+        <PassportShare sharing={overview.sharing} />
+      ) : (
+        <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-brand-mist p-4">
+          <h3 className="text-[0.85rem] font-semibold text-brand-ink">A private snapshot, shared by the candidate</h3>
+          <p className="mt-0.5 max-w-md text-[0.78rem] text-slate-600">
+            This is exactly what the candidate approved when they shared this link — it does not update as their record
+            changes, and they can revoke it at any time.
+          </p>
         </div>
-        <span className="min-h-10 cursor-not-allowed rounded-xl border border-slate-300 px-4 py-2 text-[0.8rem] font-semibold text-slate-400">
-          Sharing unavailable
-        </span>
-      </div>
+      )}
 
       <ul className="mt-3 grid gap-0.5 text-[0.68rem] text-slate-400">
         {overview.limitations.map((line) => <li key={line}>{line}</li>)}
