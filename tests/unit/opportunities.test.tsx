@@ -58,4 +58,11 @@ describe("Opportunities list", () => {
     const html = render([job({ company: "" })]);
     expect(html).toContain("Employer not named");
   });
+
+  it("points every listing at practice, honestly labelled as general rather than matched to that one job", () => {
+    const html = render([job()]);
+    expect(html).toContain('href="/practice"');
+    expect(html).toContain("Practice before you apply");
+    expect(html).toContain("Not matched to this exact opening");
+  });
 });

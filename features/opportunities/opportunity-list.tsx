@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Opportunity } from "@/lib/api";
 
 // Real, live openings from NewEra - not a matched shortlist. There is no
@@ -41,14 +42,25 @@ function Card({ job }: { job: Opportunity }) {
         <p className="mt-3 text-[0.82rem] leading-relaxed text-slate-600">{job.description}</p>
       )}
 
-      <a
-        href={job.applyUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-4 inline-flex min-h-10 items-center rounded-xl bg-brand-teal-deep px-4 text-[0.8rem] font-bold text-white transition-colors hover:bg-brand-teal"
-      >
-        Apply on NewEra
-      </a>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <a
+          href={job.applyUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-10 items-center rounded-xl bg-brand-teal-deep px-4 text-[0.8rem] font-bold text-white transition-colors hover:bg-brand-teal"
+        >
+          Apply on NewEra
+        </a>
+        <Link
+          href="/practice"
+          className="inline-flex min-h-10 items-center rounded-xl border border-slate-300 px-4 text-[0.8rem] font-bold text-brand-ink transition-colors hover:border-brand-violet/60"
+        >
+          Practice before you apply
+        </Link>
+      </div>
+      <p className="mt-1.5 text-[0.68rem] text-slate-400">
+        Not matched to this exact opening — real practice and an assessment you can show, before the interview.
+      </p>
     </li>
   );
 }

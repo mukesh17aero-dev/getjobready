@@ -3,6 +3,7 @@
 // Adding a line here is a deliberate decision to widen the feature's contract.
 
 export * from "./linkedin-preview";
+export * from "./passport-link-button";
 export * from "./photo-picker";
 export * from "./profile";
 export * from "./profile-save";

@@ -34,7 +34,7 @@ import {
   toFields,
   type ProfileFields,
   type Track,
-  BUSINESS_SPACES,
+  BUSINESS_SPACES, PassportLinkButton,
 } from "@/features/profile";
 import styles from "./profile-form.module.css";
 import { track as trackEvent } from "@/lib/footprints";
@@ -287,7 +287,6 @@ export function ProfileForm({
   const [importing, setImporting] = useState(false);
   const [imported, setImported] = useState<ImportResult | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
-
   const set = (key: keyof ProfileFields) => (value: string) => {
     setFields((f) => ({ ...f, [key]: value }));
     setSummary(null);
@@ -700,6 +699,7 @@ export function ProfileForm({
               onChange={set("link")}
               placeholder="linkedin.com/in/priyasharma"
             />
+            <PassportLinkButton onFound={set("link")} />
             <label className="block"><span className="text-[0.8rem] font-semibold text-slate-800">Where are you now?</span><span className="block text-[0.72rem] text-slate-500">Choose what describes you today.</span>
               <select className={styles.select} value={fields.track} onChange={event => chooseTrack(event.target.value as Track)} aria-invalid={trackError ? true : undefined}>
                 <option value="">Choose your situation</option>{TRACKS.map(option => <option key={option.id} value={option.id}>{option.title}</option>)}
