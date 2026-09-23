@@ -1,7 +1,7 @@
 import { getServerSession } from "@/lib/supabase-server";
-import { getPassport, getCareerRecord } from "@/lib/api";
+import { getPassportOverview } from "@/lib/api";
 import { BackLink } from "@/components/ui/back-link";
-import { PassportBook } from "@/features/passport";
+import { PassportOverview } from "@/features/passport";
 import Link from "next/link";
 
 // The Career Passport - CLOSED TO USERS while it is finished.
@@ -96,10 +96,7 @@ export default async function PassportPage() {
     );
   }
 
-  const [result, record] = await Promise.all([
-    getPassport(session.access_token),
-    getCareerRecord(session.access_token),
-  ]);
+  const result = await getPassportOverview(session.access_token);
 
   if (!result) {
     return (
@@ -112,9 +109,11 @@ export default async function PassportPage() {
     );
   }
 
-  // No role chosen yet, so no booklet. Said plainly rather than shown as an
-  // error: nothing has gone wrong, they have not aimed at anything yet.
-  if (!result.passport) {
+  const { overview } = result;
+
+  // No role chosen yet, so no record to show. Said plainly rather than shown
+  // as an error: nothing has gone wrong, they have not aimed at anything yet.
+  if (!overview.role) {
     return (
       <Frame>
         <div className="rounded-2xl border border-slate-200 bg-brand-mist px-5 py-6">
@@ -124,7 +123,7 @@ export default async function PassportPage() {
           <p className="mt-2 max-w-2xl text-[0.9rem] leading-relaxed text-slate-600">
             A passport is made the moment you choose a role — it needs a name
             and an aim on the cover before it is anything at all. Choose one in
-            Discovery and the booklet is yours, empty, that same minute.
+            Discovery and the record is yours, empty, that same minute.
           </p>
           <Link
             href="/discover"
@@ -137,11 +136,9 @@ export default async function PassportPage() {
     );
   }
 
-  const profile = record?.profile;
-  const prefs = (profile?.preferences ?? {}) as Record<string, unknown>;
   const meta = session.user.user_metadata ?? {};
   const name =
-    (typeof prefs.fullName === "string" && prefs.fullName.trim()) ||
+    overview.candidate.data?.name ||
     (typeof meta.full_name === "string" && meta.full_name) ||
     "Your name";
   const photo =
@@ -156,20 +153,12 @@ export default async function PassportPage() {
           Your Passport
         </h1>
         <p className="mt-1.5 max-w-2xl text-[0.9rem] leading-relaxed text-slate-600">
-          {result.passport.issuedAt
-            ? "Issued by Ascend. Every page names the work behind it."
-            : "Made when you chose your role. Ascend seals it once there is measured work in it."}
+          A private record of your journey, built from work that was watched
+          and marked. Nothing here is shared until you say so.
         </p>
       </header>
 
-      <PassportBook
-        passport={result.passport}
-        name={name}
-        photo={photo}
-        qualification={
-          typeof prefs.qualification === "string" ? prefs.qualification : null
-        }
-      />
+      <PassportOverview overview={overview} name={name} photo={photo} />
     </Frame>
   );
 }
