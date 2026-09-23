@@ -4,25 +4,17 @@ import { BackLink } from "@/components/ui/back-link";
 import { PassportOverview } from "@/features/passport";
 import Link from "next/link";
 
-// The Career Passport - CLOSED TO USERS while it is finished.
+// The Career Passport: a private, read-only record assembled from evidence
+// that already exists in other modules - journey milestones, before/after
+// skill comparisons, training, interviews and evidence. Sharing stays
+// disabled until candidate approval, frozen snapshots and revocation exist.
 //
-// The page below is complete and works; what is not finished is the thing it
-// reports on. A passport is sealed from measured work, and the modules that
-// produce that measured work are still being built - so every real visitor
-// would meet a booklet with nothing in it and no way to put anything in it,
-// which is a promise the product cannot keep yet.
+// Two states, and the page is honest about both:
 //
-// It is closed here rather than deleted: the route stays, so a bookmark or an
-// old link lands on a page that says where the feature is, instead of a 404.
-// Flip OPEN_TO_USERS when the work behind it lands, and the page underneath
-// is exactly as it was.
-//
-// Three states, and the page is honest about all of them:
-//
-//   No role chosen - there is no booklet, because a passport nobody aimed at
-//   is a cover with no name on it. Discovery is the way in.
-//   Created, unissued - the booklet exists, empty, and says what would issue it.
-//   Issued - Ascend has sealed it, and it can be shared.
+//   No role chosen - there is no record yet, because a passport nobody aimed
+//   at is a cover with no name on it. Discovery is the way in.
+//   Role chosen - the record is assembled live from whatever evidence is
+//   connected so far; a missing source says so rather than showing a zero.
 //
 // Signed out this is a wall rather than a blur. Everything on the page is one
 // person's own record; a blurred passport belonging to nobody would be a
@@ -35,7 +27,7 @@ export const dynamic = "force-dynamic";
  * Typed rather than inferred on purpose: a literal `false` lets TypeScript
  * prove the rest of the page unreachable and strip it from the build.
  */
-const OPEN_TO_USERS: boolean = false;
+const OPEN_TO_USERS: boolean = true;
 
 export default async function PassportPage() {
   if (!OPEN_TO_USERS) {

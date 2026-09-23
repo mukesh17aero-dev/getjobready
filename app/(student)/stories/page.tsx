@@ -9,15 +9,11 @@ import { SAMPLE_STORIES } from "@/features/story-bank";
 import { BackLink } from "@/components/ui/back-link";
 import { StoryBank } from "@/features/story-bank";
 
-// The Story Bank - CLOSED TO USERS while it is finished.
+// The Story Bank.
 //
-// It drafts stories from work that was marked, and the modules producing that
-// work are still being built - so a real visitor meets a shelf with nothing
-// on it and no way to fill it, which is a promise the product cannot keep
-// yet. The route stays so an old link lands somewhere that explains itself;
-// flip OPEN_TO_USERS and the page below is exactly as it was.
-//
-// The Story Bank. One call when signed in: the stories, the question library
+// It drafts stories from work that was marked: past practice interviews,
+// submitted simulation missions, and the person's own career record. One
+// call when signed in: the stories, the question library
 // and the coverage between them arrive together, because the screen shows all
 // three at once and three fetches would show them at three different moments.
 //
@@ -34,7 +30,7 @@ export const metadata = { title: "Your story bank" };
 export const dynamic = "force-dynamic";
 
 /** Typed, not inferred, so the page below is not stripped as unreachable. */
-const OPEN_TO_USERS: boolean = false;
+const OPEN_TO_USERS: boolean = true;
 
 /** The signed-out bank: real questions, example stories, no coverage claims. */
 function sampleBank(
