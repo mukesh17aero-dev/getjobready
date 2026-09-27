@@ -3,3 +3,5 @@
 // Adding a line here is a deliberate decision to widen the feature's contract.
 
 export * from "./simulation-api";
+
+export { WorkplaceOrientation } from "./workplace-orientation";
