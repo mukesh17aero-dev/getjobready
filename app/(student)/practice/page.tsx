@@ -18,7 +18,7 @@ import { Check, Eye, Spark } from "@/components/ui/icons";
 // so the shape of what the assessment produces is visible without a number
 // being claimed about somebody we have not measured.
 //
-// Published simulation curricula open here; the Career Passport remains in development.
+// Published simulation curricula and the Career Passport open from this hub.
 
 export const metadata = { title: "Practice" };
 export const dynamic = "force-dynamic";
@@ -62,13 +62,13 @@ export default async function PracticeLandingPage() {
     },
     {
       id: "passport", title: "Career Passport", subtitle: "What you proved, in one place", icon: <Spark size={22} />,
-      status: "Under development",
+      status: "Available",
       outcome: "The record of what you proved, in one place.", intro: "Everything you have demonstrated, gathered into a single record an employer can look at. Not claims about yourself, but things you did that were marked.",
       why: "A first application has no work history to point at. A record of what you proved, gathered in one place and sealed once there is measured work inside, gives an employer something marked to look at instead of a list of claims.",
       artifactLabel: "What the passport holds",
-      artifact: <div className={s.summaryCard}><h2>A booklet with your name on it</h2><p className={s.emptyIntro}>Made the moment you choose a role and filled from your own practice and assessment results, so there is nothing extra to write.</p><div className={s.outline}><span>Who you are</span><i /><i /><span>What you proved</span><i /><i /><span>Sealed by Ascend</span><i /></div><small className={s.exampleLabel}>Still under development · sealed once there is measured work inside</small></div>,
+      artifact: <div className={s.summaryCard}><h2>A booklet with your name on it</h2><p className={s.emptyIntro}>Made the moment you choose a role and filled from your own practice and assessment results, so there is nothing extra to write.</p><div className={s.outline}><span>Who you are</span><i /><i /><span>What you proved</span><i /><i /><span>Sealed by Ascend</span><i /></div><small className={s.exampleLabel}>Filled from your saved journey and measured work</small></div>,
       leaveWith: "A sealed record an employer can look at, filled from your own measured work.",
-      action: null,
+      action: { href: "/passport", label: "Open my Passport" },
       points: ["Filled from your own results, nothing extra to write", "Things you did that were marked, not claims", "Sealed once there is measured work inside"],
       steps: ["Choose a role in Discovery.", "Practise and sit the assessment; each result lands on a page.", "Ascend seals it once there is measured work inside."],
     },
