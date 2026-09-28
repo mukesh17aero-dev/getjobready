@@ -29,145 +29,8 @@ import {
 } from "@/lib/api";
 import { SkillWeb, type WebAxis, type WebBand } from "./skill-web";
 import { supabaseBrowser } from "@/lib/supabase-browser";
-
-const clamp = (n: number) => Math.max(0, Math.min(100, n));
-
-/**
- * Wraps a "quoted phrase" inside a sentence as a small chip, so the exact
- * words this was read from stand out from the analysis around them instead of
- * hiding inside a paragraph. Nothing is removed or shortened - the quote is
- * why this page can be trusted, so it gets more visual weight, not less.
- */
-function Evidence({ text }: { text: string }) {
-  const parts = text.split(/("[^"]{2,}")/g);
-  return (
-    <>
-      {parts.map((part, i) =>
-        part.startsWith('"') && part.endsWith('"') ? (
-          <mark
-            key={i}
-            className="rounded bg-slate-100 px-1 py-0.5 font-mono text-[0.86em] not-italic text-slate-700"
-          >
-            {part}
-          </mark>
-        ) : (
-          part
-        ),
-      )}
-    </>
-  );
-}
-
-/**
- * One skill as a small ring, for when there are too few measured skills to
- * draw the web (SkillWeb needs three axes - two make a line, not a shape).
- * Same conic-gradient technique as the big readiness Ring, scaled down, so a
- * thin sitting still reads as "a chart" rather than "a flat bar and a
- * paragraph".
- */
-function SkillGauge({ skill, score }: { skill: string; score: number }) {
-  const pct = clamp(score);
-  return (
-    <div className="flex w-28 flex-col items-center gap-2 text-center">
-      <div
-        role="img"
-        aria-label={`${skill}: ${score} out of 100`}
-        className="relative h-24 w-24 shrink-0"
-      >
-        <div
-          aria-hidden
-          className="absolute inset-0 rounded-full"
-          style={{
-            background: `conic-gradient(var(--color-brand-violet) ${pct}%, var(--color-slate-200) 0)`,
-          }}
-        />
-        <div
-          aria-hidden
-          className="absolute inset-[7px] flex items-center justify-center rounded-full bg-surface"
-        >
-          <span className="font-display text-[1.3rem] font-bold leading-none text-slate-900">
-            {score}
-          </span>
-        </div>
-      </div>
-      <span className="text-[0.8rem] font-medium leading-tight text-slate-700">
-        {skill}
-      </span>
-    </div>
-  );
-}
-
-/**
- * The readiness score as a ring.
- *
- * A conic gradient and two divs - the stack has no chart library, and this
- * needs none. The number is the accessible content; the ring is a picture of
- * the number, which is why it is one `role="img"` with a label rather than
- * something a screen reader has to walk.
- *
- * Deliberately NOT a radar. A radar plots every skill on its own axis and
- * joins them, which requires a value on every axis - and a skill this sitting
- * never reached has no value. Plotting it as zero says "bad at this" when the
- * truth is "not seen", and dropping the axis silently changes the shape of the
- * polygon into something that looks like a finding. Bars can simply leave a
- * skill out.
- */
-function Ring({ score }: { score: number }) {
-  const pct = clamp(score);
-  return (
-    <div
-      role="img"
-      aria-label={`Readiness ${score} out of 100`}
-      className="relative h-40 w-40 shrink-0"
-    >
-      <div
-        aria-hidden
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: `conic-gradient(var(--color-brand-violet) ${pct}%, var(--color-slate-200) 0)`,
-        }}
-      />
-      {/* The disc has to be the card's own colour, not the page's: a surface
-          that is nearly right reads as a smudge behind the number. */}
-      <div
-        aria-hidden
-        className="absolute inset-[11px] flex flex-col items-center justify-center rounded-full bg-surface"
-      >
-        <span className="font-display text-[2.6rem] font-bold leading-none tracking-tight text-slate-900">
-          {score}
-        </span>
-        <span className="mt-1 text-[0.66rem] font-semibold uppercase tracking-[0.12em] text-slate-500">
-          of 100
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/** A titled box. The read-out is panels now, not one long column. */
-function Panel({
-  title,
-  note,
-  children,
-}: {
-  title: string;
-  note?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded-xl border border-slate-200 p-4">
-      <h2 className="text-[0.9rem] font-semibold tracking-tight text-slate-900">
-        {title}
-      </h2>
-      {note && (
-        <p className="mt-0.5 text-[0.78rem] leading-relaxed text-slate-500">
-          {note}
-        </p>
-      )}
-      <div className="mt-3">{children}</div>
-    </section>
-  );
-}
+import { ArrowRight, Check, Clock, Spark } from "@/components/ui/icons";
+import { clamp, Evidence, Panel, Ring, SkillGauge, TONE, toneOf } from "./assessment-readout-visuals";
 
 export function AssessmentReadout({
   readout,
@@ -236,21 +99,28 @@ export function AssessmentReadout({
           were days at a job, and the read-out should use the same word the
           screen they just left used. */}
           <dl className="mt-6 grid gap-3 sm:grid-cols-3">
-            {[
-              ["Questions answered", `${readout.scenesAttempted}`],
-              ["Time spent", `${readout.minutesSpent} min`],
-              ["Skills you showed", `${touched} of ${readout.skills.length}`],
-            ].map(([label, value]) => (
+            {(
+              [
+                { label: "Questions answered", value: `${readout.scenesAttempted}`, icon: Check },
+                { label: "Time spent", value: `${readout.minutesSpent} min`, icon: Clock },
+                { label: "Skills you showed", value: `${touched} of ${readout.skills.length}`, icon: Spark },
+              ] as const
+            ).map(({ label, value, icon: Icon }) => (
               <div
                 key={label}
-                className="rounded-xl border border-slate-200 p-3.5"
+                className="flex items-start gap-3 rounded-xl border border-slate-200 p-3.5"
               >
-                <dt className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
-                  {label}
-                </dt>
-                <dd className="mt-0.5 text-lg font-semibold text-slate-900">
-                  {value}
-                </dd>
+                <span aria-hidden className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-500">
+                  <Icon size={15} />
+                </span>
+                <div>
+                  <dt className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+                    {label}
+                  </dt>
+                  <dd className="mt-0.5 text-lg font-semibold text-slate-900">
+                    {value}
+                  </dd>
+                </div>
               </div>
             ))}
           </dl>
@@ -577,25 +447,37 @@ function Scores({
   const scored = new Set(review.skillScores.map((s) => s.skill));
   const unmeasured = allSkills.filter((s) => !scored.has(s));
 
+  const heroTone = TONE[toneOf(review.readiness.score)];
+
   return (
     <div className="mt-4">
-      <div className="rounded-2xl border border-slate-200 bg-surface p-4 sm:p-5">
-        <div className="flex flex-wrap items-center gap-5 sm:gap-7">
+      <div
+        className={`rounded-2xl border p-5 sm:p-6 ${heroTone.border}`}
+        style={{
+          background: `radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, ${heroTone.ring} 10%, transparent), transparent 60%), var(--color-surface)`,
+        }}
+      >
+        <div className="flex flex-wrap items-center gap-6 sm:gap-8">
           <Ring score={review.readiness.score} />
           {/* Wide enough to read: below the ring on a phone, beside it otherwise. */}
           <div className="min-w-[14rem] flex-1">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold uppercase tracking-[0.08em] ${heroTone.bg} ${heroTone.text}`}
+            >
+              {heroTone.label}
+            </span>
+            <p className="mt-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
               Productive readiness for this role
             </p>
             {review.readiness.why && (
-              <p className="mt-1 text-[0.92rem] leading-relaxed text-slate-700">
+              <p className="mt-1 text-[0.95rem] leading-relaxed text-slate-700">
                 <Evidence text={review.readiness.why} />
               </p>
             )}
           </div>
         </div>
         {/* The number never travels without what it was read from. */}
-        <p className="mt-3 border-t border-slate-100 pt-2.5 text-[0.82rem] leading-relaxed text-slate-500">
+        <p className="mt-4 border-t border-slate-900/10 pt-3 text-[0.82rem] leading-relaxed text-slate-500">
           This comes from your assessment, in which you worked through{" "}
           {review.basis.scenesAttempted} of {review.basis.scenesInSitting}{" "}
           situations
@@ -657,7 +539,7 @@ function Scores({
                   <>
                     <div className="flex items-baseline justify-between gap-3 text-[0.86rem]">
                       <span className="font-medium text-slate-700">{s.skill}</span>
-                      <span className="shrink-0 font-semibold text-slate-900">
+                      <span className={`shrink-0 font-semibold ${TONE[toneOf(s.score)].text}`}>
                         {s.score}
                       </span>
                     </div>
@@ -667,8 +549,8 @@ function Scores({
                       aria-label={`${s.skill}: ${s.score} out of 100`}
                     >
                       <div
-                        className="h-full rounded-full bg-brand-violet"
-                        style={{ width: `${clamp(s.score)}%` }}
+                        className="h-full rounded-full"
+                        style={{ width: `${clamp(s.score)}%`, background: TONE[toneOf(s.score)].ring }}
                       />
                     </div>
                   </>
@@ -689,9 +571,16 @@ function Scores({
       )}
 
       {review.summary && (
-        <p className="mt-4 text-[0.9rem] leading-relaxed text-slate-700">
-          <Evidence text={review.summary} />
-        </p>
+        <div
+          className={`mt-4 rounded-xl border-l-[3px] p-4 ${heroTone.border} ${heroTone.bg}`}
+        >
+          <p className="text-[0.68rem] font-bold uppercase tracking-[0.1em] text-slate-500">
+            The bottom line
+          </p>
+          <p className="mt-1 text-[0.9rem] leading-relaxed text-slate-700">
+            <Evidence text={review.summary} />
+          </p>
+        </div>
       )}
 
       {/* Working with AI, given its own place rather than a line in the
@@ -705,7 +594,7 @@ function Scores({
             <h2 className="text-[0.9rem] font-semibold tracking-tight text-slate-900">
               How you worked with the AI assistant
             </h2>
-            <span className="text-[1.1rem] font-semibold text-slate-900">
+            <span className={`text-[1.1rem] font-semibold ${TONE[toneOf(review.usingAI.score)].text}`}>
               {review.usingAI.score}
               <span className="ml-1 text-[0.78rem] font-normal text-slate-400">
                 of 100
@@ -718,8 +607,8 @@ function Scores({
             aria-label={`Working with AI: ${review.usingAI.score} out of 100`}
           >
             <div
-              className="h-full rounded-full bg-brand-violet"
-              style={{ width: `${clamp(review.usingAI.score)}%` }}
+              className="h-full rounded-full"
+              style={{ width: `${clamp(review.usingAI.score)}%`, background: TONE[toneOf(review.usingAI.score)].ring }}
             />
           </div>
           {review.usingAI.why && (
@@ -731,27 +620,51 @@ function Scores({
       )}
 
       {/* Side by side, because they are two halves of one reading and stacking
-          them made the second half look like an afterthought. */}
+          them made the second half look like an afterthought. Icon + colour
+          together, never colour alone, so the distinction survives greyscale
+          and colour-blindness both. */}
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         {(
           [
-            ["What you are already good at", review.strengths],
-            ["Where you can grow", review.workOn],
-          ] as Array<[string, string[]]>
-        ).map(([title, items]) =>
+            {
+              title: "What you are already good at",
+              items: review.strengths,
+              icon: Check,
+              text: "text-teal-700",
+              bg: "bg-teal-50",
+              iconBg: "bg-teal-100",
+            },
+            {
+              title: "Where you can grow",
+              items: review.workOn,
+              icon: ArrowRight,
+              text: "text-amber-700",
+              bg: "bg-amber-50",
+              iconBg: "bg-amber-100",
+            },
+          ] as const
+        ).map(({ title, items, icon: Icon, text, bg, iconBg }) =>
           items.length > 0 ? (
-            <Panel key={title} title={title}>
-              <ul className="grid gap-1.5 text-[0.86rem] leading-relaxed text-slate-600">
+            <section key={title} className={`rounded-xl border border-slate-200 p-4 ${bg}`}>
+              <h2 className="text-[0.9rem] font-semibold tracking-tight text-slate-900">
+                {title}
+              </h2>
+              <ul className="mt-3 grid gap-2.5">
                 {items.map((line) => (
-                  <li key={line} className="flex gap-2">
-                    <span aria-hidden className="text-slate-300">
-                      ·
+                  <li key={line} className="flex gap-2.5">
+                    <span
+                      aria-hidden
+                      className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full ${iconBg} ${text}`}
+                    >
+                      <Icon size={12} />
                     </span>
-                    <Evidence text={line} />
+                    <span className="text-[0.86rem] leading-relaxed text-slate-600">
+                      <Evidence text={line} />
+                    </span>
                   </li>
                 ))}
               </ul>
-            </Panel>
+            </section>
           ) : null,
         )}
       </div>
