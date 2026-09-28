@@ -50,6 +50,7 @@ const DESTINATIONS: Destination[] = [
       { label: "Interview readiness", href: "/interview" },
     ],
   },
+  { label: "Roleplay", href: "/roleplay", match: ["/roleplay"] },
   // One word, because the bar is a bar.
   {
     label: "Identity",
