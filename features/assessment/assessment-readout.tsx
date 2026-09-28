@@ -270,17 +270,25 @@ export function AssessmentReadout({
                 Go to Simulations
               </Link>
               <span className="text-[0.78rem] text-slate-500">
-                In development — the page says where it has got to.
+                Your simulation progress is tracked there.
               </span>
             </div>
           </div>
 
-          <Link
-            href={backHref}
-            className="mt-5 inline-flex min-h-11 items-center text-[0.85rem] font-semibold text-slate-500 hover:text-slate-900"
-          >
-            Back to Practice
-          </Link>
+          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
+            <Link
+              href={backHref}
+              className="inline-flex min-h-11 items-center text-[0.85rem] font-semibold text-slate-500 hover:text-slate-900"
+            >
+              Back to Practice
+            </Link>
+            <Link
+              href="/practice/readiness/results"
+              className="inline-flex min-h-11 items-center text-[0.85rem] font-semibold text-slate-500 hover:text-slate-900"
+            >
+              See every sitting you have finished
+            </Link>
+          </div>
         </>
       )}
     </section>
