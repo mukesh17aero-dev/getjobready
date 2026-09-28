@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CAPTURE_GUARD } from "./capture-guard";
 
 // Screenshot deterrence, and an honest account of what that can mean.
 //
@@ -63,6 +64,7 @@ export function ScreenGuard({
   const [concealed, setConcealed] = useState(false);
 
   useEffect(() => {
+    if (!CAPTURE_GUARD) return;
     const hide = () => {
       setConcealed(true);
       onConcealed?.();

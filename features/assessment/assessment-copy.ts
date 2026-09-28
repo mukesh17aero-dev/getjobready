@@ -1,3 +1,5 @@
+import { CAPTURE_GUARD } from "./capture-guard";
+
 /** Protect both direct copies and page-wide selections containing assessment content. */
 export function protectAssessmentCopy(root: HTMLElement, onBlocked: (action: "copy" | "cut") => void): () => void {
   const doc = root.ownerDocument;
@@ -39,7 +41,7 @@ export function protectAssessmentInputs(root:HTMLElement,onBlocked:(action:'past
  const paste=(event:Event)=>{if(inside(event)){event.preventDefault();onBlocked('paste');}};
  const drop=(event:Event)=>{if(inside(event)){event.preventDefault();onBlocked('drop');}};
  const menu=(event:Event)=>{if(inside(event))event.preventDefault();};
- const key=(event:Event)=>{const e=event as KeyboardEvent;const letter=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&letter==='p'){e.preventDefault();onBlocked('print');}else if(e.key==='PrintScreen'||(e.metaKey&&e.shiftKey&&['3','4','5'].includes(letter))){e.preventDefault();onBlocked('capture');}else if(inside(e)&&(((e.ctrlKey||e.metaKey)&&letter==='v')||(e.shiftKey&&e.key==='Insert'))){e.preventDefault();onBlocked('paste');}};
+ const key=(event:Event)=>{const e=event as KeyboardEvent;const letter=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&letter==='p'){e.preventDefault();onBlocked('print');}else if(CAPTURE_GUARD&&(e.key==='PrintScreen'||(e.metaKey&&e.shiftKey&&['3','4','5'].includes(letter)))){e.preventDefault();onBlocked('capture');}else if(inside(e)&&(((e.ctrlKey||e.metaKey)&&letter==='v')||(e.shiftKey&&e.key==='Insert'))){e.preventDefault();onBlocked('paste');}};
  const handlers:[string,EventListener][]=[['beforeinput',insertion],['paste',paste],['drop',drop],['contextmenu',menu],['keydown',key]];
  const options={capture:true};
  handlers.forEach(([name,handler])=>doc.addEventListener(name,handler,options));
