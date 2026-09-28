@@ -1,7 +1,9 @@
 "use client";
 
 // What a finished sitting shows: a readiness score for the role, a score per
-// skill, and the work behind both.
+// skill, and the work behind both - as a set of tabs rather than one long
+// scroll, so the default view stays small and visual and the dense analysis
+// only appears once somebody asks for a specific section.
 //
 // THE NUMBERS NEVER TRAVEL ALONE. A readiness score read off twenty minutes
 // is a real thing to act on and a poor thing to be summed up by, so `basis`
@@ -15,22 +17,23 @@
 // prompt: not reaching a scene is missing evidence, not evidence of inability,
 // and a zero would read as the second.
 //
-// The bars are drawn in CSS rather than pulled from a chart library: the stack
-// forbids component libraries, and a bar is two divs.
+// Every chart is drawn in SVG rather than pulled from a chart library: the
+// stack forbids component libraries, and none of these need one.
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getRoleBenchmarks,
+  listAssessmentRuns,
   reviewAssessmentRun,
   type AssessmentReview,
   type Readout,
   type ReferenceBand,
 } from "@/lib/api";
-import { SkillWeb, type WebAxis, type WebBand } from "./skill-web";
+import type { WebAxis, WebBand } from "./skill-web";
 import { supabaseBrowser } from "@/lib/supabase-browser";
-import { ArrowRight, Check, Clock, Spark } from "@/components/ui/icons";
-import { clamp, Evidence, Panel, Ring, SkillGauge, TONE, toneOf } from "./assessment-readout-visuals";
+import { Tabs, type TabDef } from "./assessment-readout-tabs";
+import { AiPanel, AnswersPanel, OverviewPanel, SkillsPanel } from "./assessment-readout-panels";
 
 export function AssessmentReadout({
   readout,
@@ -57,7 +60,6 @@ export function AssessmentReadout({
   fresh?: boolean;
 }) {
   const finished = readout.scenesAttempted >= readout.scenesInSitting;
-  const touched = readout.skills.filter((s) => s.attempted > 0).length;
   const [reading, setReading] = useState(true);
   // Stable, so naming it in the effect's dependencies below does not re-run
   // the effect on every render - which fired a fresh review each time, and the
@@ -80,113 +82,15 @@ export function AssessmentReadout({
         {finished ? "Your role readiness report" : "Your assessment progress"}
       </h1>
 
-      <Scores
-        runId={readout.runId}
-        roleId={readout.roleId}
-        allSkills={readout.skills.map((s) => s.skill)}
-        onSettled={settled}
-        fresh={fresh}
-        example={example}
-      />
+      <Scores readout={readout} onSettled={settled} fresh={fresh} example={example} />
 
-      {/* Everything below waits. It is arithmetic and instant, which is
-          exactly why it used to be on screen first - a page that opens on
-          "how much of the job you got to" while the score is still being
-          written has buried the thing somebody came for. */}
+      {/* One action, and it is the next piece of work rather than a way back.
+          Simulation Missions is where a growth area above stops being a note
+          and becomes practice - so the read-out ends by pointing at it. It
+          waits for the same reason the tabs' content does: arithmetic is
+          instant, but this sits below the score on purpose regardless. */}
       {!reading && (
         <>
-          {/* "Scenes" is our word for them, not theirs. From the outside these
-          were days at a job, and the read-out should use the same word the
-          screen they just left used. */}
-          <dl className="mt-6 grid gap-3 sm:grid-cols-3">
-            {(
-              [
-                { label: "Questions answered", value: `${readout.scenesAttempted}`, icon: Check },
-                { label: "Time spent", value: `${readout.minutesSpent} min`, icon: Clock },
-                { label: "Skills you showed", value: `${touched} of ${readout.skills.length}`, icon: Spark },
-              ] as const
-            ).map(({ label, value, icon: Icon }) => (
-              <div
-                key={label}
-                className="flex items-start gap-3 rounded-xl border border-slate-200 p-3.5"
-              >
-                <span aria-hidden className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-500">
-                  <Icon size={15} />
-                </span>
-                <div>
-                  <dt className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
-                    {label}
-                  </dt>
-                  <dd className="mt-0.5 text-lg font-semibold text-slate-900">
-                    {value}
-                  </dd>
-                </div>
-              </div>
-            ))}
-          </dl>
-
-          <details className="mt-6 rounded-xl border border-slate-200 p-3.5">
-            <summary className="cursor-pointer text-[0.86rem] font-semibold text-slate-700">
-              How much of the job you got to
-            </summary>
-            <p className="mt-1 text-[0.8rem] text-slate-500">
-              This shows how often each skill appeared in your answered questions.
-              Fewer examples mean there is less evidence for that skill.
-            </p>
-            <ul className="mt-3 grid gap-2.5">
-              {readout.skills.map((s) => {
-                const pct = clamp(
-                  s.inSitting === 0 ? 0 : (s.attempted / s.inSitting) * 100,
-                );
-                return (
-                  <li key={s.skill}>
-                    <div className="flex items-baseline justify-between gap-3 text-[0.84rem]">
-                      <span className="font-medium text-slate-700">
-                        {s.skill}
-                      </span>
-                      <span className="shrink-0 text-[0.78rem] text-slate-400">
-                        {s.attempted} of {s.inSitting}
-                      </span>
-                    </div>
-                    <div
-                      className="mt-1 h-2 w-full overflow-hidden rounded-full bg-slate-100"
-                      role="img"
-                      aria-label={`${s.skill}: called on ${s.attempted} of ${s.inSitting} times`}
-                    >
-                      <div
-                        className={`h-full rounded-full ${
-                          s.attempted === 0 ? "bg-slate-300" : "bg-brand-teal"
-                        }`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </details>
-
-          {readout.repeated.length > 0 && (
-            <div className="mt-3">
-              <Panel title="Situations you went back to">
-                <ul className="grid gap-1.5 text-[0.84rem] text-slate-600">
-                  {readout.repeated.map((r) => (
-                    <li key={r.sceneTitle}>
-                      {r.sceneTitle} · {r.attempts} goes
-                    </li>
-                  ))}
-                </ul>
-              </Panel>
-            </div>
-          )}
-
-          {/* One action, and it is the next piece of work rather than a way back.
-          Simulation Missions is where a growth area above stops being a note
-          and becomes practice - so the read-out ends by pointing at it.
-
-          It is honest about not being finished. A button that says "Start" and
-          opens a page saying "in development" is worse than a button that says
-          so first. */}
           <div className="mt-8 rounded-2xl border border-brand-violet/25 bg-brand-violet/[0.04] p-4 sm:p-5">
             <h2 className="text-[1rem] font-semibold tracking-tight text-slate-900">
               Work on this in Simulations
@@ -300,18 +204,21 @@ function ReadingProgress() {
   );
 }
 
+/** "12 Sep", fixed to no particular timezone - a trend axis label, not a
+ * timestamp somebody needs to act on. */
+function shortDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
 function Scores({
-  runId,
-  roleId,
-  allSkills,
+  readout,
   onSettled,
   fresh,
   example,
 }: {
-  runId: string;
-  roleId: string | null;
-  /** Every skill this role claims, so the unscored ones can be named. */
-  allSkills: string[];
+  readout: Readout;
   /** Called once the read is over, whether it worked or not. */
   onSettled: () => void;
   /** Whether the marking is happening now or happened days ago. */
@@ -319,10 +226,15 @@ function Scores({
   /** Already known: shown as it is, nothing fetched. */
   example: AssessmentReview | null;
 }) {
+  const runId = readout.runId;
+  const roleId = readout.roleId;
+  const allSkills = readout.skills.map((s) => s.skill);
+
   const [review, setReview] = useState<AssessmentReview | null>(example);
   const [state, setState] = useState<"reading" | "done" | "failed">(example ? "done" : "reading");
   const [why, setWhy] = useState("");
   const [bands, setBands] = useState<ReferenceBand[]>([]);
+  const [trendPoints, setTrendPoints] = useState<Array<{ label: string; score: number }>>([]);
   // One request per run, ever - and its result is kept.
   //
   // This is the bug behind "old results do not load". The guard was a ref plus
@@ -373,15 +285,23 @@ function Scores({
       setReview(result.review);
       setState("done");
       onSettled();
-      // How everybody else did, fetched after the scores are on screen. It is
-      // a comparison, not the finding - it must never hold up the number
-      // somebody actually came for, and it is absent more often than not.
-      if (!roleId) return;
+      // Neither of these is the finding, so neither may hold up the number
+      // somebody actually came for - both are fetched after it is on screen,
+      // and both are absent more often than not.
       const { data } = await supabaseBrowser().auth.getSession();
       const token = data.session?.access_token;
       if (!token) return;
-      const other = await getRoleBenchmarks(token, roleId);
-      setBands(other?.bands ?? []);
+      if (roleId) {
+        const other = await getRoleBenchmarks(token, roleId);
+        setBands(other?.bands ?? []);
+      }
+      const history = await listAssessmentRuns(token);
+      const points = (history?.runs ?? [])
+        .filter((r) => r.readiness !== null && (!roleId || r.roleId === roleId))
+        .sort((a, b) => new Date(a.finishedAt).getTime() - new Date(b.finishedAt).getTime())
+        .slice(-6)
+        .map((r) => ({ label: shortDate(r.finishedAt), score: r.readiness! }));
+      setTrendPoints(points);
     });
   }, [runId, roleId, onSettled, example]);
 
@@ -426,8 +346,6 @@ function Scores({
     );
   }
 
-  const partial = review.basis.scenesAttempted < review.basis.scenesInSitting;
-
   // Only skills the work actually called on go on the shape. A skill nobody
   // measured cannot be a point at zero - that reads as "bad at this" when the
   // truth is "not seen" - so it is named under the chart instead.
@@ -447,255 +365,33 @@ function Scores({
   const scored = new Set(review.skillScores.map((s) => s.skill));
   const unmeasured = allSkills.filter((s) => !scored.has(s));
 
-  const heroTone = TONE[toneOf(review.readiness.score)];
+  const tabs: TabDef[] = [
+    {
+      id: "overview",
+      label: "Overview",
+      content: <OverviewPanel readout={readout} review={review} trendPoints={trendPoints} />,
+    },
+    {
+      id: "skills",
+      label: "Skill breakdown",
+      content: (
+        <SkillsPanel
+          readout={readout}
+          review={review}
+          web={web}
+          webBands={webBands}
+          anyIllustrative={anyIllustrative}
+          unmeasured={unmeasured}
+        />
+      ),
+    },
+  ];
+  if (review.usingAI) {
+    tabs.push({ id: "ai", label: "Working with AI", content: <AiPanel usingAI={review.usingAI} /> });
+  }
+  if (review.scenes.some((sc) => sc.did || sc.better)) {
+    tabs.push({ id: "answers", label: "Your answers", content: <AnswersPanel scenes={review.scenes} /> });
+  }
 
-  return (
-    <div className="mt-4">
-      <div
-        className={`rounded-2xl border p-5 sm:p-6 ${heroTone.border}`}
-        style={{
-          background: `radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, ${heroTone.ring} 10%, transparent), transparent 60%), var(--color-surface)`,
-        }}
-      >
-        <div className="flex flex-wrap items-center gap-6 sm:gap-8">
-          <Ring score={review.readiness.score} />
-          {/* Wide enough to read: below the ring on a phone, beside it otherwise. */}
-          <div className="min-w-[14rem] flex-1">
-            <span
-              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold uppercase tracking-[0.08em] ${heroTone.bg} ${heroTone.text}`}
-            >
-              {heroTone.label}
-            </span>
-            <p className="mt-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
-              Productive readiness for this role
-            </p>
-            {review.readiness.why && (
-              <p className="mt-1 text-[0.95rem] leading-relaxed text-slate-700">
-                <Evidence text={review.readiness.why} />
-              </p>
-            )}
-          </div>
-        </div>
-        {/* The number never travels without what it was read from. */}
-        <p className="mt-4 border-t border-slate-900/10 pt-3 text-[0.82rem] leading-relaxed text-slate-500">
-          This comes from your assessment, in which you worked through{" "}
-          {review.basis.scenesAttempted} of {review.basis.scenesInSitting}{" "}
-          situations
-          {partial
-            ? " — so parts of the job never came up, and this score can only speak for the parts that did"
-            : ""}
-          . It says what today showed. Do it again in a month and it will say
-          something different.
-        </p>
-      </div>
-
-      {review.skillScores.length > 0 && (
-        <>
-          <h2 className="mt-6 text-[0.95rem] font-semibold tracking-tight text-slate-900">
-            Skill by skill
-          </h2>
-          <p className="mt-0.5 text-[0.8rem] text-slate-500">
-            Only skills your work actually showed. A skill whose scenes you did
-            not reach is left out rather than scored — no evidence is not the
-            same as doing badly.
-          </p>
-          {web.length > 0 && web.length < 3 && (
-            <div className="mt-4 flex flex-wrap justify-center gap-x-8 gap-y-4 rounded-xl border border-slate-200 p-5 sm:justify-start">
-              {web.map((a) => (
-                <SkillGauge key={a.skill} skill={a.skill} score={a.score} />
-              ))}
-            </div>
-          )}
-          {web.length >= 3 && (
-            <div className="mt-4 rounded-xl border border-slate-200 p-4">
-              <SkillWeb axes={web} bands={webBands} />
-              {anyIllustrative && (
-                <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-[0.78rem] leading-relaxed text-amber-900">
-                  The lines marked{" "}
-                  <strong className="font-semibold">illustrative</strong> are
-                  placeholders, not measurements. They show roughly where those
-                  levels sit while we gather the real figures — treat them as a
-                  rough guide and nothing more.
-                </p>
-              )}
-              {unmeasured.length > 0 && (
-                <p className="mt-3 border-t border-slate-100 pt-2.5 text-[0.78rem] leading-relaxed text-slate-500">
-                  Not on this shape: {unmeasured.join(", ")}. The work in front
-                  of you never called on{" "}
-                  {unmeasured.length === 1 ? "it" : "them"}, so there is nothing
-                  to plot — which is not the same as a low score, and is why it
-                  is named here instead of drawn as one.
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Two columns on a wide screen. A dozen skills stacked one per row
-              is a page nobody reaches the bottom of. */}
-          <ul className="mt-3 grid gap-x-6 gap-y-3 lg:grid-cols-2">
-            {review.skillScores.map((s) => (
-              <li key={s.skill}>
-                {web.length >= 3 ? (
-                  <>
-                    <div className="flex items-baseline justify-between gap-3 text-[0.86rem]">
-                      <span className="font-medium text-slate-700">{s.skill}</span>
-                      <span className={`shrink-0 font-semibold ${TONE[toneOf(s.score)].text}`}>
-                        {s.score}
-                      </span>
-                    </div>
-                    <div
-                      className="mt-1 h-2 w-full overflow-hidden rounded-full bg-slate-100"
-                      role="img"
-                      aria-label={`${s.skill}: ${s.score} out of 100`}
-                    >
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${clamp(s.score)}%`, background: TONE[toneOf(s.score)].ring }}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-[0.86rem] font-medium text-slate-700">
-                    {s.skill}
-                  </p>
-                )}
-                {s.why && (
-                  <p className="mt-1 text-[0.82rem] leading-relaxed text-slate-500">
-                    <Evidence text={s.why} />
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-
-      {review.summary && (
-        <div
-          className={`mt-4 rounded-xl border-l-[3px] p-4 ${heroTone.border} ${heroTone.bg}`}
-        >
-          <p className="text-[0.68rem] font-bold uppercase tracking-[0.1em] text-slate-500">
-            The bottom line
-          </p>
-          <p className="mt-1 text-[0.9rem] leading-relaxed text-slate-700">
-            <Evidence text={review.summary} />
-          </p>
-        </div>
-      )}
-
-      {/* Working with AI, given its own place rather than a line in the
-          summary. It is one of the three things this assessment is for, and
-          the one somebody is least likely to have been told about honestly:
-          not asking is a habit people were taught, and pasting a draft is a
-          judgement failure nobody flags at college. */}
-      {review.usingAI && (
-        <div className="mt-5 rounded-xl border border-slate-200 p-4">
-          <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <h2 className="text-[0.9rem] font-semibold tracking-tight text-slate-900">
-              How you worked with the AI assistant
-            </h2>
-            <span className={`text-[1.1rem] font-semibold ${TONE[toneOf(review.usingAI.score)].text}`}>
-              {review.usingAI.score}
-              <span className="ml-1 text-[0.78rem] font-normal text-slate-400">
-                of 100
-              </span>
-            </span>
-          </div>
-          <div
-            className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100"
-            role="img"
-            aria-label={`Working with AI: ${review.usingAI.score} out of 100`}
-          >
-            <div
-              className="h-full rounded-full"
-              style={{ width: `${clamp(review.usingAI.score)}%`, background: TONE[toneOf(review.usingAI.score)].ring }}
-            />
-          </div>
-          {review.usingAI.why && (
-            <p className="mt-2 text-[0.86rem] leading-relaxed text-slate-600">
-              <Evidence text={review.usingAI.why} />
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Side by side, because they are two halves of one reading and stacking
-          them made the second half look like an afterthought. Icon + colour
-          together, never colour alone, so the distinction survives greyscale
-          and colour-blindness both. */}
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        {(
-          [
-            {
-              title: "What you are already good at",
-              items: review.strengths,
-              icon: Check,
-              text: "text-teal-700",
-              bg: "bg-teal-50",
-              iconBg: "bg-teal-100",
-            },
-            {
-              title: "Where you can grow",
-              items: review.workOn,
-              icon: ArrowRight,
-              text: "text-amber-700",
-              bg: "bg-amber-50",
-              iconBg: "bg-amber-100",
-            },
-          ] as const
-        ).map(({ title, items, icon: Icon, text, bg, iconBg }) =>
-          items.length > 0 ? (
-            <section key={title} className={`rounded-xl border border-slate-200 p-4 ${bg}`}>
-              <h2 className="text-[0.9rem] font-semibold tracking-tight text-slate-900">
-                {title}
-              </h2>
-              <ul className="mt-3 grid gap-2.5">
-                {items.map((line) => (
-                  <li key={line} className="flex gap-2.5">
-                    <span
-                      aria-hidden
-                      className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full ${iconBg} ${text}`}
-                    >
-                      <Icon size={12} />
-                    </span>
-                    <span className="text-[0.86rem] leading-relaxed text-slate-600">
-                      <Evidence text={line} />
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null,
-        )}
-      </div>
-
-      {/* Your answers, read back. Folded away rather than cut: it is the
-          longest thing on the page and the last thing most people want, but it
-          is the one part that proves the scores were read off real work. */}
-      {review.scenes.some((sc) => sc.did || sc.better) && (
-        <details className="mt-3 rounded-xl border border-slate-200 p-4">
-          <summary className="cursor-pointer text-[0.9rem] font-semibold tracking-tight text-slate-900">
-            Review your answers · scene by scene
-          </summary>
-          <ul className="mt-3 grid gap-3">
-            {review.scenes.map((sc) => (
-              <li key={sc.sceneId} className="rounded-xl bg-slate-50 p-3.5">
-                {sc.did && (
-                  <p className="text-[0.86rem] leading-relaxed text-slate-700">
-                    <Evidence text={sc.did} />
-                  </p>
-                )}
-                {sc.better && (
-                  <p className="mt-1.5 text-[0.86rem] leading-relaxed text-slate-600">
-                    <span className="font-semibold">Stronger:</span>{" "}
-                    <Evidence text={sc.better} />
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
-    </div>
-  );
+  return <Tabs tabs={tabs} label="Report sections" />;
 }
