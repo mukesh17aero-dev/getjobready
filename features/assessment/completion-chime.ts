@@ -56,3 +56,30 @@ export function playCompletionChime(): void {
     // Same rule as above: audio is decoration, never a dependency.
   }
 }
+
+/** A single soft tick - not a countdown alarm, just a light pulse felt near
+ * the end of the pacing ring's loop. Same mute flag as the chime above: one
+ * "Sound" toggle for the whole assessment, not a second one. */
+export function playQuestionTick(): void {
+  if (chimeMuted() || typeof window === "undefined") return;
+  const Ctor =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!Ctor) return;
+  try {
+    ctx ??= new Ctor();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.05, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.1);
+  } catch {
+    // Same rule as above: audio is decoration, never a dependency.
+  }
+}

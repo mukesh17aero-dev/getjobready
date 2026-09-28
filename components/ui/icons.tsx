@@ -135,3 +135,47 @@ export function Mic(props: IconProps) {
     </Svg>
   );
 }
+
+/** Bars in ascending order. Putting work in priority order. */
+export function Ranking(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 20v-4" />
+      <path d="M12 20v-9" />
+      <path d="M20 20V5" />
+    </Svg>
+  );
+}
+
+/** A 2x2 grid of buckets. Sorting items into groups. */
+export function Grid(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="3" width="8" height="8" rx="1.5" />
+      <rect x="13" y="3" width="8" height="8" rx="1.5" />
+      <rect x="3" y="13" width="8" height="8" rx="1.5" />
+      <rect x="13" y="13" width="8" height="8" rx="1.5" />
+    </Svg>
+  );
+}
+
+/** An arrow into a tray. Leaving a handover for someone else. */
+export function Handover(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 3v11" />
+      <path d="m8 10 4 4 4-4" />
+      <path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
+    </Svg>
+  );
+}
+
+/** A pencil. Writing a typed response. */
+export function Pencil(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </Svg>
+  );
+}
