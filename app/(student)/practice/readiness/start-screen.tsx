@@ -36,7 +36,7 @@ export function ReadinessStart({ roles, initialRoleId }: { roles: AssessableRole
         Which workplace will you step into?
       </h1>
       <p className="mt-2 max-w-2xl text-[0.95rem] leading-relaxed text-slate-600">
-        Try 8 workplace questions with no time limit. Handle short workplace situations through
+        Try 5 workplace questions with no time limit. Handle short workplace situations through
         decisions, messages, handovers or spoken updates. Your saved work becomes
         the evidence for feedback on what to strengthen next.
       </p>

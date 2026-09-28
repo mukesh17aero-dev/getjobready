@@ -143,7 +143,7 @@ for (const f of files) {
 const LIMIT = 800;
 const SIZE_ALLOWANCE = new Map([
   ["features/resume/resume-builder.tsx", 1949],
-  ["app/(admin)/admin/admin-console.tsx", 1425],
+  ["app/(admin)/admin/admin-console.tsx", 1415],
   // +10: required-field markers and the error summary above the form.
   ["app/(student)/interview/practice/interview-flow.tsx", 1244],
   ["app/(student)/discover/discovery-flow.tsx", 1022],

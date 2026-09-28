@@ -207,7 +207,7 @@ export function AssessmentRun({ roleId, roleTitle, backHref, signedOut = false }
   async function submit() {
     if (!scene || !run || sending || thinking || transcribing || recording || closed.current) return;
     if (scene.interaction ? !interactionComplete(scene.interaction, interaction) : !response.trim()) return;
-    if (!run.runId) { setGate({ what: "your assessment response", why: "Create an account to start your 8-question assessment and keep your work." }); return; }
+    if (!run.runId) { setGate({ what: "your assessment response", why: "Create an account to start your 5-question assessment and keep your work." }); return; }
     setSending(true); setError(null);
     await pendingSave.current;
     const t = await token();
@@ -296,7 +296,7 @@ export function AssessmentRun({ roleId, roleTitle, backHref, signedOut = false }
   if (readout) return <AssessmentReadout readout={readout} roleTitle={roleTitle} backHref={backHref} fresh />;
   if (!run || !scene) return <div className="assessment-workspace">{errorPanel || <p role="status">Getting your workplace ready…</p>}</div>;
   const disabled = sending || completionPending;
-  const questionLimit = run.questionLimit ?? 8;
+  const questionLimit = run.questionLimit ?? 5;
   const complete = scene.interaction ? interactionComplete(scene.interaction, interaction) : Boolean(response.trim());
   const offered: Helper[] = run.answered < 2 && ["assistant", "both"].includes(scene.support) ? ["assistant"] : [];
   const textChange = (text: string) => { setDirty(true); setResponse(text); setVia(scene.answer === "artefact" ? "artefact" : "typed"); };

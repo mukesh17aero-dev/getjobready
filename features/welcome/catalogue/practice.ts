@@ -22,7 +22,7 @@ export const PRACTICE: FeatureCategory = {
       href: "/practice/readiness",
       time: "15 min",
       about:
-        "Try 8 workplace questions with no time limit. Read the context cards and respond through decisions, messages, priority ordering, handovers or spoken updates. AI assistance is available on questions 1 and 2 only.",
+        "Try 5 workplace questions with no time limit. Read the context cards and respond through decisions, messages, priority ordering, handovers or spoken updates. AI assistance is available on questions 1 and 2 only.",
       walkthrough: [
         {
           tab: "What",

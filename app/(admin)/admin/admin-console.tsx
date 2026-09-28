@@ -11,7 +11,7 @@ import { RoleBatch, type BatchOutcome } from "./role-batch";
 import Link from "next/link";
 import { AdminReviewLink } from "./review-notifications";
 import { Collapsible } from "@/components/ui/collapsible";
-import { AssessmentArcEditor } from "./assessment-arc";
+import { AssessmentTab } from "./simple-assessment";
 import { InterviewBankEditor } from "./interview-bank";
 import { VideoUploadsEditor } from "./videos";
 import { SkillModelEditor } from "./skill-model-editor";
@@ -22,6 +22,7 @@ import { SkillNeeds } from "./skill-needs";
 import { RoleContextEditor } from "./role-context-editor";
 export function AdminConsole({
   initialRoleId,
+  initialTab,
   startAdding=false,
   openToEveryone,
   aiConfigured,
@@ -32,6 +33,7 @@ export function AdminConsole({
   interviewBank,
 }: {
   initialRoleId?:string;
+  initialTab?: "assessment";
   startAdding?:boolean;
   openToEveryone: boolean;
   aiConfigured: boolean;
@@ -49,7 +51,8 @@ export function AdminConsole({
     | "assessment"
     | "interview"
     | "videos"
-  >("roles");
+  >(initialTab ?? "roles");
+  const [advanced, setAdvanced] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   // What the last save actually did, in the server's terms. Kept because
@@ -1314,20 +1317,7 @@ export function AdminConsole({
         </section>
       )}
 
-      {tab === "assessment" && (
-        <AssessmentArcEditor
-          bank={arcs}
-          roles={roleSummaries.map((r) => ({
-            id: r.id,
-            title: r.title,
-            summary: r.summary,
-          }))}
-          skillsForRole={skillsForRole}
-          aiConfigured={aiConfigured}
-          token={token}
-          onChange={setArcs}
-        />
-      )}
+      {tab === "assessment" && <AssessmentTab bank={arcs} roles={roleSummaries.map((r) => ({ id: r.id, title: r.title, summary: r.summary }))} skillsForRole={skillsForRole} aiConfigured={aiConfigured} token={token} onChange={setArcs} onAdvanced={setAdvanced} />}
 
       {tab === "interview" && (
         <InterviewBankEditor
@@ -1374,7 +1364,7 @@ export function AdminConsole({
         />
       )}
 
-      <div className="sticky bottom-0 mt-6 -mx-4 flex flex-wrap items-center gap-3 border-t border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+      {(tab !== "assessment" || advanced) && <div className="sticky bottom-0 mt-6 -mx-4 flex flex-wrap items-center gap-3 border-t border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
         <p className="flex-1 text-xs text-slate-500">
           {draftPending
             ? "You have unpublished changes — students still see the published version."
@@ -1418,7 +1408,7 @@ export function AdminConsole({
         >
           Publish
         </button>
-      </div>
+      </div>}
     </main>
   );
 }

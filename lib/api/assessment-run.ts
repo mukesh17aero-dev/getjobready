@@ -227,7 +227,7 @@ export async function transcribeSceneAnswer(
 }
 
 /**
- * Begin the 8-question assessment.
+ * Begin the 5-question assessment.
  *
  * The run exists from the moment the screen opens - the induction needs the
  * company and the buddy - but the clock starts here, when they press go.
@@ -332,7 +332,7 @@ export const adminGenerateArc = (
     /** The admin's own prompt. Appended to the built-in one, never replacing it. */
     guidance?: string;
     /**
-     * How many scenes to write. A sitting has 8 questions and uses a
+     * How many scenes to write. A sitting has 5 questions and uses a
      * handful; the pool is larger so the sitting can be chosen from it and two
      * people do not get the same scenes.
      */

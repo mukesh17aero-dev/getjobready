@@ -7,7 +7,7 @@ import { AdminConsole } from "./admin-console";
 export const metadata = { title: "Admin console" };
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage({searchParams}:{searchParams:Promise<{view?:string;role?:string;add?:string}>}) {
+export default async function AdminPage({searchParams}:{searchParams:Promise<{view?:string;role?:string;add?:string;tab?:string}>}) {
   const query=await searchParams;
   const session = await getServerSession();
   if (!session) redirect("/login?next=/admin");
@@ -46,6 +46,7 @@ export default async function AdminPage({searchParams}:{searchParams:Promise<{vi
   return (
     <AdminConsole
       initialRoleId={query.role}
+      initialTab={query.tab === "assessment" ? "assessment" : undefined}
       startAdding={query.add==="1"}
       openToEveryone={access?.openToEveryone ?? true}
       aiConfigured={access?.aiConfigured ?? false}
