@@ -30,6 +30,11 @@ import type { AuthMode } from "@/components/auth/auth-form";
 // their own promised something else - somewhere to apply for jobs, and an
 // interview about to start - so Practice carries the two kinds of readiness
 // in a menu, and the application tools keep the name their own page uses.
+//
+// Roleplay used to be its own bar item, standalone next to Practice, even
+// though it is the same kind of thing - a live rehearsal, scored afterwards.
+// It moved into the Practice menu as a third entry rather than staying
+// alongside it, so there is one place for "practise the role" instead of two.
 type Destination = {
   label: string;
   href: string;
@@ -44,13 +49,13 @@ const DESTINATIONS: Destination[] = [
   {
     label: "Practice",
     href: "/practice",
-    match: ["/practice", "/interview"],
+    match: ["/practice", "/interview", "/roleplay"],
     items: [
       { label: "Role readiness", href: "/practice" },
       { label: "Interview readiness", href: "/interview" },
+      { label: "AI Roleplay", href: "/roleplay" },
     ],
   },
-  { label: "Roleplay", href: "/roleplay", match: ["/roleplay"] },
   // One word, because the bar is a bar.
   {
     label: "Identity",

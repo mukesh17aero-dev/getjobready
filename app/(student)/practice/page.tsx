@@ -3,9 +3,10 @@ import { getServerSession } from "@/lib/supabase-server";
 import { getJourneyState } from "@/lib/api";
 import { routeStatus, stages } from "@/features/journey";
 import { SAMPLE_READINESS } from "@/features/assessment";
+import { getRoleplayHome, SAMPLE_ROLEPLAY } from "@/features/roleplay";
 import { ToolHub, type HubTool } from "@/features/journey";
 import s from "@/features/journey/tool-hub.module.css";
-import { Check, Eye, Spark } from "@/components/ui/icons";
+import { Check, Eye, Mic, Spark } from "@/components/ui/icons";
 
 // Practice the role, in the same shape as Professional Presence: one tool in
 // view at a time, where this person stands with it under the tab, what they
@@ -35,6 +36,11 @@ export default async function PracticeLandingPage() {
   const example = SAMPLE_READINESS.review;
   const tone = (score: number) => (score >= 60 ? "earned" : "amber");
 
+  const roleplayHome = await getRoleplayHome(session?.access_token);
+  const roleplayHistory = signedIn ? (roleplayHome?.history ?? []) : SAMPLE_ROLEPLAY;
+  const lastRoleplay = roleplayHistory[0] ?? null;
+  const roleplayInProgress = roleplayHome?.session?.status === "in_progress";
+
   const tools: HubTool[] = [
     {
       id: "readiness", title: "The Readiness Sitting", subtitle: "12 questions from the actual work", icon: <Check size={22} />,
@@ -59,6 +65,19 @@ export default async function PracticeLandingPage() {
       action: simulation?{href:`/practice/missions?role=${encodeURIComponent(simulation.roleId)}`,label:simulation.status==='Completed'?"Review my practice":simulation.status==='Not started'?"Start my practice plan":"Continue my practice"}:{href:"/practice/missions",label:"Preview a simulation"},
       points: ["Role-specific reference cards and practical tasks", "Guided, independent and transfer practice", "Feedback tied to the work you submit"],
       steps: ["Learn from an example for your role.", "Produce the work the situation asks for.", "Use the feedback to improve, then try a fresh task."],
+    },
+    {
+      id: "roleplay", title: "AI Roleplay", subtitle: "A live conversation, marked afterwards", icon: <Mic size={22} />,
+      status: !signedIn ? "Example" : roleplayInProgress ? "In progress" : roleplayHistory.length > 0 ? `${roleplayHistory.length} ${roleplayHistory.length === 1 ? "roleplay" : "roleplays"} done` : "Start here",
+      outcome: "Practise the conversation itself, not just the answer.", intro: "Pick a scenario and a difficulty, then talk it through with an AI character who replies in character. Speak or type; the conversation ends on its own once it resolves.",
+      why: "A rehearsed answer says what you would do. A live back-and-forth tests whether you can actually do it while someone pushes back — the part a written answer never has to survive.",
+      artifactLabel: lastRoleplay ? "Your last roleplay's feedback" : "What a roleplay gives you",
+      artifact: lastRoleplay ? <div className={s.summaryCard}><h2>{lastRoleplay.scenarioTitle}</h2><small className={s.meta}>{lastRoleplay.difficulty === "challenging" ? "Challenging" : "Standard"} · {new Date(lastRoleplay.completedAt).toLocaleDateString()}{!signedIn && " · example"}</small>{lastRoleplay.summary.score && <div className={s.bigStat} data-tone={lastRoleplay.summary.score.overall >= lastRoleplay.summary.score.bar ? "earned" : "amber"}><strong>{lastRoleplay.summary.score.overall}<small> / 100</small></strong><span>Mark for this conversation<br />{lastRoleplay.summary.score.overall >= lastRoleplay.summary.score.bar ? "Cleared the bar." : "Not cleared yet."}</span></div>}<h3>WHAT WENT WELL</h3><ul>{lastRoleplay.summary.strengths.slice(0, 2).map(line => <li key={line}>{line}</li>)}</ul><h3>WORK ON NEXT</h3><p>{lastRoleplay.summary.focusNext}</p><small className={s.exampleLabel}>{signedIn ? "From your last conversation, quoted back in full inside." : "Example · not yours. Yours is written from your own conversation."}</small></div>
+        : <div className={s.summaryCard}><h2>Your feedback will sit here</h2><p className={s.emptyIntro}>A short conversation with an AI character, then what you said read back with what landed and what did not.</p><div className={s.outline}><span>What went well</span><i /><i /><span>Work on next</span><i /><i /><span>A mark, once there is enough said to score</span><i /></div><small className={s.exampleLabel}>Layout illustration · no roleplay yet</small></div>,
+      leaveWith: "Feedback on the actual conversation you had — what landed, what to change, and a mark once there is enough said to score it fairly.",
+      action: { href: "/roleplay", label: roleplayInProgress ? "Return to your roleplay" : roleplayHistory.length > 0 ? "Practise another" : "Start a roleplay" },
+      points: ["Pick the scenario and the difficulty", "Speak or type your replies", "Ends naturally, or after a safety cap of turns"],
+      steps: ["Choose a scenario and a difficulty.", "Reply in character, out loud or typed, turn by turn.", "Read what landed, what to improve, and your mark if there was enough to score."],
     },
     {
       id: "passport", title: "Career Passport", subtitle: "What you proved, in one place", icon: <Spark size={22} />,
