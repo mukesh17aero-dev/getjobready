@@ -33,6 +33,71 @@ import { supabaseBrowser } from "@/lib/supabase-browser";
 const clamp = (n: number) => Math.max(0, Math.min(100, n));
 
 /**
+ * Wraps a "quoted phrase" inside a sentence as a small chip, so the exact
+ * words this was read from stand out from the analysis around them instead of
+ * hiding inside a paragraph. Nothing is removed or shortened - the quote is
+ * why this page can be trusted, so it gets more visual weight, not less.
+ */
+function Evidence({ text }: { text: string }) {
+  const parts = text.split(/("[^"]{2,}")/g);
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.startsWith('"') && part.endsWith('"') ? (
+          <mark
+            key={i}
+            className="rounded bg-slate-100 px-1 py-0.5 font-mono text-[0.86em] not-italic text-slate-700"
+          >
+            {part}
+          </mark>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
+/**
+ * One skill as a small ring, for when there are too few measured skills to
+ * draw the web (SkillWeb needs three axes - two make a line, not a shape).
+ * Same conic-gradient technique as the big readiness Ring, scaled down, so a
+ * thin sitting still reads as "a chart" rather than "a flat bar and a
+ * paragraph".
+ */
+function SkillGauge({ skill, score }: { skill: string; score: number }) {
+  const pct = clamp(score);
+  return (
+    <div className="flex w-28 flex-col items-center gap-2 text-center">
+      <div
+        role="img"
+        aria-label={`${skill}: ${score} out of 100`}
+        className="relative h-24 w-24 shrink-0"
+      >
+        <div
+          aria-hidden
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: `conic-gradient(var(--color-brand-violet) ${pct}%, var(--color-slate-200) 0)`,
+          }}
+        />
+        <div
+          aria-hidden
+          className="absolute inset-[7px] flex items-center justify-center rounded-full bg-surface"
+        >
+          <span className="font-display text-[1.3rem] font-bold leading-none text-slate-900">
+            {score}
+          </span>
+        </div>
+      </div>
+      <span className="text-[0.8rem] font-medium leading-tight text-slate-700">
+        {skill}
+      </span>
+    </div>
+  );
+}
+
+/**
  * The readiness score as a ring.
  *
  * A conic gradient and two divs - the stack has no chart library, and this
@@ -524,7 +589,7 @@ function Scores({
             </p>
             {review.readiness.why && (
               <p className="mt-1 text-[0.92rem] leading-relaxed text-slate-700">
-                {review.readiness.why}
+                <Evidence text={review.readiness.why} />
               </p>
             )}
           </div>
@@ -552,6 +617,13 @@ function Scores({
             not reach is left out rather than scored — no evidence is not the
             same as doing badly.
           </p>
+          {web.length > 0 && web.length < 3 && (
+            <div className="mt-4 flex flex-wrap justify-center gap-x-8 gap-y-4 rounded-xl border border-slate-200 p-5 sm:justify-start">
+              {web.map((a) => (
+                <SkillGauge key={a.skill} skill={a.skill} score={a.score} />
+              ))}
+            </div>
+          )}
           {web.length >= 3 && (
             <div className="mt-4 rounded-xl border border-slate-200 p-4">
               <SkillWeb axes={web} bands={webBands} />
@@ -581,25 +653,33 @@ function Scores({
           <ul className="mt-3 grid gap-x-6 gap-y-3 lg:grid-cols-2">
             {review.skillScores.map((s) => (
               <li key={s.skill}>
-                <div className="flex items-baseline justify-between gap-3 text-[0.86rem]">
-                  <span className="font-medium text-slate-700">{s.skill}</span>
-                  <span className="shrink-0 font-semibold text-slate-900">
-                    {s.score}
-                  </span>
-                </div>
-                <div
-                  className="mt-1 h-2 w-full overflow-hidden rounded-full bg-slate-100"
-                  role="img"
-                  aria-label={`${s.skill}: ${s.score} out of 100`}
-                >
-                  <div
-                    className="h-full rounded-full bg-brand-violet"
-                    style={{ width: `${clamp(s.score)}%` }}
-                  />
-                </div>
+                {web.length >= 3 ? (
+                  <>
+                    <div className="flex items-baseline justify-between gap-3 text-[0.86rem]">
+                      <span className="font-medium text-slate-700">{s.skill}</span>
+                      <span className="shrink-0 font-semibold text-slate-900">
+                        {s.score}
+                      </span>
+                    </div>
+                    <div
+                      className="mt-1 h-2 w-full overflow-hidden rounded-full bg-slate-100"
+                      role="img"
+                      aria-label={`${s.skill}: ${s.score} out of 100`}
+                    >
+                      <div
+                        className="h-full rounded-full bg-brand-violet"
+                        style={{ width: `${clamp(s.score)}%` }}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-[0.86rem] font-medium text-slate-700">
+                    {s.skill}
+                  </p>
+                )}
                 {s.why && (
                   <p className="mt-1 text-[0.82rem] leading-relaxed text-slate-500">
-                    {s.why}
+                    <Evidence text={s.why} />
                   </p>
                 )}
               </li>
@@ -610,7 +690,7 @@ function Scores({
 
       {review.summary && (
         <p className="mt-4 text-[0.9rem] leading-relaxed text-slate-700">
-          {review.summary}
+          <Evidence text={review.summary} />
         </p>
       )}
 
@@ -644,7 +724,7 @@ function Scores({
           </div>
           {review.usingAI.why && (
             <p className="mt-2 text-[0.86rem] leading-relaxed text-slate-600">
-              {review.usingAI.why}
+              <Evidence text={review.usingAI.why} />
             </p>
           )}
         </div>
@@ -667,7 +747,7 @@ function Scores({
                     <span aria-hidden className="text-slate-300">
                       ·
                     </span>
-                    {line}
+                    <Evidence text={line} />
                   </li>
                 ))}
               </ul>
@@ -689,12 +769,13 @@ function Scores({
               <li key={sc.sceneId} className="rounded-xl bg-slate-50 p-3.5">
                 {sc.did && (
                   <p className="text-[0.86rem] leading-relaxed text-slate-700">
-                    {sc.did}
+                    <Evidence text={sc.did} />
                   </p>
                 )}
                 {sc.better && (
                   <p className="mt-1.5 text-[0.86rem] leading-relaxed text-slate-600">
-                    <span className="font-semibold">Stronger:</span> {sc.better}
+                    <span className="font-semibold">Stronger:</span>{" "}
+                    <Evidence text={sc.better} />
                   </p>
                 )}
               </li>
