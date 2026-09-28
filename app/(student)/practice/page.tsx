@@ -1,7 +1,6 @@
 import {simulationRequest,type CourseSummary} from '@/features/simulation';
 import { getServerSession } from "@/lib/supabase-server";
-import { getJourneyState } from "@/lib/api";
-import { routeStatus, stages } from "@/features/journey";
+import { getJourneyState, listAssessmentRuns } from "@/lib/api";
 import { SAMPLE_READINESS } from "@/features/assessment";
 import Link from "next/link";
 import { ToolHub, type HubTool } from "@/features/journey";
@@ -30,23 +29,29 @@ export default async function PracticeLandingPage() {
   const signedIn = Boolean(session);
   const courses=session?await simulationRequest<CourseSummary[]>('',undefined,session.access_token).catch(()=>[]):[];
   const simulation=courses.find(c=>c.roleId===state?.progress?.role?.id)||courses[0];
-  const journey = state ? stages(state) : null;
-  const readiness = state && journey ? routeStatus("readiness", state, journey) : null;
   const role = state?.progress?.role?.title ?? null;
+  const roleId = state?.progress?.role?.id ?? null;
+  // routeStatus() never implemented a "readiness" case - it fell through to a
+  // stub written before this assessment existed and nobody came back to wire
+  // it up. Reading real sittings directly instead of through that dead path.
+  const runs = session ? await listAssessmentRuns(session.access_token) : null;
+  const lastRun = (runs?.runs ?? []).find(
+    (r) => r.readiness !== null && (!roleId || r.roleId === roleId),
+  ) ?? null;
   const example = SAMPLE_READINESS.review;
   const tone = (score: number) => (score >= 60 ? "earned" : "amber");
 
   const tools: HubTool[] = [
     {
       id: "readiness", title: "The Readiness Sitting", subtitle: "10 questions from the actual work", icon: <Check size={22} />,
-      status: !signedIn ? "Start here" : readiness?.percent != null ? `${readiness.percent}% ready` : readiness?.label ?? "Not started",
+      status: !signedIn ? "Start here" : lastRun ? `${lastRun.readiness}% ready` : "Not started",
       outcome: "Find out where you stand by doing.", intro: "Try 10 questions in a simulated workplace, with no time limit. Respond to real situations through decisions, messages, priority ordering and handovers, with help beside the work where the task allows it.",
       why: "Knowing about a job and being able to do it are different things, and only one of them survives a first week. Ten questions about the job’s own work show where you stand now, before an employer finds out, and turns what your resume claims into something marked.",
-      artifactLabel: readiness?.percent != null ? "Your role readiness" : "An example readiness report",
-      artifact: readiness?.percent != null ? <div className={s.summaryCard}><h2>{role ?? "Your chosen role"}</h2><small className={s.meta}>Measured from your own assessment</small><div className={s.bigStat}><strong>{readiness.percent}<small> / 100</small></strong><span>Role readiness<br />{readiness.done ? "Measured. Practice from here closes the gaps it found." : readiness.label}</span></div><small className={s.exampleLabel}>A reading of one sitting, with the reason behind every score quoted from what you wrote.</small><Link href="/practice/readiness/results" className={s.artifactLink}>See every sitting you have finished →</Link></div>
+      artifactLabel: lastRun ? "Your role readiness" : "An example readiness report",
+      artifact: lastRun ? <div className={s.summaryCard}><h2>{lastRun.roleTitle}</h2><small className={s.meta}>Measured from your own assessment</small><div className={s.bigStat}><strong>{lastRun.readiness}<small> / 100</small></strong><span>Role readiness<br />Measured. Practice from here closes the gaps it found.</span></div><small className={s.exampleLabel}>{lastRun.scenesAttempted} of 10 situations attempted, with the reason behind every score quoted from what you wrote.</small><Link href="/practice/readiness/results" className={s.artifactLink}>See every sitting you have finished →</Link></div>
         : <div className={s.summaryCard}><h2>{SAMPLE_READINESS.roleTitle}</h2><small className={s.meta}>Example report · not yours · {example.basis.scenesAttempted} of {example.basis.scenesInSitting} situations attempted</small><div className={s.bigStat} data-tone={tone(example.readiness.score)}><strong>{example.readiness.score}<small> / 100</small></strong><span>Role readiness · {example.confidence} confidence<br />{example.summary}</span></div><h3>WHY THIS SCORE</h3><p>{example.readiness.why}</p><h3>SKILL BY SKILL</h3>{example.skillScores.map(skill => <div key={skill.skill} className={s.skillRow} data-tone={tone(skill.score)}><strong>{skill.skill}</strong><i><b style={{ width: `${skill.score}%` }} /></i><span>{skill.score}</span></div>)}{example.skillScores.map(skill => <p key={`${skill.skill}-why`} style={{ marginTop: 8 }}><b>{skill.skill}.</b> {skill.why}</p>)}{example.usingAI && <><h3>WORKING WITH THE AI ASSISTANT</h3><div className={s.skillRow} data-tone={tone(example.usingAI.score)}><strong>Judgement</strong><i><b style={{ width: `${example.usingAI.score}%` }} /></i><span>{example.usingAI.score}</span></div><p style={{ marginTop: 8 }}>{example.usingAI.why}</p></>}<h3>STRENGTHS</h3><ul>{example.strengths.map(line => <li key={line}>{line}</li>)}</ul><h3>WORK ON NEXT</h3><ul>{example.workOn.map(line => <li key={line}>{line}</li>)}</ul><small className={s.exampleLabel}>{signedIn ? "Example report from an illustrative sitting, not yours. Yours is measured from your own work once you sit the assessment." : "Example report from an illustrative sitting, not yours. Yours is measured from your own sitting, once you have an account."}</small></div>,
       leaveWith: "A score for the role and one for each skill your work showed, each with the reason behind it. Skills you did not get to are left out rather than marked zero.",
-      action: { href: "/practice/readiness", label: readiness?.percent != null ? "Sit it again" : "Start the assessment" },
+      action: { href: "/practice/readiness", label: lastRun ? "Sit it again" : "Start the assessment" },
       points: ["10 workplace questions, one at a time, with no timer", "AI help on the first two questions; the next eight are independent", "Every result is kept, so you can see what changed"],
       steps: ["Pick the job you chose in Discovery.", "Work through the situations, one at a time, with help where it is offered.", "Read the score, the reasons and the one thing to work on next."],
     },
