@@ -12,7 +12,7 @@
 // has said is a script, and the UI marks it as one.
 
 import { API_URL, requestHeaders } from "./core";
-import { apiCall } from "./core";
+import { apiCall, generateCall } from "./core";
 export type StarPart = "situation" | "task" | "action" | "result";
 export type Star = Partial<Record<StarPart, string>>;
 
@@ -80,6 +80,23 @@ export type StoryDraft =
       };
     }
   | { questionId: string; ok: false; reason: string; suggest: string };
+
+/**
+ * Filling in the blank parts of a story that's already saved. `patch` only
+ * ever carries keys for parts that were blank - a part the person already
+ * wrote is never in it, and never touched.
+ */
+export type StoryExpansion =
+  | {
+      storyId: string;
+      ok: true;
+      expansion: {
+        patch: Star;
+        missing: StarPart[];
+        evidence: StoryEvidence;
+      };
+    }
+  | { storyId: string; ok: false; reason: string };
 
 /**
  * The question library on its own, served to anybody.
@@ -150,6 +167,15 @@ export const draftStory = (token: string, questionId: string) =>
     method: "POST",
     body: { questionId },
   });
+
+/**
+ * Fill in the blank parts of a story that's already saved, from this
+ * person's own record. Uses generateCall rather than apiCall: this is an AI
+ * generation call and deserves the same ninety-second deadline and honest
+ * `{ ok: false, reason }` failure shape as any other one, not an opaque null.
+ */
+export const expandStory = (token: string, storyId: string) =>
+  generateCall<StoryExpansion>(token, `/v1/stories/${storyId}/expand`, {});
 
 export const saveStory = (
   token: string,

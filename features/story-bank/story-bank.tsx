@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import {
   draftStory,
+  expandStory,
   patchStory,
   saveStory,
   storyStrength,
@@ -99,6 +100,13 @@ export function StoryBank({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // A saved story with a blank part, and what its record can fill in for it.
+  const [expanding, setExpanding] = useState<Story | null>(null);
+  const [expansion, setExpansion] = useState<Awaited<
+    ReturnType<typeof expandStory>
+  > | null>(null);
+  const [expandBusy, setExpandBusy] = useState(false);
+
   const build = useCallback(async (q: PracticeQuestion) => {
     if (signedOut) {
       setGate({
@@ -184,6 +192,63 @@ export function StoryBank({
       stories: b.stories.map((s) => (s.id === updated.id ? updated : s)),
     }));
   }, [signedOut]);
+
+  // Filling in the blank parts of a story already saved. Never touches a
+  // part the person has already written - only the still-blank ones.
+  const expand = useCallback(async (story: Story) => {
+    if (signedOut) {
+      setGate({
+        what: "the rest of this story, filled in from your record",
+        why: "Filling in a blank part reads your record the same way drafting one does, so it needs an account to read from.",
+      });
+      return;
+    }
+    setExpanding(story);
+    setExpansion(null);
+    setError(null);
+    setExpandBusy(true);
+    const t = await token();
+    if (!t) {
+      setExpandBusy(false);
+      setError("Your session expired. Reload the page and sign in again.");
+      return;
+    }
+    const result = await expandStory(t, story.id);
+    setExpandBusy(false);
+    setExpansion(result);
+  }, [signedOut]);
+
+  // Saving happens only when they press Keep — a proposed fill is never
+  // written to the story on its own.
+  const keepExpansion = useCallback(async () => {
+    if (!expanding || !expansion || !expansion.ok) return;
+    setExpandBusy(true);
+    const t = await token();
+    if (!t) {
+      setExpandBusy(false);
+      setError("Your session expired. Reload the page and sign in again.");
+      return;
+    }
+    const updated = await patchStory(t, expanding.id, {
+      star: { ...expanding.star, ...expansion.expansion.patch },
+    });
+    setExpandBusy(false);
+    if (!updated) {
+      setError("Could not save that — try again.");
+      return;
+    }
+    setBank((b) => ({
+      ...b,
+      stories: b.stories.map((s) => (s.id === updated.id ? updated : s)),
+    }));
+    setExpanding(null);
+    setExpansion(null);
+  }, [expanding, expansion]);
+
+  const closeExpand = useCallback(() => {
+    setExpanding(null);
+    setExpansion(null);
+  }, []);
 
   const covered = bank.coverage.filter((c) => c.best !== null).length;
 
@@ -272,6 +337,9 @@ export function StoryBank({
             {bank.stories.map((story) => {
               const open = story.id === openId;
               const s = storyStrength(story);
+              const hasBlank = PARTS.some(
+                ([key]) => !(story.star[key] ?? "").trim(),
+              );
               return (
                 <li
                   key={story.id}
@@ -337,16 +405,28 @@ export function StoryBank({
                     <span className="text-[0.72rem] text-slate-500">
                       {story.evidence.label}
                     </span>
-                    {s === "draft" && (
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void markSpoken(story)}
-                        className="ml-auto inline-flex min-h-9 cursor-pointer items-center rounded-lg bg-brand-teal-deep px-3.5 text-[0.76rem] font-bold text-white transition-colors hover:bg-brand-teal disabled:opacity-50"
-                      >
-                        I have said this out loud
-                      </button>
-                    )}
+                    <div className="ml-auto flex items-center gap-2">
+                      {hasBlank && (
+                        <button
+                          type="button"
+                          disabled={expandBusy}
+                          onClick={() => void expand(story)}
+                          className="inline-flex min-h-9 cursor-pointer items-center rounded-lg border border-brand-violet/45 px-3.5 text-[0.76rem] font-bold text-brand-violet-deep transition-colors hover:bg-brand-violet/10 disabled:opacity-50"
+                        >
+                          Fill in from your record
+                        </button>
+                      )}
+                      {s === "draft" && (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void markSpoken(story)}
+                          className="inline-flex min-h-9 cursor-pointer items-center rounded-lg bg-brand-teal-deep px-3.5 text-[0.76rem] font-bold text-white transition-colors hover:bg-brand-teal disabled:opacity-50"
+                        >
+                          I have said this out loud
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </li>
               );
@@ -500,6 +580,98 @@ export function StoryBank({
                   setBuilding(null);
                   setDraft(null);
                 }}
+                className="inline-flex min-h-11 cursor-pointer items-center rounded-xl border border-slate-300 px-4 text-[0.85rem] font-bold text-brand-ink"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------- the expander */}
+      {expanding && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Filling in a story"
+          className="fixed inset-0 z-50 grid place-items-end bg-slate-900/40 p-0 sm:place-items-center sm:p-4"
+        >
+          <div className="max-h-[92svh] w-full max-w-2xl overflow-y-auto rounded-t-2xl bg-surface p-5 shadow-xl sm:rounded-2xl">
+            <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+              Filling in
+            </p>
+            <p className="mt-0.5 font-display text-[1.1rem] font-bold leading-snug text-brand-ink">
+              {expanding.title}
+            </p>
+
+            {expandBusy && !expansion && (
+              <p className="mt-4 text-[0.88rem] text-slate-500">
+                Reading your record…
+              </p>
+            )}
+
+            {expansion && !expansion.ok && (
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-[0.88rem] leading-relaxed text-amber-900">
+                  {expansion.reason}
+                </p>
+              </div>
+            )}
+
+            {expansion && expansion.ok && (
+              <>
+                <dl className="mt-4 grid gap-2 rounded-xl border border-slate-200 p-4 sm:grid-cols-2">
+                  {PARTS.map(([key, label]) => {
+                    const written = expanding.star[key];
+                    const filled = expansion.expansion.patch[key];
+                    return (
+                      <div
+                        key={key}
+                        className={
+                          written || !filled
+                            ? "pl-3"
+                            : "border-l-2 border-brand-violet/35 pl-3"
+                        }
+                      >
+                        <dt className="text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+                          {label}
+                        </dt>
+                        <dd
+                          className={`mt-0.5 text-[0.85rem] leading-relaxed ${
+                            written || filled
+                              ? "text-slate-700"
+                              : "italic text-amber-800"
+                          }`}
+                        >
+                          {written ||
+                            filled ||
+                            "Left blank on purpose — your record does not say, and I am not going to make it up."}
+                        </dd>
+                      </div>
+                    );
+                  })}
+                </dl>
+                <p className="mt-2.5 text-[0.75rem] text-slate-500">
+                  Drawn from: {expansion.expansion.evidence.label}
+                </p>
+              </>
+            )}
+
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {expansion && expansion.ok && (
+                <button
+                  type="button"
+                  disabled={expandBusy}
+                  onClick={() => void keepExpansion()}
+                  className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-brand-teal-deep px-5 text-[0.85rem] font-bold text-white transition-colors hover:bg-brand-teal disabled:opacity-50"
+                >
+                  <Check size={14} />Keep this
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={closeExpand}
                 className="inline-flex min-h-11 cursor-pointer items-center rounded-xl border border-slate-300 px-4 text-[0.85rem] font-bold text-brand-ink"
               >
                 Close
