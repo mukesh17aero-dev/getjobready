@@ -66,6 +66,7 @@ export async function generateCall<T extends { ok: boolean }>(
   token: string,
   path: string,
   body: unknown,
+  timeoutMs: number = GENERATE_TIMEOUT_MS,
 ): Promise<T | { ok: false; reason: string }> {
   // A deadline, like every other read in this file.
   //
@@ -76,7 +77,7 @@ export async function generateCall<T extends { ok: boolean }>(
   // cold instance and short enough that somebody is told rather than left.
   let res: Response;
   const abort = new AbortController();
-  const timer = setTimeout(() => abort.abort(), GENERATE_TIMEOUT_MS);
+  const timer = setTimeout(() => abort.abort(), timeoutMs);
   try {
     res = await fetch(`${API_URL}${path}`, {
       method: "POST",

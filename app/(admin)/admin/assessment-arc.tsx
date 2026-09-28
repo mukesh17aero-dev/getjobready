@@ -136,10 +136,6 @@ export function AssessmentArcEditor({
       teams: teams > 0 ? teams : undefined,
     });
     setBusy(false);
-    if (!result) {
-      setError("Could not reach the writer. Try again in a moment.");
-      return;
-    }
     if (!result.ok) {
       setError(result.reason);
       return;

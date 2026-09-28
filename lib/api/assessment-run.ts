@@ -344,10 +344,10 @@ export const adminGenerateArc = (
     teams?: number;
   },
 ) =>
-  apiCall<ArcGenerateResult>(token, "/v1/admin/assessment/arc/generate", {
-    method: "POST",
-    body,
-  });
+  // A pool is written in parallel batches of about a minute each, so this
+  // runs for minutes. The 10-second read path cut every attempt off and its
+  // retry started a second, duplicate generation on the server.
+  generateCall<ArcGenerateResult>(token, "/v1/admin/assessment/arc/generate", body, 10 * 60_000);
 
 /** What the backend drafts for the five student questions, plus industries. */
 export type RoleContextDraft = {
