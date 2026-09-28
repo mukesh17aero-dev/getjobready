@@ -92,7 +92,7 @@ export default async function ReadinessResultsPage({
       {runs.length === 0 ? (
         <div className="mt-6 rounded-xl border border-slate-200 p-5">
           <p className="text-[0.9rem] leading-relaxed text-slate-600">
-            Nothing here yet. Your first assessment is 12 questions about one
+            Nothing here yet. Your first assessment is 10 questions about one
             job&apos;s actual work, and what it finds turns up on this page.
           </p>
           <Link

@@ -326,8 +326,8 @@ export function AssessmentArcEditor({
         Assessment — workplace scenario builder
       </h2>
       <p className="mt-1 max-w-3xl text-[0.88rem] leading-relaxed text-slate-600">
-        Build a pool of real situations for this role. Each student answers 12 questions
-        with no time limit. Keep at least 12 questions per workplace. Mix action cards,
+        Build a pool of real situations for this role. Each student answers 10 questions
+        with no time limit. Keep at least 10 questions per workplace. Mix action cards,
         priorities, handovers and spoken updates where they fit the work. Keep each
         brief short and map the evidence to the skills it demonstrates.
       </p>
