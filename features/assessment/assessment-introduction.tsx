@@ -2,9 +2,10 @@
 
 import { useRef, useState, type ReactNode } from "react";
 import { assessmentIntroduction, assessmentRoleContext } from "./introduction-copy";
+import { ExploreScene } from "./explore-scene";
 
-export function AssessmentIntroduction({ roleId, roleTitle, company, fullAssessment, busy, error, onStart }: {
-  roleId: string; roleTitle: string; company: string; fullAssessment: boolean; busy: boolean; error: ReactNode; onStart: () => void;
+export function AssessmentIntroduction({ roleId, roleTitle, company, buddy, fullAssessment, busy, error, onStart }: {
+  roleId: string; roleTitle: string; company: string; buddy: string; fullAssessment: boolean; busy: boolean; error: ReactNode; onStart: () => void;
 }) {
   const video = useRef<HTMLVideoElement>(null);
   const [played, setPlayed] = useState(false);
@@ -35,6 +36,7 @@ export function AssessmentIntroduction({ roleId, roleTitle, company, fullAssessm
         <details className="assessment-intro-transcript"><summary>Prefer to read? Open the same introduction</summary>{assessmentIntroduction.map(part => <p key={part.title}><strong>{part.title}.</strong> {part.text}</p>)}<label className="assessment-read-confirm"><input type="checkbox" checked={read} onChange={event => setRead(event.target.checked)} />I’ve read the introduction and am ready.</label></details>
       </div>
       <div className="assessment-onboarding-start">
+        <ExploreScene buddy={buddy} />
         <h2>Here’s what you’ll do</h2>
         <ul className="assessment-intro-steps">
           <li><div><strong>Read the cards</strong><p>The facts and rules are beside each question.</p></div></li>

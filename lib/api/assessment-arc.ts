@@ -17,12 +17,19 @@ export type ArcAnswer = "typed" | "spoken" | "artefact";
 export type SceneInteraction =
   | { kind: "routing"; choices: Array<{ id: string; label: string; detail?: string }>; messageLabel: string }
   | { kind: "prioritisation"; items: Array<{ id: string; label: string; detail?: string }>; reasonLabel: string }
-  | { kind: "handover"; fields: Array<{ id: string; label: string; options?: string[]; required?: boolean }> };
+  | { kind: "handover"; fields: Array<{ id: string; label: string; options?: string[]; required?: boolean }> }
+  | { kind: "categorize"; buckets: Array<{ id: string; label: string; detail?: string }>; items: Array<{ id: string; label: string; detail?: string }>; reasonLabel: string }
+  | { kind: "spot"; left: RecordSide; right: RecordSide; promptLabel: string; noteLabel: string };
+
+/** One record's fields for a "spot" interaction - the same field ids appear on both sides. */
+export type RecordSide = { title: string; fields: Array<{ id: string; label: string; value: string }> };
 
 export type InteractionResponse =
   | { kind: "routing"; choiceId: string; message: string }
   | { kind: "prioritisation"; orderedIds: string[]; reason: string }
-  | { kind: "handover"; values: Record<string, string> };
+  | { kind: "handover"; values: Record<string, string> }
+  | { kind: "categorize"; placements: Record<string, string>; reason: string }
+  | { kind: "spot"; fieldId: string; note: string };
 
 export type AssessmentAnswerDraft = {
   integrity?: AnswerSignals;
