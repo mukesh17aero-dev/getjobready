@@ -37,7 +37,7 @@ export default async function PracticeLandingPage() {
 
   const tools: HubTool[] = [
     {
-      id: "readiness", title: "Role Readiness Assessment", subtitle: "12 questions from the actual work", icon: <Check size={22} />,
+      id: "readiness", title: "The Readiness Sitting", subtitle: "12 questions from the actual work", icon: <Check size={22} />,
       status: !signedIn ? "Start here" : readiness?.percent != null ? `${readiness.percent}% ready` : readiness?.label ?? "Not started",
       outcome: "Find out where you stand by doing.", intro: "Try 12 questions in a simulated workplace, with no time limit. Respond to real situations through decisions, messages, priority ordering and handovers, with help beside the work where the task allows it.",
       why: "Knowing about a job and being able to do it are different things, and only one of them survives a first week. Twelve questions about the job’s own work show where you stand now, before an employer finds out, and turns what your resume claims into something marked.",
