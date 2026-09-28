@@ -18,3 +18,5 @@ export * from "./admin";
 export * from "./career-record";
 export * from "./employer";
 export * from "./commerce";
+export * from "./institution";
+export * from "./institution-link";
