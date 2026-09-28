@@ -2,9 +2,11 @@
 
 // ---------------------------------------------------------------- practice
 
-// Nothing under this heading is finished. The page says so on every card
-// rather than linking into placeholder screens, because a tap that lands on
-// "this part isn't built yet" is worse than a card that told you first.
+// Not everything under this heading is finished, and each card says so - a
+// tap that lands on "this part isn't built yet" is worse than a card that
+// told you first. Role Readiness and Simulation Missions are live, though
+// content is published role by role so not every role has both yet; Career
+// Passport stays closed until the work that fills it exists to seal.
 import type { FeatureCategory } from "./types";
 export const PRACTICE: FeatureCategory = {
   id: "practice",
@@ -62,15 +64,15 @@ export const PRACTICE: FeatureCategory = {
       id: "simulation-missions",
       title: "Simulation Missions",
       blurb: "Real workplace situations, with decisions that carry weight.",
-      status: "building",
-      href: null,
+      status: "live",
+      href: "/practice/missions",
       time: null,
       about:
         "Short scenarios that put you inside the job rather than describing it - a decision to make, consequences that follow, and marking against what a competent person would have done.",
       forWho:
         "People who learn by doing, and anyone who needs evidence of capability rather than a certificate of attendance.",
       expect:
-        "In development. Missions will be scored against the same skills as the readiness assessment, so practice moves the number that matters.",
+        "Missions are scored against the same skills as the readiness assessment, so practice moves the number that matters. Published role by role, so not every role has a full set yet.",
     },
     {
       id: "career-passport",

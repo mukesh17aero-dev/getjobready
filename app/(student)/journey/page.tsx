@@ -7,7 +7,7 @@ import { JOURNEY } from "@/features/welcome";
 // The whole package: seven stages in the order they are meant to be walked,
 // drawn as a line at the top so the shape is visible before any of the detail.
 //
-// Two of the seven are open. The line shows which, and says so in words
+// Five of the seven are open. The line shows which, and says so in words
 // underneath rather than leaving somebody to work it out by tapping.
 
 export const metadata = { title: "The whole journey" };

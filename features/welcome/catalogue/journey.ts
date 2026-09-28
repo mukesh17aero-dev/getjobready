@@ -2,13 +2,14 @@
 
 // ----------------------------------------------------------------- journey
 
-// The whole package, in the order it is meant to be walked. Two of the seven
+// The whole package, in the order it is meant to be walked. Five of the seven
 // are usable today; the line at the top of the page shows which.
 // Discovery has a front door now, the same as the resume and the interview.
 // One card, because there is one tool. The browsing, the tour and the
 // assistant are all inside it - listing them alongside it made four doors
 // into the same room and read as more product than there is.
 import type { FeatureCategory } from "./types";
+import { PRACTICE } from "./practice";
 export const DISCOVER: FeatureCategory = {
   id: "discover",
   title: "Discovery",
@@ -84,40 +85,41 @@ export const JOURNEY: FeatureCategory = {
       id: "assessment",
       title: "Assessment",
       blurb: "Measure where you stand against the role you picked.",
-      status: "building",
-      href: null,
-      time: null,
+      status: "live",
+      href: "/practice/readiness",
+      time: "15 min",
       about:
-        "The starting-point check: what you can already do for the chosen role, and what is missing.",
+        "The starting-point check: what you can already do for the chosen role, and what is missing. Ten real workplace situations, not a self-rating.",
       forWho: "Anyone who has finished Discovery and chosen a role.",
       expect:
-        "In development. It is the baseline the rest of the journey improves on.",
+        "A score for the role and one for each skill your work showed, each with the reason behind it quoted from what you wrote. It is a reading of one sitting, and it says so.",
+      walkthrough: PRACTICE.features[0]!.walkthrough,
     },
     {
       id: "practice-stage",
       title: "Practice",
       blurb: "Close the gaps the assessment found.",
-      status: "building",
-      href: null,
+      status: "live",
+      href: "/practice",
       time: null,
       about:
         "Targeted work on the specific competencies you came up short on, rather than a general course everybody takes.",
       forWho: "Anyone with a measured gap and time to close it.",
       expect:
-        "In development. It will be driven by your own assessment results, so no two people get the same set.",
+        "Driven by your own assessment results, so no two people get the same set. One hub for the readiness sitting, simulation missions and your Career Passport.",
     },
     {
       id: "simulation",
       title: "Simulation",
       blurb: "Do the job before anyone has hired you to.",
-      status: "building",
-      href: null,
+      status: "live",
+      href: "/practice/missions",
       time: null,
       about:
         "Full task cycles inside a realistic version of the role - the part that turns knowing into having done.",
       forWho: "Anyone who has practised and wants to prove it under pressure.",
       expect:
-        "In development. Simulation results are what the Career Passport is built from.",
+        "Simulation results are what the Career Passport is built from. Published role by role, so not every role has a full set yet.",
     },
     {
       id: "passport",
