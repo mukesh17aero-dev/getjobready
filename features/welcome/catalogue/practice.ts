@@ -78,13 +78,8 @@ export const PRACTICE: FeatureCategory = {
       id: "career-passport",
       title: "Career Passport",
       blurb: "The record of what you proved, in one place.",
-      // Closed again while the work behind it is finished. A passport is
-      // sealed from measured work, and the modules that produce that work are
-      // still being built - so an open card here would hand somebody an empty
-      // booklet with no way to fill it. The route still exists and says so;
-      // it is just not offered.
-      status: "building",
-      href: null,
+      status: "live",
+      href: "/passport",
       time: null,
       about:
         "Everything you have demonstrated, gathered into a single record an employer can look at - not claims about yourself, but things you did that were marked.",

@@ -125,13 +125,13 @@ export const JOURNEY: FeatureCategory = {
       id: "passport",
       title: "Career Passport",
       blurb: "Everything you proved, gathered into one record.",
-      status: "building",
-      href: null,
+      status: "live",
+      href: "/passport",
       time: null,
       about:
         "A record of demonstrated capability that an employer can inspect, rather than a list of claims.",
       forWho: "Anyone applying without a work history to point at.",
-      expect: "In development. It assembles itself from what you have done.",
+      expect: "It assembles itself from your assessments and simulations, so there is nothing extra to write.",
     },
     {
       id: "journey-interview",
