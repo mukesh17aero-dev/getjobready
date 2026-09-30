@@ -26,6 +26,7 @@ import Link from "next/link";
 import "./discovery-modern.css";
 import ws from "./discovery-workspace.module.css";
 import { ArrowRight } from "@/components/ui/icons";
+import { RoleArt } from "./role-art";
 
 export type World = {
   id: string;
@@ -369,11 +370,9 @@ export function RoleList({
                           >
                             {kept ? "♥" : "♡"}
                           </button>
-                          <span aria-hidden="true" className="discovery-role-object absolute left-1/2 top-9 -translate-x-1/2 text-[2.4rem] leading-none">
-                            {role.world.glyph}
-                          </span>
+                          <RoleArt roleId={role.id} glyph={role.world.glyph} />
                           {role.mix[0] && (
-                            <span className="absolute inset-x-6 top-[6.6rem] truncate text-center text-[0.7rem] text-slate-500">
+                            <span className="discovery-glimpse absolute inset-x-6 top-[6.6rem] truncate text-center text-[0.7rem] text-slate-500">
                               <span className="text-[0.62rem] font-bold uppercase tracking-[0.12em]">A glimpse of the work</span> · {role.mix[0].label}
                             </span>
                           )}

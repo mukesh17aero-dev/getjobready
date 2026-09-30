@@ -9,6 +9,7 @@ export * from "./discovery-browse";
 export * from "./industry-brief";
 export * from "./pay-progression";
 export * from "./role-brief";
+export * from "./role-art";
 export * from "./role-compare";
 export * from "./role-page";
 export * from "./role-preview";

@@ -194,3 +194,32 @@ export const adminReviewSkillModel = (token: string, model: SkillModel) =>
     method: "POST",
     body: { model },
   });
+
+/**
+ * Draws a role's Discover picture on the server, with the server's own OpenAI
+ * key. Drawing takes up to a minute, so it has its own long deadline.
+ */
+export async function adminDrawRoleIllustration(
+  token: string,
+  roleId: string,
+  scene: string,
+): Promise<{ ok: true; imageUrl: string } | { ok: false; reason: string }> {
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), 3 * 60_000);
+  try {
+    const res = await fetch(`${API_URL}/v1/admin/roles/${encodeURIComponent(roleId)}/illustration`, {
+      method: "POST",
+      cache: "no-store",
+      headers: requestHeaders({ token, json: true }),
+      body: JSON.stringify({ scene }),
+      signal: abort.signal,
+    });
+    const body = (await res.json().catch(() => ({}))) as { imageUrl?: string; error?: string };
+    if (res.ok && body.imageUrl) return { ok: true, imageUrl: body.imageUrl };
+    return { ok: false, reason: body.error ?? `The server answered ${res.status}.` };
+  } catch {
+    return { ok: false, reason: abort.signal.aborted ? "That took too long. Try again." : "Could not reach the server." };
+  } finally {
+    clearTimeout(timer);
+  }
+}
