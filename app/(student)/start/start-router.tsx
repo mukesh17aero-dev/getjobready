@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CareerProfile, JourneyState, HomeWorkItem } from "@/lib/api";
 import { progressOf } from "@/features/journey";
@@ -40,6 +41,15 @@ function Illustration({ kind }: { kind: "explore" | "practice" | "interview" | "
   </svg>;
 }
 
+type HomeModule = { label: string; href: string; status?: "done" | "in_progress"; isNew?: boolean };
+// Modules shipped recently carry a "New" tag until this date, then drop it.
+const NEW_UNTIL = Date.parse("2026-10-15");
+
+/** The one module in a card worth doing next: something started, else the first not done. */
+function nextModule(modules: HomeModule[]): HomeModule | null {
+  return modules.find(mod => mod.status === "in_progress") ?? modules.find(mod => mod.status !== "done") ?? null;
+}
+
 function workStatus(item: HomeWorkItem) {
   return item.status === "follow_up" ? "Completed · follow-up" : item.status === "in_review" ? "In review" : "In progress";
 }
@@ -56,6 +66,8 @@ export function StartRouter({
   photo?: string;
 }) {
   const router = useRouter();
+  // Read once, not on every render: the "New" tags expire by date.
+  const [fresh] = useState(() => Date.now() < NEW_UNTIL);
   const state = initialState;
 
   if (!state) {
@@ -74,11 +86,14 @@ export function StartRouter({
   const practice = state.work?.find(item => item.action.href.startsWith("/practice"));
   const application = state.work?.find(item => /^(LinkedIn|Resume|Job fit)/.test(item.title));
   const role = state.progress?.role?.title;
-  const cards = [
-    { kind: "explore" as const, title: "Explore the role", description: "Get a feel for the working day.", href: "/discover", icon: Eye, detail: role ? "Your chosen role is saved" : "Find a direction that feels right", earned: Boolean(role), footer: "Explore roles", tools: ["Discovery"] },
-    { kind: "practice" as const, title: "Role readiness", description: "Build confidence through real tasks.", href: "/practice", icon: Check, detail: practice ? workStatus(practice) : "Real situations. Useful feedback.", earned: practice?.status === "follow_up", footer: "Open practice", tools: ["The Readiness Sitting", "Simulation Missions", "Career Passport"] },
-    { kind: "apply" as const, title: "Professional Presence", description: "Turn your experience into your story.", href: "/resume", icon: Spark, detail: application ? `${application.title.split(" · ")[0]} · ${application.status === "in_review" ? "in review" : application.status === "follow_up" ? "follow-up available" : "in progress"}` : "Resume, LinkedIn and job fit", earned: false, footer: "Open applications", tools: ["Resume Builder", "LinkedIn Profile Builder", "Job Fit Analyzer"] },
-    { kind: "interview" as const, title: "Interview readiness", description: "Find your words. Make them count.", href: "/interview", icon: Mic, detail: interview?.status === "follow_up" ? "Interview completed · feedback ready" : interview ? workStatus(interview) : "A space to practise your answers", earned: interview?.status === "follow_up", footer: "Open interviews", tools: ["AI Interview", "Interview Story Bank", "Question library"] },
+  // Each module's own state, from the record. A module the record cannot
+  // speak for yet carries no status rather than a guessed one.
+  const m = state.modules ?? {};
+  const cards: Array<{ kind: "explore" | "practice" | "apply" | "interview"; title: string; description: string; href: string; icon: typeof Eye; detail: string; earned: boolean; footer: string; modules: HomeModule[] }> = [
+    { kind: "explore", title: "Explore the role", description: "Get a feel for the working day.", href: "/discover", icon: Eye, detail: role ? "Your chosen role is saved" : "Find a direction that feels right", earned: Boolean(role), footer: "Explore roles", modules: [{ label: "Discovery", href: "/discover", status: role ? "done" : undefined }] },
+    { kind: "practice", title: "Role readiness", description: "Build confidence through real tasks.", href: "/practice", icon: Check, detail: practice ? workStatus(practice) : "Real situations. Useful feedback.", earned: practice?.status === "follow_up", footer: "Open practice", modules: [{ label: "The Readiness Sitting", href: "/practice/readiness", status: m.readiness }, { label: "Simulation Missions", href: "/practice/missions", isNew: fresh }, { label: "Career Passport", href: "/passport", isNew: fresh }] },
+    { kind: "apply", title: "Professional Presence", description: "Turn your experience into your story.", href: "/resume", icon: Spark, detail: application ? `${application.title.split(" · ")[0]} · ${application.status === "in_review" ? "in review" : application.status === "follow_up" ? "follow-up available" : "in progress"}` : "Resume, LinkedIn and job fit", earned: false, footer: "Open applications", modules: [{ label: "Resume Builder", href: "/resume/build", status: m.resume }, { label: "LinkedIn Profile Builder", href: "/profile/professional", status: m.linkedin }, { label: "Job Fit Analyzer", href: "/job-fit", status: m.jobFit }] },
+    { kind: "interview", title: "Interview readiness", description: "Find your words. Make them count.", href: "/interview", icon: Mic, detail: interview?.status === "follow_up" ? "Interview completed · feedback ready" : interview ? workStatus(interview) : "A space to practise your answers", earned: interview?.status === "follow_up", footer: "Open interviews", modules: [{ label: "AI Interview", href: "/interview/practice", status: m.interview }, { label: "Interview Story Bank", href: "/stories" }, { label: "Question library", href: "/interview/questions" }] },
   ];
 
   return <div className={styles.shell}><div className={styles.canvas}><main className={styles.home}>
@@ -97,13 +112,23 @@ export function StartRouter({
     <div className={styles.columns}>
       <section className={styles.workspace} aria-labelledby="workspace-heading">
         <div className={styles.sectionHeading}><div><h2 id="workspace-heading">Your workspace</h2><p>Four ways to move your career forward.</p></div></div>
-        <div className={styles.cards}>{cards.map(card => <Link href={card.href} key={card.kind} className={styles.card} data-kind={card.kind}>
-          <div className={styles.cardTop}><span className={styles.icon}><card.icon size={20} /></span><Illustration kind={card.kind} /></div>
-          <h3>{card.title}</h3><p>{card.description}</p>
-          <ul className={styles.tools} aria-label="Tools">{card.tools.map(tool => <li key={tool}>{tool}</li>)}</ul>
-          <div className={styles.cardStatus} data-earned={card.earned}>{card.earned ? <Check size={13} /> : <span className={styles.statusDot} />}{card.detail}</div>
-          <div className={styles.cardFooter}><span>{card.footer}</span><span className={styles.arrow}><ArrowRight size={17} /></span></div>
-        </Link>)}</div>
+        <div className={styles.cards}>{cards.map((card, i) => {
+          const next = nextModule(card.modules);
+          return <article key={card.kind} className={styles.card} data-kind={card.kind} style={{ "--i": i } as React.CSSProperties}>
+            <div className={styles.cardTop}><span className={styles.icon}><card.icon size={20} /></span><Illustration kind={card.kind} /></div>
+            <h3><Link href={card.href} className={styles.cardTitle}>{card.title}</Link></h3><p>{card.description}</p>
+            <ul className={styles.tools} aria-label={`${card.title}: what is inside`}>{card.modules.map((mod, j) => <li key={mod.label} style={{ "--j": j } as React.CSSProperties}>
+              <Link href={mod.href} data-status={mod.status} data-next={mod === next || undefined}>
+                {mod.status === "done" && <Check size={11} />}{mod.label}
+                {mod === next && <span className={styles.nextPip}>Next for you</span>}
+                {mod.isNew && !mod.status && mod !== next && <span className={styles.newTag}>New</span>}
+                {mod.status && <span className="sr-only">{mod.status === "done" ? " (done)" : " (in progress)"}</span>}
+              </Link>
+            </li>)}</ul>
+            <div className={styles.cardStatus} data-earned={card.earned}>{card.earned ? <Check size={13} /> : <span className={styles.statusDot} />}{card.detail}</div>
+            <Link href={next?.href ?? card.href} className={styles.cardFooter}><span>{next ? `${next.status === "in_progress" ? "Continue" : "Start"}: ${next.label}` : card.footer}</span><span className={styles.arrow}><ArrowRight size={17} /></span></Link>
+          </article>;
+        })}</div>
         <div className={styles.journey}><Link href="/journey">View journey <ArrowRight size={15} /></Link></div>
       </section>
 

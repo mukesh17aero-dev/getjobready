@@ -75,6 +75,8 @@ export type JourneyState = {
   // Optional on purpose: an API one deploy behind does not send this, and a
   // screen must degrade rather than break. Read it through progressOf().
   progress?: JourneyProgress;
+  /** Where they are with each module. Absent means not started or not known. */
+  modules?: Partial<Record<"readiness" | "resume" | "linkedin" | "jobFit" | "interview", "done" | "in_progress">>;
 };
 
 /**
