@@ -12,6 +12,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { RememberHub } from "@/features/journey";
 import { ArrowRight, Check, Spark, Mic, Eye } from "@/components/ui/icons";
 import styles from "./student-home.module.css";
+import { RoleFacts } from "./role-facts";
 
 // The signed-in home, as approved in the /preview-home-focus concept: who you
 // are and your story so far on top, four workspaces and your open work below.
@@ -108,6 +109,8 @@ export function StartRouter({
         <p>{story.who ?? "Add a little about your background and interests to start your story. You can explore roles at any time."}</p>
       </section>
     </header>
+
+    {state.progress?.role && <RoleFacts role={state.progress.role} />}
 
     <div className={styles.columns}>
       <section className={styles.workspace} aria-labelledby="workspace-heading">
