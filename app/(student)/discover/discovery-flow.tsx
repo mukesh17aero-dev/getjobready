@@ -477,7 +477,9 @@ export function DiscoveryFlow({
     setUnchooseOpen(false);
     await choose("none");
     setSelectedRole(null);
+    if (stage === "role") leaveRole("roles"); // picking again happens on the list
   }
+  function leaveRole(to: Stage) { window.history.pushState(null, "", roleUrl(null)); setStage(to); void refreshMatches(); }
   const unchooseTitle =
     (content?.catalogue ?? []).find((c) => c.id === selectedRole)?.title ?? "this role";
 
@@ -715,11 +717,7 @@ export function DiscoveryFlow({
             }
             note={matchNoteFor(rolePage.id)}
             backLabel={rolePage.label}
-            onBack={() => {
-              window.history.pushState(null, "", roleUrl(null));
-              setStage(rolePage.back);
-              void refreshMatches();
-            }}
+            onBack={() => leaveRole(rolePage.back)}
             onSectionRead={(section, seconds) =>
               track({
                 family: "interest",
