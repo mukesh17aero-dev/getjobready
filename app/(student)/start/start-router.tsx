@@ -30,18 +30,27 @@ function Illustration({ kind }: { kind: "explore" | "practice" | "interview" | "
       <g className={styles.exploreOrbit}><circle cx="115" cy="24" r="4" fill="currentColor" fillOpacity=".3" stroke="none" /></g>
       <path className={styles.exploreSpark} d="M32 76h12M38 70v12" opacity=".4" />
     </> : kind === "practice" ? <>
-      <rect x="54" y="17" width="64" height="77" rx="10" transform="rotate(10 54 17)" opacity=".2" />
+      <g className={styles.sheetBack}><rect x="54" y="17" width="64" height="77" rx="10" transform="rotate(10 54 17)" opacity=".2" /></g>
       <rect x="39" y="19" width="64" height="77" rx="10" fill="currentColor" fillOpacity=".05" />
-      <path d="m51 39 4 4 7-8m-11 23 4 4 7-8m-11 23 4 4 7-8M71 39h18M71 58h18M71 77h13" />
+      {/* Each tick is marked, then its line is written - one row at a time. */}
+      {[39, 58, 77].map((y, i) => <g key={y} style={{ "--d": i } as React.CSSProperties}>
+        <path className={styles.tick} pathLength={1} d={`M51 ${y}l4 4 7-8`} />
+        <path className={styles.writeLine} d={`M71 ${y}h${i === 2 ? 13 : 18}`} />
+      </g>)}
     </> : kind === "interview" ? <>
-      <rect x="48" y="14" width="40" height="59" rx="20" fill="currentColor" fillOpacity=".06" />
-      <path d="M38 56a30 30 0 0 0 60 0M68 86v13M55 99h26M59 32h18M59 42h18" />
-      <path d="M111 40v16m8-23v30m8-19v8M25 42v12M17 36v24" opacity=".3" />
+      <g className={styles.mic}>
+        <rect x="48" y="14" width="40" height="59" rx="20" fill="currentColor" fillOpacity=".06" />
+        <path d="M38 56a30 30 0 0 0 60 0M68 86v13M55 99h26M59 32h18M59 42h18" />
+      </g>
+      {/* A live voice meter either side of the mic. */}
+      {["M111 40v16", "M119 33v30", "M127 44v8", "M25 42v12", "M17 36v24"].map((d, i) => <path key={d} className={styles.voiceBar} d={d} opacity=".3" style={{ "--d": i } as React.CSSProperties} />)}
     </> : <>
-      <rect x="55" y="13" width="62" height="79" rx="8" transform="rotate(10 55 13)" opacity=".2" />
+      <g className={styles.sheetBack}><rect x="55" y="13" width="62" height="79" rx="8" transform="rotate(10 55 13)" opacity=".2" /></g>
       <rect x="36" y="16" width="62" height="81" rx="8" fill="currentColor" fillOpacity=".05" />
-      <circle cx="54" cy="36" r="7" /><path d="M69 32h16M69 40h11M49 56h35M49 65h35M49 74h22" />
-      <circle cx="103" cy="81" r="15" fill="var(--home-surface)" /><path d="m97 81 4 4 8-9" />
+      <circle cx="54" cy="36" r="7" />
+      {/* The page writes itself, then the check is stamped on. */}
+      {["M69 32h16", "M69 40h11", "M49 56h35", "M49 65h35", "M49 74h22"].map((d, i) => <path key={d} className={styles.writeLine} d={d} style={{ "--d": i } as React.CSSProperties} />)}
+      <g className={styles.stamp}><circle cx="103" cy="81" r="15" fill="var(--home-surface)" /><path className={styles.tick} pathLength={1} d="m97 81 4 4 8-9" style={{ "--d": 5 } as React.CSSProperties} /></g>
     </>}
   </svg>;
 }

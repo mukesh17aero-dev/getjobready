@@ -47,3 +47,19 @@
 @keyframes radar{0%{transform:scale(.95);opacity:.45}100%{transform:scale(1.55);opacity:0}}
 .card:is(:hover,:focus-within) .exploreNeedle{animation:needleSeek 3.2s ease-in-out infinite}.card:is(:hover,:focus-within) .exploreOrbit{animation:orbitLoop 7s linear infinite}.card:is(:hover,:focus-within) .exploreRipple{animation:radar 2.4s ease-out infinite}
 @media (prefers-reduced-motion:reduce){.exploreNeedle,.exploreOrbit,.exploreRipple,.exploreSpark,.card:is(:hover,:focus-within) :is(.exploreNeedle,.exploreOrbit,.exploreRipple){animation:none}}
+.tick{stroke-dasharray:1;animation:tickDraw .45s ease-out backwards;animation-delay:calc(.5s + var(--d,0) * .32s)}
+.writeLine{transform-box:fill-box;transform-origin:left center;animation:lineWrite .5s cubic-bezier(.3,.8,.3,1) backwards;animation-delay:calc(.62s + var(--d,0) * .2s)}
+.sheetBack{transform-box:fill-box;transform-origin:bottom left;transition:transform .5s cubic-bezier(.3,1.4,.5,1)}
+.stamp{transform-box:fill-box;transform-origin:center;animation:stampOn .55s cubic-bezier(.3,1.5,.5,1) 1.65s backwards}
+.mic{transform-box:fill-box;transform-origin:50% 90%;transition:transform .6s cubic-bezier(.3,1.4,.5,1)}
+.voiceBar{transform-box:fill-box;transform-origin:center;animation:voice .5s ease-in-out 3 alternate backwards;animation-delay:calc(.45s + var(--d,0) * .09s)}
+@keyframes tickDraw{from{stroke-dashoffset:1}}
+@keyframes lineWrite{from{transform:scaleX(0)}}
+@keyframes stampOn{0%{transform:scale(1.6);opacity:0}60%{transform:scale(.88);opacity:1}100%{transform:scale(1)}}
+@keyframes voice{0%{transform:scaleY(.35)}100%{transform:scaleY(1.2)}}
+@keyframes voiceLive{0%,100%{transform:scaleY(.45)}50%{transform:scaleY(1.25)}}
+.card:is(:hover,:focus-within) .sheetBack{transform:translate(3px,-4px) rotate(3deg)}
+.card:is(:hover,:focus-within) .tick{animation-name:tickRedraw}.card:is(:hover,:focus-within) .writeLine{animation-name:lineRewrite}.card:is(:hover,:focus-within) .stamp{animation-name:stampAgain}
+@keyframes tickRedraw{from{stroke-dashoffset:1}}@keyframes lineRewrite{from{transform:scaleX(0)}}@keyframes stampAgain{0%{transform:scale(1.6);opacity:0}60%{transform:scale(.88);opacity:1}100%{transform:scale(1)}}
+.card:is(:hover,:focus-within) .mic{transform:rotate(-5deg)}.card:is(:hover,:focus-within) .voiceBar{animation:voiceLive .7s ease-in-out infinite;animation-delay:calc(var(--d,0) * -.13s)}
+@media (prefers-reduced-motion:reduce){.tick,.writeLine,.stamp,.voiceBar,.card:is(:hover,:focus-within) :is(.tick,.writeLine,.stamp,.voiceBar){animation:none}.sheetBack,.mic{transition:none}.card:is(:hover,:focus-within) :is(.sheetBack,.mic){transform:none}}
