@@ -13,10 +13,28 @@ import { JOURNEY } from "@/features/welcome";
 export const metadata = { title: "The whole journey" };
 export const dynamic = "force-dynamic";
 
+// The journey's own stages, named as the cards on this page name them.
+// Profile has no card here; choosing a direction happens inside Discovery.
+const CARD_FOR_STAGE: Record<string, string> = {
+  discovery: "discovery",
+  direction: "discovery",
+  readiness: "assessment",
+  missions: "simulation",
+  interview: "journey-interview",
+  passport: "passport",
+};
+
 export default async function JourneyLandingPage() {
   const session = await getServerSession();
   const state = session ? await getJourneyState(session.access_token) : null;
-  const travelled = state ? journeyPercent(stages(state)) : null;
+  const list = state ? stages(state) : [];
+  const travelled = state ? journeyPercent(list) : null;
+  const live = list.find((stage) => stage.state === "live");
+  const nextId = live ? (CARD_FOR_STAGE[live.id] ?? null) : null;
+  const doneIds = list
+    .filter((stage) => stage.state === "done" && stage.id !== "direction")
+    .map((stage) => CARD_FOR_STAGE[stage.id])
+    .filter((id): id is string => Boolean(id) && id !== nextId);
 
   return (
     <FeatureLanding
@@ -32,6 +50,8 @@ export default async function JourneyLandingPage() {
           : null
       }
       journeyLine
+      nextId={nextId}
+      doneIds={doneIds}
     />
   );
 }

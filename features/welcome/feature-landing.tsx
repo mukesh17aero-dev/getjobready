@@ -66,12 +66,18 @@ export function FeatureLandingBody({
    * the page you are already on.
    */
   onOpen,
+  nextId = null,
+  doneIds = [],
 }: {
   category: FeatureCategory;
   targetRole?: string | null;
   stat?: { label: string; value: string; note: string } | null;
   journeyLine?: boolean;
   onOpen?: () => void;
+  /** This person's next step, from their own progress. Defaults to the first open tool. */
+  nextId?: string | null;
+  /** Steps they have already finished, shown with a tick and a quiet "Review" link. */
+  doneIds?: string[];
 }) {
   const [selectedId, setSelectedId] = useState(category.features[0].id);
   const tabs = useRef<Array<HTMLDivElement | null>>([]);
@@ -82,6 +88,9 @@ export function FeatureLandingBody({
   // built. Two primary actions is the same as none, so everything else on the
   // page is a selection rather than a call to act.
   const primary = category.features.find(isOpen) ?? null;
+  // Only that card gets the filled button; every other open card is a quiet
+  // link. Five equal buttons told nobody which one to press.
+  const next = category.features.find((f) => f.id === nextId && isOpen(f)) ?? primary;
 
   // Arrow keys move between cards, because a list that controls a panel is a
   // tab list and people expect it to behave like one.
@@ -211,6 +220,12 @@ export function FeatureLandingBody({
           {category.features.map((feature, i) => {
             const on = feature.id === selected.id;
             const open = isOpen(feature);
+            const isNext = feature.id === next?.id;
+            const done = doneIds.includes(feature.id);
+            const label = done ? `Review ${feature.title}` : `Open ${feature.title}`;
+            const look = isNext
+              ? "inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-xl bg-brand-teal-deep px-4 text-[0.8rem] font-bold text-white transition-colors hover:bg-brand-teal"
+              : "inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-[0.8rem] font-semibold text-brand-teal-deep underline-offset-4 hover:underline";
             return (
               // A card, not a button: it carries its own "open" link now, and
               // a button cannot contain one. It keeps the tab semantics - the
@@ -241,9 +256,16 @@ export function FeatureLandingBody({
                     : "border-slate-200 hover:border-brand-teal/50"
                 } ${open ? "" : "opacity-75"}`}
               >
+                {isNext && (
+                  <p className="mb-1 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-violet-700">
+                    Your next step
+                  </p>
+                )}
                 <div className="flex items-start justify-between gap-3">
                   <h2 className="font-display text-[1.02rem] font-bold leading-snug text-brand-ink">
+                    {done && <span aria-hidden="true" className="mr-1.5 text-brand-teal-deep">✓</span>}
                     {feature.title}
+                    {done && <span className="sr-only"> (done)</span>}
                   </h2>
                   <StatusChip status={feature.status} />
                 </div>
@@ -263,18 +285,18 @@ export function FeatureLandingBody({
                           e.stopPropagation();
                           onOpen();
                         }}
-                        className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-xl bg-brand-teal-deep px-4 text-[0.8rem] font-bold text-white transition-colors hover:bg-brand-teal"
+                        className={look}
                       >
-                        Open {feature.title}
+                        {label}
                         <ArrowRight size={13} />
                       </button>
                     ) : (
                       <Link
                         href={feature.href!}
                         onClick={(e) => e.stopPropagation()}
-                        className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-xl bg-brand-teal-deep px-4 text-[0.8rem] font-bold text-white transition-colors hover:bg-brand-teal"
+                        className={look}
                       >
-                        Open {feature.title}
+                        {label}
                         <ArrowRight size={13} />
                       </Link>
                     ))}
