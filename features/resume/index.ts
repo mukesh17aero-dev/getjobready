@@ -6,6 +6,7 @@ export * from "./essentials-modal";
 export * from "./plans";
 export * from "./resume-api";
 export * from "./resume-pagination";
+export * from "./resume-setup";
 export * from "./resume-sheet";
 export * from "./resume-template-access";
 export * from "./resume-text";

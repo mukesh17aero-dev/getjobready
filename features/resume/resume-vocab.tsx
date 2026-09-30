@@ -86,6 +86,8 @@ export type Revision = {
   /** One question that would make the change stronger, if there was one. */
   followUp?: string;
   declined: string | null;
+  /** A better change Scribe would suggest, applied with one press. */
+  offer?: { label: string; instruction: string };
   /** The resume as it was BEFORE this revision, for "Put it back". */
   before: ResumeData;
 };

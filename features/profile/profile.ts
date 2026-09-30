@@ -323,6 +323,8 @@ export const WORK_KINDS = [
   { id: "freelance", label: "Freelance" },
   { id: "family", label: "Family business" },
   { id: "volunteering", label: "Volunteering" },
+  { id: "project", label: "College project" },
+  { id: "club", label: "Club or event" },
 ] as const;
 
 export const workKindLabel = (id: string): string =>

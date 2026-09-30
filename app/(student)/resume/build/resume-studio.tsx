@@ -9,12 +9,14 @@ import { RequiredMark } from "@/components/ui/required-mark";
 import { track as trackEvent } from "@/lib/footprints";
 import { whenLabel } from "@/lib/when";
 import { SAMPLE_ATS, SAMPLE_CHECKLIST, EXAMPLE_RESUME, SAMPLE_REVIEW } from "@/features/resume";
+import { CopyButton } from "@/components/ui/copy-button";
 import {
   A4Frame,
   EssentialsModal,
   MiniPreview,
   NEXT_STEP_HREF,
   NEXT_STEP_LABEL,
+  ResumeSetup,
   ResumeSheet,
   ReviewProgress,
   SAMPLE_RESUME,
@@ -22,22 +24,27 @@ import {
   STUDENT_SAMPLE,
   TEMPLATES,
   asTemplate,
+  firstStepFor,
+  setupGaps,
   splitList,
   standingLabel,
   uploadRead,
   type LedgerEntry,
   type Revision,
+  type SetupStep,
 } from "@/features/resume";
 import {
   downloadResumeDocx,
   exportTemplate,
   generateResume,
+  getResumeRecord,
   readResumeUpload,
   refineResume,
   resumeCompleteness,
   resumeChecklistFor,
   resumeGapCheck,
   reviewResume,
+  saveResumeDraft,
   saveResumeProfile,
   type AtsCheck,
   type ChecklistItem,
@@ -50,8 +57,7 @@ import {
   type ResumeTemplate,
 } from "@/features/resume";
 import { resumePage } from "@/features/resume";
-import { previewTemplate, previewTemplates } from "@/features/resume";
-import { PLANS, PLAN_KEY, isPlan, type PlanId } from "@/features/resume";
+import { previewTemplate } from "@/features/resume";
 import s from "./resume-studio.module.css";
 
 // Resume Studio, as approved in public/previews/ascend-resume-complete.html:
@@ -73,16 +79,17 @@ import s from "./resume-studio.module.css";
 //   else's, so the part that is hard to picture - the read-back - is there to
 //   look at before they decide.
 
-type Stage = "start" | "plan" | "draft" | "review" | "export";
+// No plan stage while payments are off: a plan chosen without paying unlocked
+// layouts for nothing. It returns when checkout is real.
+type Stage = "start" | "draft" | "review" | "export";
 const STAGES: Array<{ id: Stage; name: string }> = [
-  { id: "start", name: "Start" },
-  { id: "plan", name: "Choose a plan" },
+  { id: "start", name: "Your details" },
   { id: "draft", name: "Your draft" },
   { id: "review", name: "Feedback" },
-  { id: "export", name: "Export" },
+  { id: "export", name: "Download" },
 ];
-// The plans live in lib/plans.ts, shared with the account menu.
-type Purpose = "role" | "general" | "improve";
+// Build from nothing, or improve a resume they already have.
+type Purpose = "general" | "improve";
 type Track = "student" | "early_career";
 const EXAMPLE_ROLE = "Customer Success Associate";
 // What the example draft would be asked beside it - the same shape a live
@@ -92,11 +99,10 @@ const EXAMPLE_PROMPTS: GapQuestion[] = [
   { field: "pos_system", question: "Which billing or point-of-sale system did you use at the store?", about: "the store job" },
 ];
 const HEADINGS: Record<Stage, [string, string]> = {
-  start: ["Start", "Start with what you have. Shape it for where you want to go."],
-  plan: ["Choose a plan", "One payment. 30 days to build and refine. No automatic renewal."],
+  start: ["Your details", "A resume can only say what is true about you. Start with what you have done."],
   draft: ["Your draft", "Read the draft, check the facts and refine the words."],
   review: ["Feedback", "See the key signals, improve one thing and choose a useful next step."],
-  export: ["Export", "Choose a format for the way you plan to use it."],
+  export: ["Download", "Choose a format for the way you plan to use it."],
 };
 const Arrow = () => <span aria-hidden="true">→</span>;
 const Tick = () => <span aria-hidden="true">✓</span>;
@@ -125,21 +131,18 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   const profileSkills = useMemo(() => splitList(prefs["skills"]), [prefs]);
 
   const [stage, setStage] = useState<Stage>(opened ? "draft" : "start");
-  const [plan, setPlan] = useState<PlanId>(() => (isPlan(prefs["resumePlan"]) ? (prefs["resumePlan"] as PlanId) : "plus"));
-  const [planChosen, setPlanChosen] = useState<boolean>(isPlan(prefs["resumePlan"]));
   const [purpose, setPurpose] = useState<Purpose>("general");
   const [roleInput, setRoleInput] = useState(lockedRole?.title ?? "");
   const [jdInput, setJdInput] = useState("");
   const [trackChoice, setTrackChoice] = useState<Track | null>(savedTrack);
   const [selectedTemplate, setSelectedTemplate] = useState<ResumeTemplate>(asTemplate(opened?.template));
-  const allowedTemplateIds = previewTemplates(planChosen ? plan : null, signedOut);
-  const hasAdditionalTemplates = allowedTemplateIds.length > 1;
+  const allowedTemplateIds = TEMPLATES.map(item => item.id);
   const template = previewTemplate(selectedTemplate, allowedTemplateIds);
-  const availableTemplates = TEMPLATES.filter(item => allowedTemplateIds.includes(item.id));
-  function setTemplate(next: ResumeTemplate) {
-    if (!allowedTemplateIds.includes(next)) { go("plan"); return; }
-    setSelectedTemplate(next);
-  }
+  const availableTemplates = TEMPLATES;
+  const setTemplate = (next: ResumeTemplate) => setSelectedTemplate(next);
+  // Which setup step is open; the first one still missing something.
+  const gaps = setupGaps(profile);
+  const [setupStep, setSetupStep] = useState<SetupStep | null>(() => signedOut ? null : firstStepFor(setupGaps(initialProfile)));
   const [upload, setUpload] = useState<{ filename: string; text: string; read: { experience: number; education: number; skills: number }; parsed: Record<string, unknown> | null } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState<null | "checking" | "building" | "reviewing" | "revising" | "exporting" | "saving">(null);
@@ -178,38 +181,24 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   const fileRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
 
-  // A plan chosen before signing up is kept in the browser, so it is still
-  // there when they come back from the sign-up page.
-  useEffect(() => {
-    if (!signedOut) return;
-    // After the first paint, so the server-rendered page and the browser agree
-    // on what they showed first.
-    const id = setTimeout(() => {
-      try {
-        const stored = localStorage.getItem(PLAN_KEY);
-        if (isPlan(stored)) { setPlan(stored); setPlanChosen(true); }
-      } catch { /* storage unavailable: the choice simply does not persist */ }
-    }, 0);
-    return () => clearTimeout(id);
-  }, [signedOut]);
-
-  const targeted = purpose === "role" || (purpose === "improve" && Boolean(roleInput.trim()));
+  // A role is optional on both doors: named, the draft is shaped for it.
+  const targeted = Boolean(roleInput.trim());
   const general = !targeted;
   const chosenRole = () => (targeted ? roleInput.trim() : "");
-  const readyToBuild = Boolean(trackChoice) && (purpose === "general" || (purpose === "role" && Boolean(roleInput.trim())) || (purpose === "improve" && upload !== null));
+  // Building from nothing needs the record filled first; improving needs the file.
+  const detailsReady = purpose === "improve" ? upload !== null : gaps.length === 0;
+  const readyToBuild = Boolean(trackChoice) && detailsReady;
   // What the person still has to answer on the start stage, so the alert at
   // the top can send them straight to it instead of describing it.
   const missingNow: MissingField[] = stage !== "start" ? [] : [
+    ...(purpose === "general" ? gaps.map(gap => ({ id: "resume-setup", label: gap.label })) : []),
     ...(!trackChoice ? [{ id: "resume-track", label: "Where are you right now?" }] : []),
-    ...(purpose === "role" && !roleInput.trim() ? [{ id: "resume-role", label: "Target role" }] : []),
     ...(purpose === "improve" && upload === null ? [{ id: "resume-upload", label: "The resume to improve" }] : []),
   ];
   const wrongTrack = Boolean(error) && !trackChoice;
-  const wrongRole = Boolean(error) && purpose === "role" && !roleInput.trim();
-  // Only the name is insisted on: a resume without one is not a resume.
-  // Everything else is written from the record, and asked for beside the
-  // draft only when it would make a line stronger.
-  const needsEssentials = !text("fullName");
+  // Improving an upload still needs a name for the header; building from
+  // nothing asks for it in the first setup step.
+  const needsEssentials = purpose === "improve" && !text("fullName");
   const isExample = !result;
   const shown = result ?? { resume: EXAMPLE_RESUME, targetRole: EXAMPLE_ROLE };
   const shownReview = result ? review : SAMPLE_REVIEW;
@@ -221,11 +210,10 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   const previewResume = useMemo<ResumeData>(() => {
     const sample = trackChoice === "student" ? STUDENT_SAMPLE : SAMPLE_RESUME;
     const name = text("fullName"), city = text("city");
-    return { ...sample, header: { name: name || sample.header.name, city: city || sample.header.city, email: name ? "your.email@example.com" : sample.header.email } };
+    return { ...sample, header: { name: name || sample.header.name, city: city || sample.header.city, email: name ? "" : sample.header.email } };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, trackChoice]);
   const stageIndex = STAGES.findIndex(item => item.id === stage);
-  const chosenPlan = PLANS.find(item => item.id === plan)!;
 
   function go(next: Stage) {
     setStage(next); setError(null); setStatus("");
@@ -237,14 +225,11 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
     if (!t) askForAccount("your resume", "Writing it takes a couple of minutes of an AI's time and produces a document that is yours - so it needs an account to belong to, and to be waiting for you when you come back to change it.");
     return t;
   }
-  function savePlanLocally(id: PlanId) { try { localStorage.setItem(PLAN_KEY, id); } catch { /* fine */ } }
 
   // ---- Start ----
   function choosePurpose(next: Purpose) {
     setPurpose(next); setError(null);
     if (next !== "improve") setUpload(null);
-    if (next === "general") { setRoleInput(""); setJdInput(""); }
-    if (next === "role" && !roleInput.trim() && lockedRole) setRoleInput(lockedRole.title);
   }
   async function readExisting(file: File) {
     if (signedOut) { askForAccount("your uploaded resume", "Reading your file and improving it means keeping both - what you had, and what it became - so there has to be somewhere to keep them."); return; }
@@ -256,28 +241,13 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
     setUpload({ filename: read.filename, text: read.text, read: read.read, parsed: read.parsed });
   }
   function continueFromStart() {
+    if (signedOut) { void withToken(); return; }
     if (!readyToBuild) {
-      setError(!trackChoice ? "Tell us where you are right now first." : purpose === "role" ? "Name the role you are aiming at." : "Choose the resume to improve first.");
+      if (purpose === "general" && gaps.length > 0) { setSetupStep(firstStepFor(gaps)); setError("A few details are still needed before your resume can be written."); return; }
+      setError(!trackChoice ? "Tell us where you are right now first." : "Choose the resume to improve first.");
       return;
     }
     setError(null);
-    if (!planChosen) { go("plan"); return; }
-    void beginBuild();
-  }
-
-  // ---- Plan ----
-  async function continueWithPlan() {
-    savePlanLocally(plan);
-    if (signedOut) {
-      askForAccount("your resume", `Your ${chosenPlan.name} choice is kept while you sign in or create an account. Building starts the moment you are back.`);
-      return;
-    }
-    setBusy("saving"); setError(null);
-    const t = await withToken(); if (!t) { setBusy(null); return; }
-    const saved = await saveResumeProfile(t, { education: profile?.education ?? [], experience: profile?.experience ?? [], projects: profile?.projects ?? [], achievements: profile?.achievements ?? [], preferences: { ...prefs, resumePlan: plan } });
-    setBusy(null);
-    if (saved) setProfile(saved);
-    setPlanChosen(true);
     void beginBuild();
   }
 
@@ -320,7 +290,15 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
     setBusy("building");
     const generated = await generateResume(t, { ...body, template: exportTemplate(template) });
     setBusy(null);
-    if (!generated) { setError("The draft didn't come back this time. Nothing was lost - try again."); return; }
+    if (!generated.ok) {
+      // The server refuses an incomplete record by name; open the step that fills it.
+      if (generated.missing?.length) { setPurpose("general"); setSetupStep(firstStepFor(generated.missing)); go("start"); }
+      setError(generated.reason);
+      return;
+    }
+    // The server wrote this draft into the record; read it back so later saves start from it.
+    void getResumeRecord(t).then(record => { if (record?.profile) setProfile(record.profile); });
+    lastSaved.current = generated.resume;
     setResult({ resume: generated.resume, targetRole: generated.targetRole });
     setAts(generated.ats ?? null); setChecklist(generated.checklist ?? null); setReview(null); setRevisions([]); setExported(false); setPane("document");
     trackEvent({ family: "engagement", event: "resume_generated", module: "resume", target: generated.targetRole, meta: { keywordsUsed: generated.resume.keywordsUsed.length } });
@@ -352,16 +330,9 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
     setResult({ resume: revised.resume, targetRole: result.targetRole });
     if (revised.ats) setAts(revised.ats);
     if (revised.checklist) setChecklist(revised.checklist);
-    if (revised.added.length > 0) void keepClaims(t, revised.added);
-    setRevisions(list => [...list, { ask, reply: revised.reply, changed: revised.changed, didChange, added: revised.added, ...(revised.followUp ? { followUp: revised.followUp } : {}), declined: revised.declined, before }]);
+    setRevisions(list => [...list, { ask, reply: revised.reply, changed: revised.changed, didChange, added: revised.added, ...(revised.followUp ? { followUp: revised.followUp } : {}), ...(revised.offer ? { offer: revised.offer } : {}), declined: revised.declined, before }]);
     setRequest(""); setReview(null); setExported(false);
     trackEvent({ family: "engagement", event: "resume_revised", module: "resume", target: result.targetRole, meta: { declined: Boolean(revised.declined) } });
-  }
-  async function keepClaims(t: string, claims: string[]) {
-    const previous = Array.isArray(prefs["resumeClaims"]) ? (prefs["resumeClaims"] as string[]) : [];
-    const merged = [...previous, ...claims].filter((claim, i, all) => all.findIndex(o => o.toLowerCase() === claim.toLowerCase()) === i);
-    const saved = await saveResumeProfile(t, { education: profile?.education ?? [], experience: profile?.experience ?? [], projects: profile?.projects ?? [], achievements: profile?.achievements ?? [], preferences: { ...prefs, resumeClaims: merged.slice(0, 40) } });
-    if (saved) setProfile(saved);
   }
   function applySummary() {
     if (!result) return;
@@ -450,16 +421,25 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
       await new Promise<void>(resolve => { const after = () => { window.removeEventListener("afterprint", after); resolve(); }; window.addEventListener("afterprint", after); window.print(); });
     }
     setBusy(null); setExported(true);
-    void keepDownloaded(t, result, review);
+    // Saved on the server against the current record, then read back for the shelf.
+    const kept = await saveResumeDraft(t, { resume: result.resume, targetRole: result.targetRole, template: exportTemplate(template), downloaded: true, ...(review ? { review } : {}) });
+    if (kept) { const record = await getResumeRecord(t); if (record?.profile) setProfile(record.profile); }
   }
-  async function keepDownloaded(t: string, taken: { resume: ResumeData; targetRole: string }, read: ResumeReview | null) {
-    const raw = Array.isArray(prefs["resumeLedger"]) ? [...(prefs["resumeLedger"] as LedgerEntry[])] : [];
-    const index = raw.map(e => e?.role).lastIndexOf(taken.targetRole);
-    const entry: LedgerEntry = { ...(index >= 0 ? raw[index] : {}), role: taken.targetRole, at: index >= 0 ? (raw[index]?.at ?? new Date().toISOString()) : new Date().toISOString(), skillsHighlighted: (index >= 0 ? raw[index]?.skillsHighlighted : undefined) ?? taken.resume.skills.flatMap(group => group.items).slice(0, 30), resume: taken.resume, template, downloadedAt: new Date().toISOString(), ...(read ? { review: read } : {}) };
-    if (index >= 0) raw[index] = entry; else raw.push(entry);
-    const saved = await saveResumeProfile(t, { education: profile?.education ?? [], experience: profile?.experience ?? [], projects: profile?.projects ?? [], achievements: profile?.achievements ?? [], preferences: { ...prefs, resumeLedger: raw.slice(-20) } });
-    if (saved) setProfile(saved);
-  }
+
+  // ---- Autosave: the draft is saved a moment after every change ----
+  const lastSaved = useRef<ResumeData | null>(opened?.resume ?? null);
+  useEffect(() => {
+    if (signedOut || !result || result.resume === lastSaved.current) return;
+    const id = setTimeout(() => {
+      void (async () => {
+        const t = await token();
+        if (!t) return;
+        const saved = await saveResumeDraft(t, { resume: result.resume, targetRole: result.targetRole, template: exportTemplate(template) });
+        if (saved) { lastSaved.current = result.resume; setStatus("Draft saved."); }
+      })();
+    }, 1500);
+    return () => clearTimeout(id);
+  }, [result, template, signedOut]);
   function openVersion(entry: LedgerEntry) {
     if (!entry.resume) return;
     setResult({ resume: entry.resume, targetRole: entry.role }); setSelectedTemplate(asTemplate(entry.template)); setRevisions([]); setReview(entry.review ?? null); setAts(null); setChecklist(null); setExported(false);
@@ -469,7 +449,7 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   // ---- Which stages can be opened from the bar ----
   function canOpen(id: Stage) {
     if (signedOut) return true;
-    if (id === "start" || id === "plan") return true;
+    if (id === "start") return true;
     return Boolean(result);
   }
   const needsAccountForScribe = () => askForAccount("Scribe, on your own resume", "Scribe rewrites your own draft from your own record. This one is an example, so there is nothing of yours for it to work on yet.");
@@ -520,16 +500,21 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   const exampleBanner = isExample && <div className={s.exampleBanner}><span><b>This is an example.</b> A finished resume and the feedback it was given, so you can see what you get. Yours is written from your own record.</span><button type="button" onClick={() => go("start")}>Build mine <Arrow /></button></div>;
   const building = busy === "building" || busy === "checking";
   const footer: Record<Stage, [string, string, string]> = {
-    start: ["Start with what is already yours.", "You can change the look and add more detail later.", planChosen ? (purpose === "improve" ? "Work on my resume" : "Build my resume") : "Continue"],
-    plan: [`${chosenPlan.name} · ₹${chosenPlan.price} total`, "30-day pass · one-time payment · no automatic renewal", signedOut ? `Continue with ${chosenPlan.name}` : `Continue with ${chosenPlan.name}`],
+    start: purpose === "improve"
+      ? ["Start from the resume you have.", "We keep what you wrote and work on how it reads.", "Work on my resume"]
+      : gaps.length > 0 && !signedOut
+        ? [`${gaps.length} ${gaps.length === 1 ? "detail" : "details"} to go.`, gaps.map(gap => gap.label).join(" · "), "Build my resume"]
+        : ["Everything is in.", "You can change the look and add more detail later.", "Build my resume"],
     draft: ["Happy with the words?", "See the feedback before you export.", "Review my resume"],
     review: ["You choose what to improve.", "Feedback helps you decide; it is not a hiring score.", "Continue to export"],
     export: ["Your resume stays part of your journey.", "Every version is kept with its feedback.", exported ? "Back to my resume" : format === "docx" ? "Download Word file" : "Print or save as PDF"],
   };
   function primaryAction() {
     if (stage === "start") return continueFromStart();
-    if (stage === "plan") return void continueWithPlan();
-    if (stage === "draft") return go("review");
+    if (stage === "draft") {
+      if (!completeness.ready) { setError(`Before feedback, the draft needs: ${completeness.missing.map(g => g.section.toLowerCase()).join(", ")}. Ask Scribe or add it to your details.`); return; }
+      return go("review");
+    }
     if (stage === "review") return go("export");
     if (exported) return go("draft");
     return void exportResume();
@@ -548,34 +533,24 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
 
       {building ? <section className={`${s.card} ${s.buildState}`}><div className={s.buildGlyph} aria-hidden="true">✦</div><span className={s.smallLabel} style={{ justifyContent: "center", marginTop: 18 }}>{busy === "checking" ? "GETTING YOUR DETAILS TOGETHER" : "WRITING YOUR DRAFT"}</span><h2>Bringing your story together.</h2><p>Your draft is written from your saved record and nothing else.</p><div className={s.buildRows}><span>Read your experience and skills</span><span>Shape the draft for your direction</span><span>Prepare the document for your review</span></div><p className={s.quiet}>This takes a minute or so. Stay on this page.</p></section> : <>
 
-      {stage === "start" && <div className={s.setupGrid}><div className={s.setupLeft}><section className={s.card}><div className={s.sectionHeading}><h2>What are you making?</h2></div>
-        <div className={s.purposes} role="group" aria-label="Resume purpose">{([{ id: "role", name: "For a role", copy: "Give it a clear direction", icon: "◎" }, { id: "general", name: "General resume", copy: "Bring your story together", icon: "▤" }, { id: "improve", name: "Improve existing", copy: "Start with your document", icon: "↥" }] as Array<{ id: Purpose; name: string; copy: string; icon: string }>).map(item => <button type="button" key={item.id} aria-pressed={purpose === item.id} onClick={() => choosePurpose(item.id)}><span className={s.purposeIcon}>{item.icon}</span><strong>{item.name}</strong><small>{item.copy}</small></button>)}</div>
+      {stage === "start" && <div className={s.setupGrid}><div className={s.setupLeft}><section className={s.card}><div className={s.sectionHeading}><h2>Do you have a resume already?</h2></div>
+        <div className={s.purposes} role="group" aria-label="Do you have a resume already?">{([{ id: "general", name: "No - build it with me", copy: "Step by step, from what you have done", icon: "✦" }, { id: "improve", name: "Yes - improve mine", copy: "Upload it and we work on how it reads", icon: "↥" }] as Array<{ id: Purpose; name: string; copy: string; icon: string }>).map(item => <button type="button" key={item.id} aria-pressed={purpose === item.id} onClick={() => choosePurpose(item.id)}><span className={s.purposeIcon}>{item.icon}</span><strong>{item.name}</strong><small>{item.copy}</small></button>)}</div>
         {purpose === "improve" && (upload ? <div className={s.softBox}><strong>Working from {upload.filename}</strong><p>{uploadRead(upload.read)} We keep what you wrote and work on how it reads.</p><button type="button" className={s.undo} onClick={() => setUpload(null)}>Remove</button></div> : <button type="button" className={s.upload} disabled={uploading} onClick={() => fileRef.current?.click()}><strong>{uploading ? "Reading your resume…" : "Choose an existing resume"}</strong><small>PDF or Word. We read it, keep what you wrote, and say what is missing.</small></button>)}
-        {purpose !== "general" ? <><label className={s.field} htmlFor="resume-role">Target role {purpose === "improve" ? "(optional)" : <RequiredMark />}<input id="resume-role" value={roleInput} aria-required={purpose === "role" || undefined} aria-invalid={wrongRole || undefined} data-invalid={wrongRole || undefined} onChange={e => { setRoleInput(e.target.value); if (wrongRole) setError(null); }} placeholder="e.g. Customer Success Associate" /></label>{lockedRole && roleInput.trim() !== lockedRole.title && <button type="button" className={s.undo} onClick={() => setRoleInput(lockedRole.title)}>Use {lockedRole.title}, from your Discovery</button>}<details className={s.details}><summary>Add a job posting <span>Optional</span></summary><label className={s.field}>Job description<textarea rows={3} value={jdInput} onChange={e => setJdInput(e.target.value)} /></label></details></> : <p className={s.softBox}>Create a reusable introduction to your experience. The feedback will suggest roles worth exploring.</p>}
+        <label className={s.field} htmlFor="resume-role">Aiming at a role? (optional)<input id="resume-role" value={roleInput} onChange={e => setRoleInput(e.target.value)} placeholder="e.g. Customer Success Associate - leave blank for a general resume" /></label>{lockedRole && roleInput.trim() !== lockedRole.title && <button type="button" className={s.undo} onClick={() => setRoleInput(lockedRole.title)}>Use {lockedRole.title}, from your Discovery</button>}{targeted && <details className={s.details}><summary>Add a job posting <span>Optional</span></summary><label className={s.field}>Job description<textarea rows={3} value={jdInput} onChange={e => setJdInput(e.target.value)} /></label></details>}
         <fieldset className={s.track} id="resume-track" tabIndex={-1} aria-invalid={wrongTrack || undefined} data-invalid={wrongTrack || undefined}><legend>Where are you right now?<RequiredMark /></legend><div className={s.starterTrack}>{([{ id: "student", label: "Still studying" }, { id: "early_career", label: "Working, or have worked" }] as Array<{ id: Track; label: string }>).map(option => <label key={option.id}><input type="radio" name="resume-track" value={option.id} checked={trackChoice === option.id} onChange={() => { setTrackChoice(option.id); setError(null); }} />{option.label}</label>)}</div></fieldset>
       </section>
-        <section className={s.card}><div className={s.sectionHeading}><h2>Choose a look</h2><span>{hasAdditionalTemplates ? "Switch any time" : "Basic is free to preview"}</span></div><div className={s.templates} role="group" aria-label="Template selection">{TEMPLATES.map(item => {
-            const locked = !allowedTemplateIds.includes(item.id);
-            return <button type="button" key={item.id} aria-pressed={!locked && template === item.id} aria-label={locked ? `${item.name} · plan-locked template. View plans to unlock` : `Preview ${item.name}`} data-locked={locked} onClick={() => locked ? go("plan") : setTemplate(item.id)}>
-              <span className={s.templatePreview}>
-                <span className={s.thumb} aria-hidden={locked || undefined} inert={locked || undefined}><MiniPreview id={item.id} resume={previewResume} roleLine={targeted ? roleInput.trim() || "The role you are aiming at" : "Written for whoever reads it"} track={trackChoice ?? undefined} /></span>
-                {locked && <span className={s.templateLock}><span aria-hidden="true">▣</span>Plan required<span>View plans →</span></span>}
-              </span>
-              <strong>{item.name}</strong><small>{locked ? "View plans to unlock" : item.id === "classic" ? "Free to preview" : item.blurb}</small>
-            </button>;
-          })}</div>
+        {purpose === "general" && !signedOut && <div id="resume-setup" tabIndex={-1}><ResumeSetup profile={profile} suggestions={target?.keywords ?? []} token={token} onSaved={setProfile} step={setupStep} onStep={setSetupStep} /></div>}
+        <section className={s.card}><div className={s.sectionHeading}><h2>Choose a look</h2><span>Switch any time</span></div><div className={s.templates} role="group" aria-label="Template selection">{TEMPLATES.map(item => <button type="button" key={item.id} aria-pressed={template === item.id} aria-label={`Preview ${item.name}`} onClick={() => setTemplate(item.id)}>
+              <span className={s.templatePreview}><span className={s.thumb}><MiniPreview id={item.id} resume={previewResume} roleLine={targeted ? roleInput.trim() : "Written for whoever reads it"} track={trackChoice ?? undefined} /></span></span>
+              <strong>{item.name}</strong><small>{item.blurb}</small>
+            </button>)}</div>
         </section>
       </div><aside className={s.setupAside}>
         {ledger.length > 0 && <section className={s.card}><div className={s.sectionHeading}><h2>Your saved resumes</h2><span>{ledger.length} {ledger.length === 1 ? "version" : "versions"}</span></div><div className={`${s.versions} ${s.pagedVersions}`}>{savedVersions.entries.map((entry, i) => <button type="button" key={`${entry.at}-${savedVersions.start + i}`} onClick={() => openVersion(entry)}><span><strong>{entry.role}</strong><small>{entry.downloadedAt ? `Downloaded ${whenLabel(entry.downloadedAt)}` : `Built ${whenLabel(entry.at)}`}</small></span><span>Open <Arrow /></span></button>)}</div>{savedVersions.pages > 1 && <nav className={s.savedPagination} aria-label="Saved resume pages"><button type="button" disabled={savedVersions.page === 0} onClick={() => setSavedPage(savedVersions.page - 1)}>Previous</button><span aria-live="polite" aria-atomic="true">Page {savedVersions.page + 1} of {savedVersions.pages}<small>{savedVersions.start + 1}–{savedVersions.start + savedVersions.entries.length} of {ledger.length} resumes</small></span><button type="button" disabled={savedVersions.page === savedVersions.pages - 1} onClick={() => setSavedPage(savedVersions.page + 1)}>Next</button></nav>}<p className={s.quiet}>Open one to read it, refine it or export it again. Building below makes a new version.</p></section>}
         <section className={`${s.card} ${s.lookPreview}`}><div className={s.sectionHeading}><h2>Preview · {TEMPLATES.find(item => item.id === template)?.name}</h2><span>{signedOut ? "Illustration, not your information" : "Your details, in this look"}</span></div><div className={`${s.documentFrame} ${s.lookSheet}`}><A4Frame><ResumeSheet resume={previewResume} template={template} roleLine={targeted ? roleInput.trim() || "The role you are aiming at" : "Written for whoever reads it"} track={trackChoice ?? undefined} /></A4Frame></div></section>
-        <section className={s.recordCard}><span className={s.smallLabel}>{signedOut ? "✓ A HEAD START FROM YOUR RECORD" : text("fullName") ? "✓ A HEAD START FROM YOUR RECORD" : "YOUR RECORD"}</span><h2>{signedOut ? "Your saved details come with you" : text("fullName") || "Nothing saved yet"}</h2><p>{signedOut ? "Once you have an account, your experience, education and skills are written in for you." : `${profile?.experience.length ?? 0} experience, ${profile?.education.length ?? 0} education, ${profileSkills.length} skills on your record.`}</p>{!signedOut && <div className={s.facts}><span><b>{profile?.experience.length ?? 0}</b> experience entries</span><span><b>{profile?.education.length ?? 0}</b> education entries</span><span><b>{profileSkills.length}</b> listed skills</span></div>}<small>{signedOut ? "The resume preview is an illustration, not your information." : "Anything missing is asked for when you build, and saved to your profile."}</small></section>
+        <section className={s.recordCard}><span className={s.smallLabel}>{signedOut ? "✓ A HEAD START FROM YOUR RECORD" : text("fullName") ? "✓ A HEAD START FROM YOUR RECORD" : "YOUR RECORD"}</span><h2>{signedOut ? "Your saved details come with you" : text("fullName") || "Nothing saved yet"}</h2><p>{signedOut ? "Once you have an account, your experience, education and skills are written in for you." : `${profile?.experience.length ?? 0} experience, ${profile?.education.length ?? 0} education, ${profileSkills.length} skills on your record.`}</p>{!signedOut && <div className={s.facts}><span><b>{profile?.experience.length ?? 0}</b> experience entries</span><span><b>{profile?.education.length ?? 0}</b> education entries</span><span><b>{profileSkills.length}</b> listed skills</span></div>}<small>{signedOut ? "The resume preview is an illustration, not your information." : "Everything you add here is saved to your profile."}</small>{!signedOut && <Link href="/profile" className={s.checkLink}>Open my profile <Arrow /></Link>}</section>
 
       </aside></div>}
-
-      {stage === "plan" && <><div className={s.shared}><Tick /><span>Basic is free to preview. Starter includes three layouts; Plus and Pro include all six.</span><span>Tax-inclusive prices · no automatic renewal</span></div>
-        <div className={s.cards} role="group" aria-label="Select a plan">{PLANS.map(item => <button type="button" key={item.id} className={s.plan} aria-pressed={plan === item.id} onClick={() => setPlan(item.id)}><div className={s.planTop}><span>{item.tag}</span><i>{plan === item.id && <Tick />}</i></div><h2>{item.name}</h2><p>{item.intro}</p><div className={s.price}><strong>₹{item.price}</strong><span>one-time<br />30-day pass</span></div><p className={s.outcome}>{item.outcome}</p><ul>{item.features.map(feature => <li key={feature}><Tick />{feature}</li>)}</ul><div className={s.planBottom}>{plan === item.id ? "Selected" : "Choose this plan"}<Arrow /></div></button>)}</div>
-        <p className={s.usageNote}>One AI draft creates a new resume version; one AI improvement is one successful Scribe revision. Manual edits, switching layouts and downloading saved files do not use AI allowances.</p>
-        <div className={s.questions}><details><summary>What happens after 30 days?</summary><p>Your AI allowance expires; existing work remains available to view and download.</p></details><details><summary>Can I upgrade?</summary><p>Pay the difference during your current pass. Keep the original expiry and carry existing usage into the higher plan.</p></details><details><summary>Does Pro mean unlimited?</summary><p>It includes the listed career tools with clear allowances, including two 10-minute AI interviews. It does not include unlimited AI or every future feature.</p></details></div></>}
 
       {stage === "draft" && <>{exampleBanner}<div className={s.documentToolbar}><span><i />{isExample ? "Example resume" : revisions.length ? `Your draft · ${revisions.length} ${revisions.length === 1 ? "change" : "changes"}` : "Your draft · ready to review"}</span><label>Layout<select value={template} onChange={e => setTemplate(asTemplate(e.target.value))}>{availableTemplates.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div>
         <div className={s.mobileTabs} role="group" aria-label="Workspace view"><button type="button" aria-pressed={pane === "document"} onClick={() => setPane("document")}>Document</button><button type="button" aria-pressed={pane === "edit"} onClick={() => setPane("edit")}>Edit with Scribe</button></div>
@@ -595,7 +570,7 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
                 <textarea id="scribe-ask" rows={3} value={request} disabled={busy !== null} placeholder="Tell Scribe what to change…" onChange={e => setRequest(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (isExample) askForAccount("Scribe, on your own resume", "Scribe rewrites your own draft from your own record. This one is an example, so there is nothing of yours for it to work on yet."); else void askScribe(); } }} />
               </label>
               <button type="button" className={s.secondary} disabled={!request.trim() || busy !== null} onClick={() => isExample ? askForAccount("Scribe, on your own resume", "Scribe rewrites your own draft from your own record. This one is an example, so there is nothing of yours for it to work on yet.") : void askScribe()}>{busy === "revising" ? "Rewriting…" : "Ask Scribe"} <Arrow /></button>
-              {revisions.length > 0 && <ol className={s.thread}>{revisions.map((rev, i) => <li key={`${rev.ask}-${i}`}><p className={s.ask}>{rev.ask}</p><div className={s.proposal}><span className={s.smallLabel}>SCRIBE</span><p>{rev.reply}</p>{rev.declined && rev.declined !== rev.reply && <p className={s.quiet}><b>Not changed:</b> {rev.declined}</p>}{rev.added.length > 0 && <p className={s.quiet}>Added from what you told me: {rev.added.join("; ")}. Make sure you can stand behind it in the interview.</p>}{rev.followUp && <p><b>{rev.followUp}</b></p>}{rev.didChange && <div><button type="button" onClick={() => undoRevision(i)}>↶ Undo this change</button></div>}</div></li>)}</ol>}
+              {revisions.length > 0 && <ol className={s.thread}>{revisions.map((rev, i) => <li key={`${rev.ask}-${i}`}><p className={s.ask}>{rev.ask}</p><div className={s.proposal}><span className={s.smallLabel}>SCRIBE</span>{rev.didChange ? <p className={s.okNote}><Tick /><span>Updated on your resume{rev.changed.length > 0 ? `: ${rev.changed.join("; ")}` : ""}</span></p> : <p className={s.quiet}>Your resume was not changed.</p>}<p>{rev.reply}</p>{rev.declined && rev.declined !== rev.reply && <p className={s.quiet}><b>Not changed:</b> {rev.declined}</p>}{rev.added.length > 0 && <p className={s.quiet}>Added from what you told me: {rev.added.join("; ")}. Make sure you can stand behind it in the interview.</p>}{rev.followUp && <p><b>{rev.followUp}</b></p>}<div>{rev.offer && <button type="button" disabled={busy !== null} onClick={() => void askScribe(rev.offer!.instruction)}>✦ {rev.offer.label}</button>}{rev.didChange && <button type="button" onClick={() => undoRevision(i)}>↶ Undo this change</button>}<CopyButton value={rev.reply} label="Copy Scribe's reply" /></div></div></li>)}</ol>}
               {/* The other way to change the words: your own hands. It was a
                   fourth tab, which made it look like a fourth thing to do. */}
               <button type="button" className={s.handEdit} onClick={() => { setEditor("summary"); setSummaryDraft(shown.resume.summary); }}>Rather write the opening paragraph yourself? <Arrow /></button>

@@ -39,9 +39,9 @@ describe("the architecture guard", () => {
     planted.push(f);
     // built at runtime: a literal deep-import path in this file would itself
     // be a violation, and the guard is right to say so.
-    const deep = ["@", "features", "resume", "resume-builder"].join("/");
+    const deep = ["@", "features", "resume", "resume-sheet"].join("/");
     fs.writeFileSync(path.join(ROOT, f),
-      `import { ResumeBuilder } from "${deep}";\nexport const Probe = () => ResumeBuilder;\n`);
+      `import { ResumeSheet } from "${deep}";\nexport const Probe = () => ResumeSheet;\n`);
     const { ok, output } = runGuard();
     expect(ok).toBe(false);
     // components/ may not import features/ at all, and this is also a deep import

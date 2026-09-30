@@ -176,8 +176,36 @@ export const resumeGapCheck = (token: string, body: TargetBody) =>
     body,
   });
 
-export const generateResume = (token: string, body: TargetBody) =>
-  call<GenerateResult>(token, "/v1/resume/generate", { method: "POST", body });
+/** One gap in the record that a resume cannot be written without. */
+export type ReadinessGap = { item: "name" | "phone" | "city" | "education" | "experience" | "skills"; label: string };
+
+export async function generateResume(
+  token: string,
+  body: TargetBody,
+): Promise<({ ok: true } & GenerateResult) | { ok: false; reason: string; missing?: ReadinessGap[] }> {
+  try {
+    const res = await fetch(`${API_URL}/v1/resume/generate`, {
+      method: "POST",
+      cache: "no-store",
+      headers: headers(token, true),
+      body: JSON.stringify(body),
+    });
+    const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    if (res.ok) return { ok: true, ...(data as GenerateResult) };
+    if (data.error === "profile_incomplete" && Array.isArray(data.missing)) {
+      return { ok: false, reason: "A few details are still missing from your profile.", missing: data.missing as ReadinessGap[] };
+    }
+    return { ok: false, reason: typeof data.error === "string" ? data.error : "The draft didn't come back this time. Nothing was lost - try again." };
+  } catch {
+    return { ok: false, reason: "Could not reach the server. Check your connection and try again." };
+  }
+}
+
+/** The draft as it stands, saved as they work on it - and marked when downloaded. */
+export const saveResumeDraft = (
+  token: string,
+  body: { resume: ResumeData; targetRole: string; template?: ExportTemplate; downloaded?: boolean; review?: ResumeReview },
+) => call<{ saved: true }>(token, "/v1/resume/draft", { method: "PUT", body });
 
 /**
  * A resume they already have, read into text. Nothing is stored server-side:
@@ -404,6 +432,8 @@ export const refineResume = (
     /** One question that would make the change stronger, if there is one. */
     followUp?: string;
     declined: string | null;
+    /** A better change Scribe would suggest, pressable as one instruction. */
+    offer?: { label: string; instruction: string } | null;
     /** The rewritten file, read back the way a screening system reads it. */
     ats?: AtsCheck;
     checklist?: ResumeChecklist;

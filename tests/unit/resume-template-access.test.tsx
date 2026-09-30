@@ -24,12 +24,11 @@ describe("selected-plan template preview",()=>{
   expect(previewTemplate("sidebar",previewTemplates("starter",false))).toBe("sidebar");
   expect(previewTemplate("professional",previewTemplates("plus",false))).toBe("professional");
  });
- it("renders one clear Basic card and five inert thumbnails for an unsigned visitor",()=>{
-  const html=render("plus",true);expect(html.match(/data-locked="true"/g)).toHaveLength(5);expect(html.match(/data-locked="false"/g)).toHaveLength(1);expect(html.match(/inert=""/g)).toHaveLength(5);expect(html).toContain('aria-label="Preview Basic"');expect(html).toContain("Preview · Basic");
- });
- it("renders the correct locks for signed-in plan selections",()=>{
-  expect(render(null).match(/data-locked="true"/g)).toHaveLength(5);
-  expect(render("starter").match(/data-locked="true"/g)).toHaveLength(3);
-  expect(render("plus")).not.toContain('data-locked="true"');
+ // While payments are off the studio has no plan step and locks nothing.
+ it("offers every layout in the studio, signed in or not",()=>{
+  for(const html of [render(null,true),render(null),render("starter")]){
+   expect(html).not.toContain("data-locked");expect(html).not.toContain('inert=""');
+   expect(html.match(/aria-label="Preview /g)).toHaveLength(6);expect(html).toContain("Preview · Basic");
+  }
  });
 });
