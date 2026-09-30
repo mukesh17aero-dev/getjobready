@@ -18,7 +18,7 @@ export function RoleArt({ roleId, glyph }: { roleId: string; glyph: string }) {
     );
   }
   return (
-    <span aria-hidden="true" className="discovery-role-art absolute inset-x-0 top-0 h-[145px] overflow-hidden">
+    <span aria-hidden="true" className="discovery-role-art absolute inset-x-0 top-0 h-[190px] overflow-hidden">
       {/* A plain img, loaded straight from storage: a redrawn picture shows
           within a minute. The ref catches a missing picture whose error fired
           before the page was interactive, which onError alone would miss. */}
@@ -28,7 +28,7 @@ export function RoleArt({ roleId, glyph }: { roleId: string; glyph: string }) {
         alt=""
         loading="lazy"
         decoding="async"
-        className="h-full w-full object-cover object-[center_40%]"
+        className="h-full w-full object-cover object-[center_45%]"
         ref={(img) => { if (img?.complete && img.naturalWidth === 0) setFailed(true); }}
         onError={() => setFailed(true)}
       />

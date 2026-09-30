@@ -20,4 +20,4 @@
 
 /* Card surfaces and text follow the existing app theme tokens. */
 .discovery-role-card .text-brand-ink{color:var(--color-brand-ink)}.discovery-role-card .text-slate-500,.discovery-role-card .text-slate-600,.discovery-role-card .text-slate-700{color:var(--color-slate-600)}
-.discovery-role-card:has(.discovery-role-art)>label{background:#ffffffe6;border-radius:8px;padding:0 8px;left:10px}.discovery-role-card:has(.discovery-role-art) .discovery-glimpse{inset-inline:auto;left:50%;transform:translateX(-50%);max-width:calc(100% - 32px);top:113px;background:#ffffffeb;border-radius:6px;padding:2px 8px}
+.discovery-role-card:has(.discovery-role-art){padding-top:206px!important;background:var(--color-surface)!important}.discovery-role-card:has(.discovery-role-art)>label{background:#ffffffe6;border-radius:8px;padding:0 8px;left:10px}.discovery-role-card:has(.discovery-role-art) .discovery-glimpse{inset-inline:auto;left:50%;transform:translateX(-50%);max-width:calc(100% - 32px);top:160px;background:#ffffffeb;border-radius:6px;padding:2px 8px}

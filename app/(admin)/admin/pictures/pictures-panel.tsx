@@ -55,7 +55,7 @@ export function PicturesPanel({ roles }: { roles: Role[] }) {
     <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       <h1 className="text-2xl font-semibold text-slate-900">Role pictures</h1>
       <p className="mt-1 text-[0.9rem] text-slate-600">
-        One picture per role, shown at the top of its card in Discover. Drawn in the Ascend style: anime-inspired, ink outlines, teal and violet, no text.
+        One picture per role, shown at the top of its card in Discover. Drawn in the Ascend style: polished anime-inspired illustration, fine line art, teal and violet, no text. Framed wide so nobody&apos;s head is cut off on the card.
       </p>
 
       <label className="mt-5 block text-[0.82rem] font-semibold text-slate-700">
@@ -84,6 +84,11 @@ export function PicturesPanel({ roles }: { roles: Role[] }) {
           {/* A plain img: a picture that does not exist yet simply hides, and a redraw shows at once. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img key={current} src={current} alt={`Picture for ${role?.title ?? "this role"}`} className="w-full rounded-xl border border-slate-200" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+          <p className="mt-4 text-[0.78rem] font-semibold text-slate-700">How it looks on the Discover card</p>
+          <div className="mt-1 h-[190px] w-full max-w-[380px] overflow-hidden rounded-xl border border-slate-200">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img key={`${current}-card`} src={current} alt="" className="h-full w-full object-cover object-[center_45%]" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+          </div>
           <figcaption className="mt-2 text-[0.8rem] text-slate-500">
             {shown ? "Just drawn. It is live on the role's Discover card now." : "The current picture, if there is one."}{" "}
             <Link href="/discover" className="font-semibold text-brand-teal-deep underline">See it in Discover</Link>
