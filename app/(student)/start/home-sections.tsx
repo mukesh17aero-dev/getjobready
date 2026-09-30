@@ -95,34 +95,51 @@ export function Evidence({ evidence, modules }: { evidence: HomeEvidence | null 
   );
 }
 
-function ToolLink({ tool }: { tool: HomeTool }) {
+function ToolTile({ tool }: { tool: HomeTool }) {
+  const chip = tool.status === "done" ? "Done" : tool.status === "in_progress" ? (tool.note ? tool.note[0]!.toUpperCase() + tool.note.slice(1) : "In progress") : tool.isNew ? "New" : null;
   return (
-    <Link href={tool.href} className={s.tool} data-status={tool.status}>
-      {tool.status === "done" && <Check size={13} />}
-      {tool.label}
-      {tool.note && <span className={s.toolNote}>· {tool.note}</span>}
-      {tool.isNew && !tool.status && <span className={s.newTag}>New</span>}
-      {tool.status && <span className="sr-only">{tool.status === "done" ? " (done)" : " (in progress)"}</span>}
+    <Link href={tool.href} className={s.tile} data-status={tool.status} data-new={tool.isNew && !tool.status ? true : undefined}>
+      <span className={s.tileHead}>
+        <b>{tool.label}</b>
+        {chip && <span className={s.chip}>{tool.status === "done" && <Check size={11} />}{chip}</span>}
+      </span>
+      <span className={s.tileBlurb}>{tool.blurb}</span>
+      <span className={s.tileGo} aria-hidden="true">{tool.status === "done" ? "Open again" : tool.status === "in_progress" ? "Continue" : "Open"}<ArrowRight size={13} /></span>
     </Link>
   );
 }
 
-export function Tools({ groups, also }: { groups: ToolGroup[]; also: ToolGroup[] }) {
+function ToolGroups({ groups }: { groups: ToolGroup[] }) {
   return (
-    <section className={s.section} aria-labelledby="tools">
-      <div className={s.sectionHead}><h2 id="tools">Everything you can use</h2></div>
-      <div className={s.tools} data-count={groups.length}>
-        {groups.map((g) => (
-          <div key={g.id} className={s.toolGroup}><h3>{g.title}</h3>{g.tools.map((t) => <ToolLink key={t.label} tool={t} />)}</div>
-        ))}
-      </div>
-      {also.length > 0 && (
-        <div className={s.also}>
-          <h3>Also available</h3>
-          <div>{also.flatMap((g) => g.tools).map((t) => <ToolLink key={t.label} tool={t} />)}</div>
+    <div className={s.toolGroups}>
+      {groups.map((g) => (
+        <div key={g.id} className={s.toolGroup}>
+          <h3>{g.title}</h3>
+          <div className={s.tiles}>{g.tools.map((t) => <ToolTile key={t.label} tool={t} />)}</div>
         </div>
+      ))}
+    </div>
+  );
+}
+
+export function Tools({ groups, also }: { groups: ToolGroup[]; also: ToolGroup[] }) {
+  const count = [...groups, ...also].reduce((n, g) => n + g.tools.length, 0);
+  return (
+    <>
+      <section className={s.section} aria-labelledby="tools">
+        <div className={s.sectionHead}>
+          <h2 id="tools">{also.length ? "Your toolkit" : "Everything Ascend can do for you"}</h2>
+          <span>{also.length ? "The tools for what you came for." : `${count} tools in four areas. Open any of them, any time.`}</span>
+        </div>
+        <ToolGroups groups={groups} />
+      </section>
+      {also.length > 0 && (
+        <section className={s.section} aria-labelledby="more">
+          <div className={s.sectionHead}><h2 id="more">More ways Ascend can help</h2><span>Here whenever you want them.</span></div>
+          <ToolGroups groups={also} />
+        </section>
       )}
-    </section>
+    </>
   );
 }
 

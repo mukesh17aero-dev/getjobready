@@ -6,7 +6,7 @@ import type { HomeFocus, JourneyState } from "@/lib/api";
 // gets a page about that one thing, not a journey they never asked for.
 
 export type RailStep = { label: string; state: "done" | "current" | "started" | "ahead"; note: string };
-export type HomeTool = { label: string; href: string; status?: "done" | "in_progress"; note?: string; isNew?: boolean };
+export type HomeTool = { label: string; href: string; blurb: string; status?: "done" | "in_progress"; note?: string; isNew?: boolean };
 export type ToolGroup = { id: "explore" | "readiness" | "presence" | "interview"; title: string; tools: HomeTool[] };
 export type NextStepPanel = { eyebrow: string; title: string; why: string; cta: string; href: string; meta: string[] };
 export type HomePlan = {
@@ -37,21 +37,22 @@ export function homePlan(state: JourneyState, now: number): HomePlan {
   const fresh = now < NEW_UNTIL;
 
   const all: Record<ToolGroup["id"], ToolGroup> = {
-    explore: { id: "explore", title: "Explore the role", tools: [{ label: "Discovery", href: "/discover", status: role ? "done" : undefined }] },
+    explore: { id: "explore", title: "Explore the role", tools: [{ label: "Discovery", href: "/discover", blurb: "See a role's real working day, then choose one to aim at", status: role ? "done" : undefined }] },
     readiness: { id: "readiness", title: "Role readiness", tools: [
-      { label: "The Readiness Sitting", href: "/practice/readiness", status: m.readiness },
-      { label: "Simulation Missions", href: "/practice/missions", isNew: fresh },
-      { label: "Career Passport", href: "/passport", isNew: fresh },
+      { label: "The Readiness Sitting", href: "/practice/readiness", blurb: "Five questions on the job's own work, scored skill by skill", status: m.readiness },
+      { label: "Simulation Missions", href: "/practice/missions", blurb: "Real tasks from the role, marked the way the job would", isNew: fresh },
+      { label: "Career Passport", href: "/passport", blurb: "The skills you have proved, in one record you can share", isNew: fresh },
     ] },
     presence: { id: "presence", title: "Professional presence", tools: [
-      { label: "Resume Builder", href: "/resume/build", status: m.resume, note: m.resume === "in_progress" ? "draft" : undefined },
-      { label: "LinkedIn Profile", href: "/profile/professional", status: m.linkedin, note: m.linkedin === "in_progress" ? "in review" : undefined },
-      { label: "Job Fit Analyzer", href: "/job-fit", status: m.jobFit },
+      { label: "Resume Builder", href: "/resume/build", blurb: "A one-page resume written from what you have done", status: m.resume, note: m.resume === "in_progress" ? "draft" : undefined },
+      { label: "LinkedIn Profile", href: "/profile/professional", blurb: "A headline and About section in your own voice", status: m.linkedin, note: m.linkedin === "in_progress" ? "in review" : undefined },
+      { label: "Job Fit Analyzer", href: "/job-fit", blurb: "How your record matches a real job posting", status: m.jobFit },
     ] },
     interview: { id: "interview", title: "Interview readiness", tools: [
-      { label: "AI Interview", href: "/interview/practice", status: m.interview, note: m.interview === "in_progress" ? "open" : undefined },
-      { label: "Interview Story Bank", href: "/stories" },
-      { label: "Question library", href: "/interview/questions" },
+      { label: "AI Interview", href: "/interview/practice", blurb: "Rehearse out loud and get a mark on every answer", status: m.interview, note: m.interview === "in_progress" ? "open" : undefined },
+      { label: "Interview Story Bank", href: "/stories", blurb: "Your best answers, drafted from your own record" },
+      { label: "AI Roleplay", href: "/roleplay", blurb: "Practise a tough workplace conversation, safely" },
+      { label: "Question library", href: "/interview/questions", blurb: "The questions this role's interviews actually ask" },
     ] },
   };
   const lead: Record<HomeFocus, ToolGroup["id"][]> = {
