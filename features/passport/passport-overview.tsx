@@ -1,4 +1,6 @@
+import Link from "next/link";
 import type {
+  PassportActivity,
   PassportEvidenceItem,
   PassportFeedState,
   PassportInterview,
@@ -257,6 +259,49 @@ function Training({ training, state }: { training: PassportTraining[]; state: Pa
   );
 }
 
+const KIND_LABEL: Record<PassportActivity["kind"], string> = {
+  assessment: "Assessment", interview: "Interview", training: "Missions", roleplay: "Roleplay",
+  resume: "Resume", linkedin: "LinkedIn", job_fit: "Job fit",
+};
+const STATE_CHIP: Record<PassportActivity["state"], { label: string; className: string }> = {
+  scored: { label: "Scored", className: "bg-brand-mist text-brand-teal-deep" },
+  completed: { label: "Done", className: "bg-brand-mist text-brand-teal-deep" },
+  awaiting_report: { label: "Report waiting", className: "bg-amber-50 text-amber-800" },
+  in_progress: { label: "In progress", className: "bg-slate-100 text-slate-700" },
+};
+
+/** Every task, from every role and tool - the candidate's own log, never shared. */
+function Activity({ activity }: { activity: PassportActivity[] }) {
+  if (activity.length === 0) {
+    return <Empty title="Your work will be listed here" body="Every sitting, interview, mission, roleplay, resume and job fit check you finish is recorded here, whichever role it was for." />;
+  }
+  return (
+    <ol className="grid gap-2">
+      {activity.map((a) => {
+        const chip = STATE_CHIP[a.state];
+        const report = a.kind === "assessment" && a.state === "awaiting_report" ? `/practice/readiness/results/${a.id.slice("assessment:".length)}` : null;
+        return (
+          <li key={a.id} className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1 border-b border-slate-100 pb-2 last:border-0 last:pb-0">
+            <div className="min-w-0 flex-1">
+              <p className="text-[0.62rem] font-semibold uppercase tracking-wide text-slate-500">
+                {KIND_LABEL[a.kind]} · {formatDate(a.at)}
+              </p>
+              <h3 className="text-[0.86rem] font-semibold text-brand-ink">{a.title}</h3>
+              <p className="text-[0.78rem] leading-relaxed text-slate-600">{a.detail}</p>
+              {report && (
+                <Link href={report} className="inline-flex min-h-11 items-center text-[0.8rem] font-semibold text-brand-teal-deep underline-offset-2 hover:underline">
+                  Get your report →
+                </Link>
+              )}
+            </div>
+            <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[0.66rem] font-semibold ${chip.className}`}>{chip.label}</span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 function Interviews({ interviews, state }: { interviews: PassportInterview[]; state: PassportFeedState }) {
   if (interviews.length === 0) {
     return (
@@ -383,6 +428,12 @@ export function PassportOverview({
         <Stat value={skillsDash} label="Skills with assessments" caption="Evidence-backed observations" />
         <Stat value={String(evidenceDash)} label="Supporting work items" caption="Private until approved for sharing" />
       </div>
+
+      {shareControls && (
+        <SectionCard id="activity" heading="Everything you have done" pill="Every role · only you see this">
+          <Activity activity={overview.activity ?? []} />
+        </SectionCard>
+      )}
 
       <SectionCard id="journey" heading="The candidate journey" pill="Private record">
         <Journey journey={overview.journey} state={overview.sources.journey} />

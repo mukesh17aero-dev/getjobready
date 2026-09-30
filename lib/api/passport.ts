@@ -108,6 +108,15 @@ export type PassportCandidate = {
   experience: { title: string; organisation: string | null; period: string | null }[];
 };
 
+export type PassportActivity = {
+  id: string;
+  kind: "assessment" | "interview" | "training" | "roleplay" | "resume" | "linkedin" | "job_fit";
+  title: string;
+  detail: string;
+  at: string;
+  state: "scored" | "awaiting_report" | "completed" | "in_progress";
+};
+
 export type PassportOverview = {
   version: string;
   generatedAt: string;
@@ -125,6 +134,8 @@ export type PassportOverview = {
   training: PassportTraining[];
   interviews: PassportInterview[];
   evidence: PassportEvidenceItem[];
+  /** Everything the candidate did, every role and tool, newest first. Never in a shared copy. */
+  activity?: PassportActivity[];
   summary: {
     completedModules: number;
     totalModules: number;
