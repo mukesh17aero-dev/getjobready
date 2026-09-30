@@ -113,7 +113,9 @@ export function StartRouter({
       <section className={styles.workspace} aria-labelledby="workspace-heading">
         <div className={styles.sectionHeading}><div><h2 id="workspace-heading">Your workspace</h2><p>Four ways to move your career forward.</p></div></div>
         <div className={styles.cards}>{cards.map((card, i) => {
-          const next = nextModule(card.modules);
+          // Until a role is chosen there is one real first step, so only
+          // Explore gets the highlight; the rest stay plain links.
+          const next = card.kind === "explore" || role ? nextModule(card.modules) : null;
           return <article key={card.kind} className={styles.card} data-kind={card.kind} style={{ "--i": i } as React.CSSProperties}>
             <div className={styles.cardTop}><span className={styles.icon}><card.icon size={20} /></span><Illustration kind={card.kind} /></div>
             <h3><Link href={card.href} className={styles.cardTitle}>{card.title}</Link></h3><p>{card.description}</p>
