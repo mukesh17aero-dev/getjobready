@@ -19,6 +19,7 @@
 // corner. It volunteers nothing; the briefing is what a tour is for.
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { RoleBody, type RolePart } from "./role-preview";
 import type { RoleDetail } from "@/lib/api";
 import ws from "./discovery-workspace.module.css";
@@ -244,6 +245,29 @@ export function RolePage({
               </div>
             </section>
 
+            {chosen ? (
+              // Chosen already: asking "could this be your kind of work?" again
+              // answered nothing and left no way forward. What comes next is
+              // finding out where they stand on this role's own work.
+              <aside className={`${ws.panel} ${ws.decision}`} aria-label="Your next step">
+                <p className={ws.eyebrow}>✓ YOUR CHOSEN DIRECTION</p>
+                <h2>Now find out where you stand</h2>
+                <p>You picked {title}. A short assessment on this job&rsquo;s own work shows what you can already do and what is worth practising.</p>
+                <Link href={`/practice/readiness?role=${encodeURIComponent(role.roleId)}`} className={ws.primary}>
+                  Check your role readiness →
+                </Link>
+                <p className={ws.quiet} style={{ marginTop: 16 }}>Also for {title}:</p>
+                <p style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 4 }}>
+                  <Link href="/resume/build" className={ws.textButton} style={{ maxWidth: "none", minHeight: 44 }}>Build a resume for it →</Link>
+                  <Link href="/interview/practice" className={ws.textButton} style={{ maxWidth: "none", minHeight: 44 }}>Practise an interview for it →</Link>
+                </p>
+                {onUnchoose && (
+                  <button type="button" className={ws.textButton} disabled={choosing} onClick={onUnchoose} style={{ marginTop: 8, maxWidth: "none" }}>
+                    Unselect this direction
+                  </button>
+                )}
+              </aside>
+            ) : (
             <aside className={`${ws.panel} ${ws.decision}`} aria-label="Make it your own">
               <p className={ws.eyebrow}>MAKE IT YOUR OWN</p>
               <h2>Could this be your kind of work?</h2>
@@ -279,18 +303,14 @@ export function RolePage({
               <button
                 type="button"
                 className={ws.primary}
-                disabled={choosing || chosen}
+                disabled={choosing}
                 onClick={onChoose}
               >
-                {chosen ? "✓ Your chosen direction" : choosing ? "Saving…" : "Choose this direction →"}
+                {choosing ? "Saving…" : "Choose this direction →"}
               </button>
-              {chosen && onUnchoose && (
-                <button type="button" className={ws.textButton} disabled={choosing} onClick={onUnchoose} style={{ marginTop: 8 }}>
-                  Unselect this direction
-                </button>
-              )}
               <p className={`${ws.quiet}`}>Your interest helps you choose. Readiness comes from a separate assessment.</p>
             </aside>
+            )}
           </div>
         </div>
       </div>
