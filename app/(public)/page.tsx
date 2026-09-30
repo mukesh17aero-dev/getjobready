@@ -49,13 +49,6 @@ export default async function Home({
     : [await getJourneyState(null), null, null];
 
   const isAdmin = access?.isAdmin ?? false;
-  // Written onto the auth user when they upload one, so the home needs no
-  // second call to know about it.
-  const meta = session?.user.user_metadata ?? {};
-  const photo = [meta.avatar_url, meta.picture].find(
-    (value): value is string =>
-      typeof value === "string" && value.startsWith("http"),
-  );
   const viewing: Audience = isAdmin ? asAudience(asParam) : "student";
 
   const notice = erased ? (
@@ -94,7 +87,6 @@ export default async function Home({
           fallbackName={
             (session?.user.user_metadata?.full_name as string | undefined) ?? ""
           }
-          photo={photo}
         />
       </main>
     );

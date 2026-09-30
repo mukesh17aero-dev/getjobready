@@ -55,6 +55,8 @@ export type JourneyProgress = {
   track: string | null;
   discoveryDone: boolean;
   selectedRole: string | null;
+  /** What they came to Ascend for; the home page leads with it. */
+  focus?: HomeFocus | null;
 };
 
 export type HomeWorkItem = {
@@ -75,6 +77,8 @@ export type JourneyState = {
   // Optional on purpose: an API one deploy behind does not send this, and a
   // screen must degrade rather than break. Read it through progressOf().
   progress?: JourneyProgress;
+  /** What their own marked work shows. Null when unavailable. */
+  evidence?: HomeEvidence | null;
   /** Where they are with each module. Absent means not started or not known. */
   modules?: Partial<Record<"readiness" | "resume" | "linkedin" | "jobFit" | "interview", "done" | "in_progress">>;
 };
@@ -123,5 +127,29 @@ export async function getJourneyState(
     return (await res.json()) as JourneyState;
   } catch {
     return null;
+  }
+}
+
+export type HomeFocus = "journey" | "interview" | "practice" | "presence";
+
+export type HomeEvidence = {
+  /** Overall readiness score of each finished sitting, oldest first. */
+  readiness: Array<{ at: string; score: number }>;
+  weakestSkill: string | null;
+  interview: { mark: number; bar: number } | null;
+};
+
+/** Saves what they came to Ascend for. */
+export async function setJourneyFocus(token: string, focus: HomeFocus): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_URL}/v1/journey/focus`, {
+      method: "PUT",
+      cache: "no-store",
+      headers: requestHeaders({ token, json: true }),
+      body: JSON.stringify({ focus }),
+    });
+    return res.ok;
+  } catch {
+    return false;
   }
 }

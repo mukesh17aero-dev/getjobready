@@ -4,65 +4,15 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CareerProfile, JourneyState, HomeWorkItem } from "@/lib/api";
-import { progressOf } from "@/features/journey";
+import { homePlan, pickupReason, progressOf, RememberHub } from "@/features/journey";
 import { toFields } from "@/features/profile";
-import { storySoFar } from "@/features/journey";
-import { pickupReason } from "@/features/journey";
-import { Avatar } from "@/components/ui/avatar";
-import { RememberHub } from "@/features/journey";
-import { ArrowRight, Check, Spark, Mic, Eye } from "@/components/ui/icons";
-import styles from "./student-home.module.css";
+import { ArrowRight, Check, Spark } from "@/components/ui/icons";
+import { Evidence, FocusPicker, NextStep, Rail, Tools } from "./home-sections";
+import s from "./home.module.css";
 
-// The signed-in home, as approved in the /preview-home-focus concept: who you
-// are and your story so far on top, four workspaces and your open work below.
-
-// These illustrations describe the tools; they are not scores or activity charts.
-function Illustration({ kind }: { kind: "explore" | "practice" | "interview" | "apply" }) {
-  return <svg className={styles.illustration} aria-hidden="true" viewBox="0 0 150 112" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    {kind === "explore" ? <>
-      <circle cx="82" cy="54" r="39" opacity=".15" /><circle cx="82" cy="54" r="27" opacity=".25" />
-      {/* Radar ripple and orbit only move while the card is hovered or focused. */}
-      <circle className={styles.exploreRipple} cx="82" cy="54" r="27" opacity="0" />
-      <g className={styles.exploreNeedle}>
-        <path d="m82 26 8 20 21 8-21 8-8 21-8-21-20-8 20-8z" fill="currentColor" fillOpacity=".1" />
-        <circle cx="82" cy="54" r="4" fill="currentColor" />
-      </g>
-      <g className={styles.exploreOrbit}><circle cx="115" cy="24" r="4" fill="currentColor" fillOpacity=".3" stroke="none" /></g>
-      <path className={styles.exploreSpark} d="M32 76h12M38 70v12" opacity=".4" />
-    </> : kind === "practice" ? <>
-      <g className={styles.sheetBack}><rect x="54" y="17" width="64" height="77" rx="10" transform="rotate(10 54 17)" opacity=".2" /></g>
-      <rect x="39" y="19" width="64" height="77" rx="10" fill="currentColor" fillOpacity=".05" />
-      {/* Each tick is marked, then its line is written - one row at a time. */}
-      {[39, 58, 77].map((y, i) => <g key={y} style={{ "--d": i } as React.CSSProperties}>
-        <path className={styles.tick} pathLength={1} d={`M51 ${y}l4 4 7-8`} />
-        <path className={styles.writeLine} d={`M71 ${y}h${i === 2 ? 13 : 18}`} />
-      </g>)}
-    </> : kind === "interview" ? <>
-      <g className={styles.mic}>
-        <rect x="48" y="14" width="40" height="59" rx="20" fill="currentColor" fillOpacity=".06" />
-        <path d="M38 56a30 30 0 0 0 60 0M68 86v13M55 99h26M59 32h18M59 42h18" />
-      </g>
-      {/* A live voice meter either side of the mic. */}
-      {["M111 40v16", "M119 33v30", "M127 44v8", "M25 42v12", "M17 36v24"].map((d, i) => <path key={d} className={styles.voiceBar} d={d} opacity=".3" style={{ "--d": i } as React.CSSProperties} />)}
-    </> : <>
-      <g className={styles.sheetBack}><rect x="55" y="13" width="62" height="79" rx="8" transform="rotate(10 55 13)" opacity=".2" /></g>
-      <rect x="36" y="16" width="62" height="81" rx="8" fill="currentColor" fillOpacity=".05" />
-      <circle cx="54" cy="36" r="7" />
-      {/* The page writes itself, then the check is stamped on. */}
-      {["M69 32h16", "M69 40h11", "M49 56h35", "M49 65h35", "M49 74h22"].map((d, i) => <path key={d} className={styles.writeLine} d={d} style={{ "--d": i } as React.CSSProperties} />)}
-      <g className={styles.stamp}><circle cx="103" cy="81" r="15" fill="var(--home-surface)" /><path className={styles.tick} pathLength={1} d="m97 81 4 4 8-9" style={{ "--d": 5 } as React.CSSProperties} /></g>
-    </>}
-  </svg>;
-}
-
-type HomeModule = { label: string; href: string; status?: "done" | "in_progress"; isNew?: boolean };
-// Modules shipped recently carry a "New" tag until this date, then drop it.
-const NEW_UNTIL = Date.parse("2026-10-15");
-
-/** The one module in a card worth doing next: something started, else the first not done. */
-function nextModule(modules: HomeModule[]): HomeModule | null {
-  return modules.find(mod => mod.status === "in_progress") ?? modules.find(mod => mod.status !== "done") ?? null;
-}
+// The signed-in home, led by the student's goal rather than by our tools: what
+// they came for, where they are on the way to it, the one next step and why,
+// what their own marked work shows, then everything else, quietly.
 
 function workStatus(item: HomeWorkItem) {
   return item.status === "follow_up" ? "Completed · follow-up" : item.status === "in_review" ? "In review" : "In progress";
@@ -72,94 +22,65 @@ export function StartRouter({
   initialState,
   profile = null,
   fallbackName = "",
-  photo,
 }: {
   initialState: JourneyState | null;
   profile?: CareerProfile | null;
   fallbackName?: string;
-  photo?: string;
 }) {
   const router = useRouter();
-  // Read once, not on every render: the "New" tags expire by date.
-  const [fresh] = useState(() => Date.now() < NEW_UNTIL);
+  // Read once: the "New" tags expire by date.
+  const [now] = useState(() => Date.now());
+  const [changingFocus, setChangingFocus] = useState(false);
   const state = initialState;
 
   if (!state) {
-    return <div className={styles.shell}><div className={styles.canvas}><main className={styles.home}>
-      <h1>Your workspace is here.</h1><p>We couldn’t load your saved activity.</p>
-      <button type="button" className={styles.primary} onClick={() => window.location.reload()}>Try again <ArrowRight size={16} /></button>
-    </main></div></div>;
+    return <main className={s.home}><section className={s.next}>
+      <h2>Your home is here.</h2><p className={s.nextWhy}>We couldn&rsquo;t load your saved activity.</p>
+      <button type="button" className={s.nextCta} onClick={() => window.location.reload()}>Try again <ArrowRight size={16} /></button>
+    </section></main>;
   }
 
-  const fields = toFields(profile);
-  const name = progressOf(state).name || fields.fullName || fallbackName;
+  const plan = homePlan(state, now);
+  const name = progressOf(state).name || toFields(profile).fullName || fallbackName;
   const firstName = name.split(" ")[0];
-  const story = storySoFar(state, fields);
-  const work = state.work?.slice(0, 5);
-  const interview = state.work?.find(item => item.title.startsWith("Interview"));
-  const practice = state.work?.find(item => item.action.href.startsWith("/practice"));
-  const application = state.work?.find(item => /^(LinkedIn|Resume|Job fit)/.test(item.title));
-  const role = state.progress?.role?.title;
-  // Each module's own state, from the record. A module the record cannot
-  // speak for yet carries no status rather than a guessed one.
-  const m = state.modules ?? {};
-  const cards: Array<{ kind: "explore" | "practice" | "apply" | "interview"; title: string; description: string; href: string; icon: typeof Eye; detail: string; earned: boolean; footer: string; modules: HomeModule[] }> = [
-    { kind: "explore", title: "Explore the role", description: "Get a feel for the working day.", href: "/discover", icon: Eye, detail: role ? "Your chosen role is saved" : "Find a direction that feels right", earned: Boolean(role), footer: "Explore roles", modules: [{ label: "Discovery", href: "/discover", status: role ? "done" : undefined }] },
-    { kind: "practice", title: "Role readiness", description: "Build confidence through real tasks.", href: "/practice", icon: Check, detail: practice ? workStatus(practice) : "Real situations. Useful feedback.", earned: practice?.status === "follow_up", footer: "Open practice", modules: [{ label: "The Readiness Sitting", href: "/practice/readiness", status: m.readiness }, { label: "Simulation Missions", href: "/practice/missions", isNew: fresh }, { label: "Career Passport", href: "/passport", isNew: fresh }] },
-    { kind: "apply", title: "Professional Presence", description: "Turn your experience into your story.", href: "/resume", icon: Spark, detail: application ? `${application.title.split(" · ")[0]} · ${application.status === "in_review" ? "in review" : application.status === "follow_up" ? "follow-up available" : "in progress"}` : "Resume, LinkedIn and job fit", earned: false, footer: "Open applications", modules: [{ label: "Resume Builder", href: "/resume/build", status: m.resume }, { label: "LinkedIn Profile Builder", href: "/profile/professional", status: m.linkedin }, { label: "Job Fit Analyzer", href: "/job-fit", status: m.jobFit }] },
-    { kind: "interview", title: "Interview readiness", description: "Find your words. Make them count.", href: "/interview", icon: Mic, detail: interview?.status === "follow_up" ? "Interview completed · feedback ready" : interview ? workStatus(interview) : "A space to practise your answers", earned: interview?.status === "follow_up", footer: "Open interviews", modules: [{ label: "AI Interview", href: "/interview/practice", status: m.interview }, { label: "Interview Story Bank", href: "/stories" }, { label: "Question library", href: "/interview/questions" }] },
-  ];
+  const focusChosen = state.progress?.focus ?? null;
+  const role = state.progress?.role?.title ?? null;
+  const work = state.work?.slice(0, 4);
 
-  return <div className={styles.shell}><div className={styles.canvas}><main className={styles.home}>
+  return <main className={s.home}>
     <RememberHub path="/start" />
-    <header className={styles.hero}>
-      <div className={styles.welcome}>
-        {(name || photo) && <Link href="/profile" className={styles.avatarLink} aria-label="Open your profile"><Avatar src={photo} name={name} className={styles.avatar} /></Link>}
-        <div><span className={styles.eyebrow}>YOUR CAREER, IN THE MAKING</span><h1>{firstName ? <>Welcome back,<br /><strong>{firstName}.</strong></> : <>Your next chapter<br /><strong>starts here.</strong></>}</h1></div>
+
+    {(!focusChosen || changingFocus) && <FocusPicker current={focusChosen} onDone={focusChosen ? () => setChangingFocus(false) : undefined} />}
+
+    <section className={s.goal} aria-labelledby="goal">
+      <div className={s.goalHead}>
+        <div>
+          <p className={s.eyebrow}>{firstName ? `WELCOME BACK, ${firstName.toUpperCase()}` : "WELCOME"}</p>
+          <h1 id="goal">{plan.heading}</h1>
+          <p className={s.subline}>{plan.subline}</p>
+        </div>
+        <div className={s.goalLinks}>
+          {focusChosen && !changingFocus && <button type="button" className={s.linkButton} onClick={() => setChangingFocus(true)}>Change focus</button>}
+          {role && <Link href="/discover" className={s.linkButton}>Change role</Link>}
+        </div>
       </div>
-      <section className={styles.story} aria-labelledby="story-heading">
-        <div className={styles.storyLabel}><span className={styles.storyMark}><Spark size={16} /></span><h2 id="story-heading">Your story so far</h2><Link href="/profile">Edit profile <ArrowRight size={13} /></Link></div>
-        <p>{story.who ?? "Add a little about your background and interests to start your story. You can explore roles at any time."}</p>
-      </section>
-    </header>
+      <Rail steps={plan.rail} />
+    </section>
 
+    <NextStep next={plan.next} />
 
-    <div className={styles.columns}>
-      <section className={styles.workspace} aria-labelledby="workspace-heading">
-        <div className={styles.sectionHeading}><div><h2 id="workspace-heading">Your workspace</h2><p>Four ways to move your career forward.</p></div></div>
-        <div className={styles.cards}>{cards.map((card, i) => {
-          // Until a role is chosen there is one real first step, so only
-          // Explore gets the highlight; the rest stay plain links.
-          const next = card.kind === "explore" || role ? nextModule(card.modules) : null;
-          return <article key={card.kind} className={styles.card} data-kind={card.kind} style={{ "--i": i } as React.CSSProperties}>
-            <div className={styles.cardTop}><span className={styles.icon}><card.icon size={20} /></span><Illustration kind={card.kind} /></div>
-            <h3><Link href={card.href} className={styles.cardTitle}>{card.title}</Link></h3><p>{card.description}</p>
-            <ul className={styles.tools} aria-label={`${card.title}: what is inside`}>{card.modules.map((mod, j) => <li key={mod.label} style={{ "--j": j } as React.CSSProperties}>
-              <Link href={mod.href} data-status={mod.status} data-next={mod === next || undefined}>
-                {mod.status === "done" && <Check size={11} />}{mod.label}
-                {mod === next && <><span className={styles.nextPip}>Next for you</span><ArrowRight size={11} /></>}
-                {mod.isNew && !mod.status && mod !== next && <span className={styles.newTag}>New</span>}
-                {mod.status && <span className="sr-only">{mod.status === "done" ? " (done)" : " (in progress)"}</span>}
-              </Link>
-            </li>)}</ul>
-            <div className={styles.cardStatus} data-earned={card.earned}>{card.earned ? <Check size={13} /> : <span className={styles.statusDot} />}{card.detail}</div>
-            <Link href={next?.href ?? card.href} className={styles.cardFooter}><span>{next ? `${next.status === "in_progress" ? "Continue" : "Start"}: ${next.label}` : card.footer}</span><span className={styles.arrow}><ArrowRight size={17} /></span></Link>
-          </article>;
-        })}</div>
-        <div className={styles.journey}><Link href="/journey">View journey <ArrowRight size={15} /></Link></div>
-      </section>
+    <Evidence evidence={state.evidence} modules={state.modules} />
 
-      <section className={styles.pickup} aria-labelledby="pickup-heading">
-        <div className={styles.sectionHeading}><div><h2 id="pickup-heading">Pick up your work</h2><p>Your latest open work and useful follow-ups.</p></div></div>
-        {work == null ? <div className={styles.empty}><h3>Saved work is unavailable</h3><p>We couldn’t check your latest records.</p><button type="button" onClick={() => router.refresh()}>Try again <ArrowRight size={15} /></button></div>
-          : work.length === 0 ? <div className={styles.empty}><Spark size={28} /><h3>Room for your next step</h3><p>Explore a role or open a workspace. Your open drafts and recommended follow-ups will appear here.</p><Link href="/discover">Explore roles <ArrowRight size={15} /></Link></div>
-          : <ol className={styles.workList}>{work.map((item, index) => <li key={item.id} className={styles.workItem} data-featured={index === 0}>
-            <div className={styles.workMeta}><span className={styles.badge} data-completed={item.status === "follow_up"}>{item.status === "follow_up" && <Check size={12} />}{workStatus(item)}</span>{index === 0 && <span className={styles.latest}>LATEST OPEN WORK</span>}</div>
-            <h3>{item.title}</h3>
-            <p className={styles.reason}><strong>Why pick this up: </strong>{pickupReason(item.reason)}</p>
-            <Link href={item.action.href} className={index === 0 ? styles.primary : styles.workLink}>{item.action.label}<ArrowRight size={16} /></Link>
-          </li>)}</ol>}
-      </section>
-    </div>
-  </main></div></div>;
+    <Tools groups={plan.groups} also={plan.alsoAvailable} />
+
+    <section className={s.section} aria-labelledby="pickup">
+      <div className={s.sectionHead}><h2 id="pickup">Pick up where you left off</h2></div>
+      {work == null ? <div className={s.empty}><p>We couldn&rsquo;t check your latest records.</p><button type="button" className={s.linkButton} onClick={() => router.refresh()}>Try again</button></div>
+        : work.length === 0 ? <div className={s.empty}><Spark size={20} /><p>Nothing open right now. Your drafts and follow-ups appear here.</p></div>
+          : <div className={s.pickup}>{work.map(item => <Link key={item.id} href={item.action.href} className={s.pickupItem}>
+            <span><b>{item.title}</b><small>{item.status === "follow_up" && <Check size={12} />}{workStatus(item)} · {pickupReason(item.reason)}</small></span>
+            <span className={s.pickupAction}>{item.action.label}<ArrowRight size={14} /></span>
+          </Link>)}</div>}
+    </section>
+  </main>;
 }
