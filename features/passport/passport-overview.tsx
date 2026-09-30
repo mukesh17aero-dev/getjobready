@@ -1,6 +1,5 @@
-import Link from "next/link";
 import type {
-  PassportActivity,
+  PassportAchievement,
   PassportEvidenceItem,
   PassportFeedState,
   PassportInterview,
@@ -259,45 +258,41 @@ function Training({ training, state }: { training: PassportTraining[]; state: Pa
   );
 }
 
-const KIND_LABEL: Record<PassportActivity["kind"], string> = {
-  assessment: "Assessment", interview: "Interview", training: "Missions", roleplay: "Roleplay",
-  resume: "Resume", linkedin: "LinkedIn", job_fit: "Job fit",
-};
-const STATE_CHIP: Record<PassportActivity["state"], { label: string; className: string }> = {
-  scored: { label: "Scored", className: "bg-brand-mist text-brand-teal-deep" },
-  completed: { label: "Done", className: "bg-brand-mist text-brand-teal-deep" },
-  awaiting_report: { label: "Report waiting", className: "bg-amber-50 text-amber-800" },
-  in_progress: { label: "In progress", className: "bg-slate-100 text-slate-700" },
+const KIND_LABEL: Record<PassportAchievement["kind"], string> = {
+  assessment: "Readiness assessment", interview: "Interview practice", training: "Simulation missions", roleplay: "AI roleplay",
 };
 
-/** Every task, from every role and tool - the candidate's own log, never shared. */
-function Activity({ activity }: { activity: PassportActivity[] }) {
-  if (activity.length === 0) {
-    return <Empty title="Your work will be listed here" body="Every sitting, interview, mission, roleplay, resume and job fit check you finish is recorded here, whichever role it was for." />;
+/**
+ * The proof: marked work toward the role, as badges. Only scored or submitted
+ * work appears - nothing self-reported and nothing still waiting for a result.
+ */
+function Achievements({ items }: { items: PassportAchievement[] }) {
+  if (items.length === 0) {
+    return <Empty title="Your achievements will appear here" body="Each scored readiness assessment, simulation mission, marked practice interview and AI roleplay becomes a badge here - proof of what you can do for this role." />;
   }
   return (
-    <ol className="grid gap-2">
-      {activity.map((a) => {
-        const chip = STATE_CHIP[a.state];
-        const report = a.kind === "assessment" && a.state === "awaiting_report" ? `/practice/readiness/results/${a.id.slice("assessment:".length)}` : null;
-        return (
-          <li key={a.id} className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1 border-b border-slate-100 pb-2 last:border-0 last:pb-0">
-            <div className="min-w-0 flex-1">
-              <p className="text-[0.62rem] font-semibold uppercase tracking-wide text-slate-500">
-                {KIND_LABEL[a.kind]} · {formatDate(a.at)}
-              </p>
-              <h3 className="text-[0.86rem] font-semibold text-brand-ink">{a.title}</h3>
-              <p className="text-[0.78rem] leading-relaxed text-slate-600">{a.detail}</p>
-              {report && (
-                <Link href={report} className="inline-flex min-h-11 items-center text-[0.8rem] font-semibold text-brand-teal-deep underline-offset-2 hover:underline">
-                  Get your report →
-                </Link>
-              )}
-            </div>
-            <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[0.66rem] font-semibold ${chip.className}`}>{chip.label}</span>
-          </li>
-        );
-      })}
+    <ol className="grid gap-2.5 sm:grid-cols-2">
+      {items.map((a) => (
+        <li key={a.id} className="flex items-start gap-3 rounded-xl border border-teal-200 bg-white p-3">
+          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-brand-mist text-brand-teal-deep">
+            {a.score !== null ? (
+              <span className="text-center leading-none">
+                <span className="block text-[1.15rem] font-bold tabular-nums">{a.score}</span>
+                <span className="text-[0.55rem] font-semibold">/ 100</span>
+              </span>
+            ) : (
+              <span aria-hidden className="text-[1.3rem] font-bold">✓</span>
+            )}
+          </span>
+          <div className="min-w-0">
+            <p className="text-[0.62rem] font-semibold uppercase tracking-wide text-slate-500">
+              {KIND_LABEL[a.kind]} · {formatDate(a.at)}
+            </p>
+            <h3 className="text-[0.86rem] font-semibold text-brand-ink">{a.title}</h3>
+            <p className="text-[0.78rem] leading-relaxed text-slate-600">{a.detail}</p>
+          </div>
+        </li>
+      ))}
     </ol>
   );
 }
@@ -429,11 +424,9 @@ export function PassportOverview({
         <Stat value={String(evidenceDash)} label="Supporting work items" caption="Private until approved for sharing" />
       </div>
 
-      {shareControls && (
-        <SectionCard id="activity" heading="Everything you have done" pill="Every role · only you see this">
-          <Activity activity={overview.activity ?? []} />
-        </SectionCard>
-      )}
+      <SectionCard id="achievements" heading={shareControls ? "What you have achieved" : "What they have achieved"} pill={overview.role ? `Toward ${overview.role.title}` : "Marked work only"}>
+        <Achievements items={overview.achievements ?? []} />
+      </SectionCard>
 
       <SectionCard id="journey" heading="The candidate journey" pill="Private record">
         <Journey journey={overview.journey} state={overview.sources.journey} />

@@ -108,13 +108,15 @@ export type PassportCandidate = {
   experience: { title: string; organisation: string | null; period: string | null }[];
 };
 
-export type PassportActivity = {
+/** Something achieved toward the role: marked or submitted work only. */
+export type PassportAchievement = {
   id: string;
-  kind: "assessment" | "interview" | "training" | "roleplay" | "resume" | "linkedin" | "job_fit";
+  kind: "assessment" | "interview" | "training" | "roleplay";
   title: string;
   detail: string;
   at: string;
-  state: "scored" | "awaiting_report" | "completed" | "in_progress";
+  state: "scored" | "completed" | "in_progress";
+  score: number | null;
 };
 
 export type PassportOverview = {
@@ -134,8 +136,8 @@ export type PassportOverview = {
   training: PassportTraining[];
   interviews: PassportInterview[];
   evidence: PassportEvidenceItem[];
-  /** Everything the candidate did, every role and tool, newest first. Never in a shared copy. */
-  activity?: PassportActivity[];
+  /** Scored sittings, missions, interviews and roleplays toward the role, newest first. */
+  achievements?: PassportAchievement[];
   summary: {
     completedModules: number;
     totalModules: number;
