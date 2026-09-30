@@ -391,18 +391,27 @@ export function storySoFar(state: JourneyState, fields: ProfileFields): Story {
     );
   }
 
-  const city = said("city");
-  const spaces = said("interestedSpaces");
-  const aim = role?.title ?? selectedRole;
-
-  const second: string[] = [];
-  if (city) second.push(`You are in ${city}`);
-  if (spaces)
-    second.push(`${second.length ? "d" : "You are d"}rawn to ${list(spaces)}`);
-  if (aim) {
-    second.push(`${second.length ? "a" : "You are a"}iming at ${aim}`);
+  // Direction: the role they chose, or - with none - the first two places
+  // they are drawn to. Six industries and a city read as a form, not a story,
+  // and "none" is how an unselected role is stored, never something to say.
+  const aim = role?.title ?? (selectedRole && selectedRole !== "none" ? selectedRole : null);
+  const spaces = said("interestedSpaces").split(",").map((p) => p.trim()).filter(Boolean);
+  if (aim) sentences.push(`You are aiming for ${aim}.`);
+  else if (spaces.length > 0) {
+    const shown = spaces.length > 2 ? `${spaces.slice(0, 2).join(", ")} and ${spaces.length - 2} more` : list(spaces.join(","));
+    sentences.push(`No role chosen yet. You are drawn to ${shown}.`);
   }
-  if (second.length > 0) sentences.push(`${join(second)}.`);
+
+  // What they have actually done, from the same statuses the home cards tick.
+  const m = state.modules ?? {};
+  const achieved = [
+    m.readiness === "done" && "checked your readiness",
+    m.interview === "done" && "finished a practice interview",
+    m.resume === "done" && "downloaded a resume",
+    m.linkedin === "done" && "shaped your LinkedIn profile",
+    m.jobFit === "done" && "run a job-fit check",
+  ].filter((x): x is string => Boolean(x));
+  if (achieved.length > 0) sentences.push(`So far you have ${join(achieved)}.`);
 
   return {
     who: sentences.length > 0 ? sentences.join(" ") : null,
