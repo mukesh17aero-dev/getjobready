@@ -62,15 +62,14 @@ describe("Passport overview page", () => {
     const html = render(base);
     expect(html).toContain("Skill results will appear here");
     expect(html).toContain("A missing score is never shown as zero");
-    expect(html).toContain("Training evidence is on its way");
-    expect(html).toContain("Interview results will appear here");
-    expect(html).toContain("A place for proof");
+    expect(html).toContain("Nothing to showcase yet");
+    expect(html).not.toContain("A place for proof");
     expect(html).toContain("Education has not been added yet");
     expect(html).toContain("Experience has not been added yet");
   });
 
   it("marks an unavailable feed as a failure rather than silence", () => {
-    const html = render({ ...base, sources: { ...base.sources, training: "unavailable" } });
+    const html = render({ ...base, sources: { ...base.sources, assessments: "unavailable" } });
     expect(html).toContain("could not be loaded");
   });
 
@@ -167,10 +166,10 @@ describe("Passport overview page", () => {
     expect(html).toContain("Bengaluru, India");
     expect(html).toContain("Customer care");
     expect(html).toContain("+30 pts");
-    expect(html).toContain("9 of 9 tasks submitted");
-    expect(html).toContain("Explained personal actions with concrete examples.");
-    expect(html).toContain("Complaint response task");
     expect(html).toContain("Bachelor of Commerce");
+    // Missions, interviews and evidence lines now live in the achievements, not their own sections.
+    expect(html).not.toContain("The work behind the profile");
+    expect(html).not.toContain("Training &amp; practical work");
     expect(html).not.toContain("Not comparable");
   });
 });

@@ -1,14 +1,11 @@
 import type {
-  PassportEvidenceItem,
   PassportFeedState,
-  PassportInterview,
   PassportJourneyStep,
   PassportOverview as PassportOverviewData,
   PassportSkillComparison,
-  PassportTraining,
 } from "@/lib/api";
 import { PassportShare } from "./passport-share";
-import { PassportShowcase } from "./passport-showcase";
+import { PassportAchievements, PassportShowcase } from "./passport-showcase";
 
 // The Career Passport, as a private record rather than a certificate.
 //
@@ -218,117 +215,6 @@ function Skills({ skills, state }: { skills: PassportSkillComparison[]; state: P
   );
 }
 
-function Training({ training, state }: { training: PassportTraining[]; state: PassportFeedState }) {
-  if (training.length === 0) {
-    return (
-      <Empty
-        title="Training evidence is on its way"
-        body={sourceMessage(state, "Courses, workplace tasks and recorded completion will be connected here.")}
-      />
-    );
-  }
-  return (
-    <div className="grid gap-3">
-      {training.map((t) => (
-        <article key={t.id} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-          <span className="rounded-full bg-brand-mist px-2 py-0.5 text-[0.62rem] font-semibold text-slate-600">
-            {t.status === "completed" ? "Completed" : "In progress"}
-          </span>
-          <h3 className="mt-1 text-[0.85rem] font-semibold text-brand-ink">{t.title}</h3>
-          <div
-            role="progressbar"
-            aria-label={`${t.title} tasks submitted`}
-            aria-valuenow={t.tasksSubmitted}
-            aria-valuemin={0}
-            aria-valuemax={t.tasksTotal}
-            className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-brand-mist"
-          >
-            <div
-              className="h-full rounded-full bg-brand-teal-deep"
-              style={{ width: `${Math.min(100, Math.floor((t.tasksSubmitted / t.tasksTotal) * 100))}%` }}
-            />
-          </div>
-          <p className="mt-1 text-[0.75rem] text-slate-600">
-            {t.tasksSubmitted} of {t.tasksTotal} tasks submitted · {formatDate(t.completedAt)}
-          </p>
-          <p className="mt-0.5 text-[0.68rem] text-slate-400">Submission confirms completion, not skill verification.</p>
-        </article>
-      ))}
-    </div>
-  );
-}
-
-function Interviews({ interviews, state }: { interviews: PassportInterview[]; state: PassportFeedState }) {
-  if (interviews.length === 0) {
-    return (
-      <Empty
-        title="Interview results will appear here"
-        body={sourceMessage(state, "Completed practice interviews can contribute scored feedback, strengths and areas to improve.")}
-      />
-    );
-  }
-  return (
-    <div className="grid gap-3">
-      {interviews.map((interview) => (
-        <article key={interview.id} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-          <h3 className="text-[0.85rem] font-semibold text-brand-ink">{interview.title}</h3>
-          <p className="mt-0.5 text-[0.8rem] text-slate-700">
-            <span className="font-semibold tabular-nums">{interview.score ?? "—"}</span>
-            {interview.score === null ? " Score not available" : " / 100"}
-          </p>
-          <p className="text-[0.68rem] text-slate-400">
-            {formatDate(interview.provenance.recordedAt)} · {interview.provenance.confidence} confidence
-          </p>
-          {interview.strengths.length > 0 && (
-            <>
-              <p className="mt-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">What went well</p>
-              <ul className="mt-0.5 grid gap-0.5 text-[0.76rem] text-slate-600">
-                {interview.strengths.map((s) => <li key={s}>{s}</li>)}
-              </ul>
-            </>
-          )}
-          {interview.improvements.length > 0 && (
-            <>
-              <p className="mt-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">Next practice focus</p>
-              <ul className="mt-0.5 grid gap-0.5 text-[0.76rem] text-slate-600">
-                {interview.improvements.map((s) => <li key={s}>{s}</li>)}
-              </ul>
-            </>
-          )}
-        </article>
-      ))}
-    </div>
-  );
-}
-
-function Evidence({ evidence }: { evidence: PassportEvidenceItem[] }) {
-  if (evidence.length === 0) {
-    return (
-      <Empty
-        title="A place for proof"
-        body="Relevant assessment submissions, practical work and interview evaluations will appear here once their modules are connected."
-      />
-    );
-  }
-  return (
-    <div className="grid gap-2.5 sm:grid-cols-2">
-      {evidence.map((e) => (
-        <article key={e.id} className="rounded-xl border border-slate-200 p-3">
-          <span className="rounded-full bg-brand-mist px-2 py-0.5 text-[0.6rem] font-semibold text-slate-600">
-            {e.module} · Private
-          </span>
-          <h3 className="mt-1.5 text-[0.8rem] font-semibold text-brand-ink">{e.title}</h3>
-          <p className="mt-1 text-[0.68rem] text-slate-400">
-            {formatDate(e.recordedAt)} · {e.confidence} confidence
-            <br />
-            Source: {e.sourceId}
-          </p>
-        </article>
-      ))}
-    </div>
-  );
-}
-
 export function PassportOverview({
   overview,
   name,
@@ -348,7 +234,7 @@ export function PassportOverview({
   const candidate = overview.candidate.data;
   const journeyDash = overview.sources.journey === "available" ? `${overview.summary.completedModules} / ${overview.summary.totalModules}` : "—";
   const skillsDash = overview.sources.assessments === "available" ? String(overview.summary.assessedSkills) : "—";
-  const evidenceDash = overview.evidence.length || "—";
+  const achieved = (overview.achievements ?? []).filter((a) => !a.hidden).length || "—";
 
   return (
     <div>
@@ -379,35 +265,28 @@ export function PassportOverview({
         </p>
       </div>
 
-      <PassportShowcase
+      <PassportShowcase showcase={overview.showcase ?? []} editable={shareControls} roleTitle={overview.role?.title ?? null} />
+
+      <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+        <Stat value={journeyDash} label="Journey stages completed" caption="Completion, not proficiency" />
+        <Stat value={skillsDash} label="Skills with assessments" caption="Evidence-backed observations" />
+        <Stat value={String(achieved)} label="Marked achievements" caption="Scored or submitted work" />
+      </div>
+
+      <SectionCard id="skills" heading="From starting point to progress" pill="Same-rubric comparison">
+        <Skills skills={overview.skills} state={overview.sources.assessments} />
+      </SectionCard>
+
+      <PassportAchievements
         showcase={overview.showcase ?? []}
         achievements={overview.achievements ?? []}
         editable={shareControls}
         roleTitle={overview.role?.title ?? null}
       />
 
-      <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-        <Stat value={journeyDash} label="Journey stages completed" caption="Completion, not proficiency" />
-        <Stat value={skillsDash} label="Skills with assessments" caption="Evidence-backed observations" />
-        <Stat value={String(evidenceDash)} label="Supporting work items" caption="Private until approved for sharing" />
-      </div>
-
       <SectionCard id="journey" heading="The candidate journey" pill="Private record">
         <Journey journey={overview.journey} state={overview.sources.journey} />
       </SectionCard>
-
-      <SectionCard id="skills" heading="From starting point to progress" pill="Same-rubric comparison">
-        <Skills skills={overview.skills} state={overview.sources.assessments} />
-      </SectionCard>
-
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <SectionCard heading="Training & practical work">
-          <Training training={overview.training} state={overview.sources.training} />
-        </SectionCard>
-        <SectionCard heading="Interview preparation">
-          <Interviews interviews={overview.interviews} state={overview.sources.interviews} />
-        </SectionCard>
-      </div>
 
       <SectionCard heading="Background & experience" pill="Candidate supplied">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -444,10 +323,6 @@ export function PassportOverview({
             )}
           </div>
         </div>
-      </SectionCard>
-
-      <SectionCard id="evidence" heading="The work behind the profile" pill="Source-linked evidence">
-        <Evidence evidence={overview.evidence} />
       </SectionCard>
 
       {shareControls ? (

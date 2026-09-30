@@ -49,36 +49,16 @@ function ScoreBadge({ a, large = false }: { a: PassportAchievement; large?: bool
   );
 }
 
-export function PassportShowcase({
-  showcase,
-  achievements,
-  editable,
-  roleTitle,
-}: {
+type Props = {
   showcase: PassportShowcaseItem[];
-  achievements: PassportAchievement[];
   /** The candidate's own view: reports open and choices can be changed. */
   editable: boolean;
   roleTitle: string | null;
-}) {
-  const router = useRouter();
-  const [busy, setBusy] = useState<string | null>(null);
-  const [failed, setFailed] = useState(false);
-  const shown = editable ? achievements : achievements.filter((a) => !a.hidden);
-  const leading = new Set(showcase.map((s) => s.item.id));
+};
 
-  async function change(action: ShowcaseAction, a: PassportAchievement) {
-    setBusy(a.id);
-    setFailed(false);
-    const { data } = await supabaseBrowser().auth.getSession();
-    const ok = data.session ? await setPassportShowcase(data.session.access_token, { action, kind: a.kind, id: a.id }) : false;
-    setBusy(null);
-    if (!ok) { setFailed(true); return; }
-    router.refresh();
-  }
-
+/** The best of each kind, leading the Passport. */
+export function PassportShowcase({ showcase, editable, roleTitle }: Props) {
   return (
-    <>
       <section aria-labelledby="showcase" className="mt-4">
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
           <h2 id="showcase" className="text-[1.05rem] font-bold tracking-tight text-brand-ink">
@@ -123,7 +103,28 @@ export function PassportShowcase({
           </ol>
         )}
       </section>
+  );
+}
 
+/** Every achievement toward the role, with its report and the candidate's pin / hide choices. */
+export function PassportAchievements({ showcase, achievements, editable, roleTitle }: Props & { achievements: PassportAchievement[] }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  const shown = editable ? achievements : achievements.filter((a) => !a.hidden);
+  const leading = new Set(showcase.map((s) => s.item.id));
+
+  async function change(action: ShowcaseAction, a: PassportAchievement) {
+    setBusy(a.id);
+    setFailed(false);
+    const { data } = await supabaseBrowser().auth.getSession();
+    const ok = data.session ? await setPassportShowcase(data.session.access_token, { action, kind: a.kind, id: a.id }) : false;
+    setBusy(null);
+    if (!ok) { setFailed(true); return; }
+    router.refresh();
+  }
+
+  return (
       <section aria-labelledby="achievements" className="mt-4">
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
           <h2 id="achievements" className="text-[1.05rem] font-bold tracking-tight text-brand-ink">
@@ -168,6 +169,5 @@ export function PassportShowcase({
         )}
         {failed && <p role="alert" className="mt-2 text-[0.8rem] text-orange-800">That change did not save. Check your connection and try again.</p>}
       </section>
-    </>
   );
 }
