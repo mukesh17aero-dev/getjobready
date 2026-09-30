@@ -3,3 +3,4 @@
 // Adding a line here is a deliberate decision to widen the feature's contract.
 
 export * from "./passport-overview";
+export { ApplicationReviewCard } from "./application-review-card";

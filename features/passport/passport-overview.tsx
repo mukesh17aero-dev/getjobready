@@ -225,11 +225,14 @@ export function PassportOverview({
    * to the candidate, on their own copy of this same component.
    */
   shareControls = true,
+  afterShowcase = null,
 }: {
   overview: PassportOverviewData;
   name: string;
   photo?: string | null;
   shareControls?: boolean;
+  /** The candidate's own private extras under the showcase, such as the application review. */
+  afterShowcase?: React.ReactNode;
 }) {
   const candidate = overview.candidate.data;
   const journeyDash = overview.sources.journey === "available" ? `${overview.summary.completedModules} / ${overview.summary.totalModules}` : "—";
@@ -266,6 +269,7 @@ export function PassportOverview({
       </div>
 
       <PassportShowcase showcase={overview.showcase ?? []} editable={shareControls} roleTitle={overview.role?.title ?? null} />
+      {afterShowcase}
 
       <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
         <Stat value={journeyDash} label="Journey stages completed" caption="Completion, not proficiency" />

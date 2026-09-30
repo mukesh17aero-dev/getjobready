@@ -1,7 +1,7 @@
 import { getServerSession } from "@/lib/supabase-server";
-import { getPassportOverview } from "@/lib/api";
+import { getApplicationReview, getPassportOverview } from "@/lib/api";
 import { BackLink } from "@/components/ui/back-link";
-import { PassportOverview } from "@/features/passport";
+import { ApplicationReviewCard, PassportOverview } from "@/features/passport";
 import Link from "next/link";
 
 // The Career Passport: a private, read-only record assembled from evidence
@@ -88,7 +88,10 @@ export default async function PassportPage() {
     );
   }
 
-  const result = await getPassportOverview(session.access_token);
+  const [result, review] = await Promise.all([
+    getPassportOverview(session.access_token),
+    getApplicationReview(session.access_token),
+  ]);
 
   if (!result) {
     return (
@@ -150,7 +153,12 @@ export default async function PassportPage() {
         </p>
       </header>
 
-      <PassportOverview overview={overview} name={name} photo={photo} />
+      <PassportOverview
+        overview={overview}
+        name={name}
+        photo={photo}
+        afterShowcase={review ? <ApplicationReviewCard status={review} /> : null}
+      />
     </Frame>
   );
 }
