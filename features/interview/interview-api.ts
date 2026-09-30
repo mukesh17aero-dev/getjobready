@@ -93,6 +93,8 @@ export type InterviewHome = {
   workingOn: GrowthArea[];
   /** Completed interviews, newest first, each with its full read-out. */
   history: Array<{
+    /** Absent on the worked example. */
+    id?: string;
     roleTitle: string;
     round: "hr" | "managerial";
     completedAt: string;
@@ -131,6 +133,10 @@ async function call<T>(
 
 export const getInterviewHome = (token: string) =>
   call<InterviewHome>(token, "/v1/interview");
+
+/** One finished interview with its read-out; null when it is not theirs. */
+export const getInterviewReport = async (token: string, id: string) =>
+  (await call<{ report: InterviewHome["history"][number] }>(token, `/v1/interview/reports/${encodeURIComponent(id)}`))?.report ?? null;
 
 export const startInterview = (
   token: string,

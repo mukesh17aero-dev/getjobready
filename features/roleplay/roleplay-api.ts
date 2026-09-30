@@ -61,6 +61,8 @@ export type RoleplayHome = {
   speechAvailable: boolean;
   session: RoleplaySessionView | null;
   history: Array<{
+    /** Absent on the worked example. */
+    id?: string;
     scenarioId: string;
     scenarioTitle: string;
     difficulty: Difficulty;
@@ -97,6 +99,10 @@ async function call<T>(
     return null;
   }
 }
+
+/** One finished roleplay with its feedback; null when it is not theirs. */
+export const getRoleplayReport = async (token: string, id: string) =>
+  (await call<{ report: RoleplayHome["history"][number] }>(token, `/v1/roleplay/reports/${encodeURIComponent(id)}`))?.report ?? null;
 
 // No token required — the scenario catalogue is published, not personal.
 // A token attaches this person's own in-progress session and history.

@@ -4,6 +4,8 @@ import Page from "@/app/(public)/passport/[token]/page";
 
 const api = vi.hoisted(() => ({ getSharedPassport: vi.fn() }));
 vi.mock("@/lib/api", () => api);
+// The showcase refreshes the page after a change; there is no app router in a static render.
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => undefined }) }));
 
 const overview = {
   version: "passport-overview-v1", generatedAt: "2026-09-23T09:00:00Z", mode: "candidate_preview" as const,

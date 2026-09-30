@@ -1,8 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { PassportOverview } from "@/features/passport";
 import type { PassportOverview as PassportOverviewData } from "@/lib/api";
+
+// The showcase refreshes the page after a change; there is no app router in a static render.
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => undefined }) }));
 
 const base: PassportOverviewData = {
   version: "passport-overview-v1",
@@ -26,6 +29,26 @@ const base: PassportOverviewData = {
 
 const render = (overview: PassportOverviewData, name = "Aarav Mehta") =>
   renderToStaticMarkup(createElement(PassportOverview, { overview, name, photo: null }));
+
+describe("Passport showcase", () => {
+  const top = { id: "assessment:run-1", kind: "assessment" as const, title: "Readiness assessment · CSA", detail: "Up 12 points from the first sitting.", at: "2026-09-20T09:00:00Z", state: "scored" as const, score: 78 };
+  const hidden = { ...top, id: "roleplay:rp-1", kind: "roleplay" as const, title: "Workplace roleplay · Angry customer", score: 41, hidden: true };
+  const withWork = { ...base, achievements: [top, hidden], showcase: [{ kind: "assessment" as const, pinned: false, item: top }] };
+
+  it("leads with the best work and links the candidate to its full report", () => {
+    const html = render(withWork);
+    expect(html).toContain("Top assessment");
+    expect(html).toContain("/practice/readiness/results/run-1");
+    expect(html).toContain("Hidden from employers");
+  });
+
+  it("never shows hidden work, or report links, in an employer's copy", () => {
+    const html = renderToStaticMarkup(createElement(PassportOverview, { overview: withWork, name: "Aarav Mehta", photo: null, shareControls: false }));
+    expect(html).toContain("Top assessment");
+    expect(html).not.toContain("Angry customer");
+    expect(html).not.toContain("/practice/readiness/results/run-1");
+  });
+});
 
 describe("Passport overview page", () => {
   it("shows a dash rather than zero when a source has not connected yet", () => {

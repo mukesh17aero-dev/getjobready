@@ -2,7 +2,9 @@
 
 // Choosing a scenario and difficulty before the conversation starts.
 
+import Link from "next/link";
 import { useState } from "react";
+import { whenLabel } from "@/lib/when";
 import {
   RoleplayScenarioPicker,
   RoleplaySummary,
@@ -88,6 +90,27 @@ export function RoleplaySetup({
             <RoleplaySummary summary={history[0]!.summary} scenarioTitle={history[0]!.scenarioTitle} />
           </div>
         </details>
+      )}
+
+      {!exampleHistory && history.some((h) => h.id) && (
+        <section aria-labelledby="past-roleplays" className="rounded-2xl border border-slate-200 bg-surface p-4">
+          <h2 id="past-roleplays" className="text-sm font-bold text-brand-ink">Your past conversations</h2>
+          <ul className="mt-2 grid gap-1">
+            {history.filter((h) => h.id).map((h) => (
+              <li key={h.id}>
+                <Link href={`/roleplay/report/${h.id}`} className="flex min-h-11 items-center justify-between gap-3 rounded-lg px-2 text-[0.85rem] hover:bg-slate-50">
+                  <span className="min-w-0">
+                    <span className="font-semibold text-brand-ink">{h.scenarioTitle}</span>
+                    <span className="ml-2 text-[0.75rem] text-slate-500">{whenLabel(h.completedAt)}</span>
+                  </span>
+                  <span className="shrink-0 text-[0.8rem] font-semibold text-teal-700">
+                    {h.summary.score ? `${Math.round(h.summary.score.overall)} / 100 · ` : ""}Open report →
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );

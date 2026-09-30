@@ -117,7 +117,13 @@ export type PassportAchievement = {
   at: string;
   state: "scored" | "completed" | "in_progress";
   score: number | null;
+  /** Hidden by the candidate: left out of the showcase and of any shared copy. */
+  hidden?: boolean;
 };
+
+/** The best of one kind, at the top of the Passport - pinned by the candidate, or suggested. */
+export type PassportShowcaseItem = { kind: PassportAchievement["kind"]; pinned: boolean; item: PassportAchievement };
+export type ShowcaseAction = "pin" | "unpin" | "hide" | "show";
 
 export type PassportOverview = {
   version: string;
@@ -138,6 +144,7 @@ export type PassportOverview = {
   evidence: PassportEvidenceItem[];
   /** Scored sittings, missions, interviews and roleplays toward the role, newest first. */
   achievements?: PassportAchievement[];
+  showcase?: PassportShowcaseItem[];
   summary: {
     completedModules: number;
     totalModules: number;
@@ -159,6 +166,21 @@ export type PassportSharing = {
 
 export const getPassportOverview = (token: string) =>
   apiCall<{ overview: PassportOverview }>(token, "/v1/passport/overview");
+
+/** Pin, unpin, hide or show one achievement. True when saved. */
+export async function setPassportShowcase(token: string, body: { action: ShowcaseAction; kind: PassportAchievement["kind"]; id: string }): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_URL}/v1/passport/showcase`, {
+      method: "PUT",
+      cache: "no-store",
+      headers: requestHeaders({ token, json: true }),
+      body: JSON.stringify(body),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
 
 export type SharePassportResult =
   | { ok: true; token: string; expiresAt: string }

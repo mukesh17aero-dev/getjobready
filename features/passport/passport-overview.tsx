@@ -1,5 +1,4 @@
 import type {
-  PassportAchievement,
   PassportEvidenceItem,
   PassportFeedState,
   PassportInterview,
@@ -9,6 +8,7 @@ import type {
   PassportTraining,
 } from "@/lib/api";
 import { PassportShare } from "./passport-share";
+import { PassportShowcase } from "./passport-showcase";
 
 // The Career Passport, as a private record rather than a certificate.
 //
@@ -258,45 +258,6 @@ function Training({ training, state }: { training: PassportTraining[]; state: Pa
   );
 }
 
-const KIND_LABEL: Record<PassportAchievement["kind"], string> = {
-  assessment: "Readiness assessment", interview: "Interview practice", training: "Simulation missions", roleplay: "AI roleplay",
-};
-
-/**
- * The proof: marked work toward the role, as badges. Only scored or submitted
- * work appears - nothing self-reported and nothing still waiting for a result.
- */
-function Achievements({ items }: { items: PassportAchievement[] }) {
-  if (items.length === 0) {
-    return <Empty title="Your achievements will appear here" body="Each scored readiness assessment, simulation mission, marked practice interview and AI roleplay becomes a badge here - proof of what you can do for this role." />;
-  }
-  return (
-    <ol className="grid gap-2.5 sm:grid-cols-2">
-      {items.map((a) => (
-        <li key={a.id} className="flex items-start gap-3 rounded-xl border border-teal-200 bg-white p-3">
-          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-brand-mist text-brand-teal-deep">
-            {a.score !== null ? (
-              <span className="text-center leading-none">
-                <span className="block text-[1.15rem] font-bold tabular-nums">{a.score}</span>
-                <span className="text-[0.55rem] font-semibold">/ 100</span>
-              </span>
-            ) : (
-              <span aria-hidden className="text-[1.3rem] font-bold">✓</span>
-            )}
-          </span>
-          <div className="min-w-0">
-            <p className="text-[0.62rem] font-semibold uppercase tracking-wide text-slate-500">
-              {KIND_LABEL[a.kind]} · {formatDate(a.at)}
-            </p>
-            <h3 className="text-[0.86rem] font-semibold text-brand-ink">{a.title}</h3>
-            <p className="text-[0.78rem] leading-relaxed text-slate-600">{a.detail}</p>
-          </div>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
 function Interviews({ interviews, state }: { interviews: PassportInterview[]; state: PassportFeedState }) {
   if (interviews.length === 0) {
     return (
@@ -418,15 +379,18 @@ export function PassportOverview({
         </p>
       </div>
 
+      <PassportShowcase
+        showcase={overview.showcase ?? []}
+        achievements={overview.achievements ?? []}
+        editable={shareControls}
+        roleTitle={overview.role?.title ?? null}
+      />
+
       <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
         <Stat value={journeyDash} label="Journey stages completed" caption="Completion, not proficiency" />
         <Stat value={skillsDash} label="Skills with assessments" caption="Evidence-backed observations" />
         <Stat value={String(evidenceDash)} label="Supporting work items" caption="Private until approved for sharing" />
       </div>
-
-      <SectionCard id="achievements" heading={shareControls ? "What you have achieved" : "What they have achieved"} pill={overview.role ? `Toward ${overview.role.title}` : "Marked work only"}>
-        <Achievements items={overview.achievements ?? []} />
-      </SectionCard>
 
       <SectionCard id="journey" heading="The candidate journey" pill="Private record">
         <Journey journey={overview.journey} state={overview.sources.journey} />
