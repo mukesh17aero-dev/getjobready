@@ -120,7 +120,7 @@ export function StartRouter({
             <ul className={styles.tools} aria-label={`${card.title}: what is inside`}>{card.modules.map((mod, j) => <li key={mod.label} style={{ "--j": j } as React.CSSProperties}>
               <Link href={mod.href} data-status={mod.status} data-next={mod === next || undefined}>
                 {mod.status === "done" && <Check size={11} />}{mod.label}
-                {mod === next && <span className={styles.nextPip}>Next for you</span>}
+                {mod === next && <><span className={styles.nextPip}>Next for you</span><ArrowRight size={11} /></>}
                 {mod.isNew && !mod.status && mod !== next && <span className={styles.newTag}>New</span>}
                 {mod.status && <span className="sr-only">{mod.status === "done" ? " (done)" : " (in progress)"}</span>}
               </Link>
