@@ -50,8 +50,6 @@ export type JourneyProgress = {
     // The engine's own reason for putting them in this role, kept from the day
     // they finished the survey.
     why?: string | null;
-    /** The biggest share of the working day, from the role's own day mix. */
-    busiest?: { label: string; share: number } | null;
   } | null;
   name: string | null;
   track: string | null;
