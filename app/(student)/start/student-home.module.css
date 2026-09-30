@@ -37,3 +37,13 @@
 @media (prefers-reduced-motion:reduce){.card,.tools li,.tools a[data-next]{animation:none}}
 .tools a{font-size:11px;padding:5px 9px}.tools a[data-next] .nextPip{color:#5b21b6;background:#fff}
 @media(max-width:1180px){.tools a{font-size:10.5px}}
+.exploreNeedle,.exploreOrbit,.exploreRipple{transform-box:view-box;transform-origin:82px 54px}.exploreSpark{transform-box:fill-box;transform-origin:center}
+.exploreNeedle{animation:needleSettle 1.9s cubic-bezier(.3,1.35,.45,1) .45s backwards}.exploreOrbit{animation:orbitSweep 2.2s cubic-bezier(.2,.8,.2,1) .6s backwards}.exploreSpark{animation:sparkTwinkle 1s ease-out 1.5s backwards}
+@keyframes needleSettle{0%{transform:rotate(-80deg)}55%{transform:rotate(16deg)}78%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
+@keyframes orbitSweep{from{transform:rotate(-220deg);opacity:0}}
+@keyframes sparkTwinkle{0%{transform:scale(0) rotate(-90deg);opacity:0}70%{transform:scale(1.25) rotate(8deg)}}
+@keyframes needleSeek{0%,100%{transform:rotate(0)}30%{transform:rotate(-18deg)}65%{transform:rotate(12deg)}}
+@keyframes orbitLoop{to{transform:rotate(360deg)}}
+@keyframes radar{0%{transform:scale(.95);opacity:.45}100%{transform:scale(1.55);opacity:0}}
+.card:is(:hover,:focus-within) .exploreNeedle{animation:needleSeek 3.2s ease-in-out infinite}.card:is(:hover,:focus-within) .exploreOrbit{animation:orbitLoop 7s linear infinite}.card:is(:hover,:focus-within) .exploreRipple{animation:radar 2.4s ease-out infinite}
+@media (prefers-reduced-motion:reduce){.exploreNeedle,.exploreOrbit,.exploreRipple,.exploreSpark,.card:is(:hover,:focus-within) :is(.exploreNeedle,.exploreOrbit,.exploreRipple){animation:none}}

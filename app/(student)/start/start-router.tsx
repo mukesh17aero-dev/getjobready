@@ -21,9 +21,14 @@ function Illustration({ kind }: { kind: "explore" | "practice" | "interview" | "
   return <svg className={styles.illustration} aria-hidden="true" viewBox="0 0 150 112" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     {kind === "explore" ? <>
       <circle cx="82" cy="54" r="39" opacity=".15" /><circle cx="82" cy="54" r="27" opacity=".25" />
-      <path d="m82 26 8 20 21 8-21 8-8 21-8-21-20-8 20-8z" fill="currentColor" fillOpacity=".1" />
-      <circle cx="82" cy="54" r="4" fill="currentColor" /><circle cx="115" cy="24" r="4" fill="currentColor" fillOpacity=".3" stroke="none" />
-      <path d="M32 76h12M38 70v12" opacity=".4" />
+      {/* Radar ripple and orbit only move while the card is hovered or focused. */}
+      <circle className={styles.exploreRipple} cx="82" cy="54" r="27" opacity="0" />
+      <g className={styles.exploreNeedle}>
+        <path d="m82 26 8 20 21 8-21 8-8 21-8-21-20-8 20-8z" fill="currentColor" fillOpacity=".1" />
+        <circle cx="82" cy="54" r="4" fill="currentColor" />
+      </g>
+      <g className={styles.exploreOrbit}><circle cx="115" cy="24" r="4" fill="currentColor" fillOpacity=".3" stroke="none" /></g>
+      <path className={styles.exploreSpark} d="M32 76h12M38 70v12" opacity=".4" />
     </> : kind === "practice" ? <>
       <rect x="54" y="17" width="64" height="77" rx="10" transform="rotate(10 54 17)" opacity=".2" />
       <rect x="39" y="19" width="64" height="77" rx="10" fill="currentColor" fillOpacity=".05" />
