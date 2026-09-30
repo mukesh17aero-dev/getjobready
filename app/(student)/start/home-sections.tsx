@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import type { HomeEvidence, HomeFocus, JourneyState } from "@/lib/api";
 import { setJourneyFocus } from "@/lib/api";
 import { supabaseBrowser } from "@/lib/supabase-browser";
-import { FOCUS_OPTIONS, type HomePlan, type HomeTool, type RailStep, type ToolGroup } from "@/features/journey";
-import { ArrowRight, Check } from "@/components/ui/icons";
+import { FOCUS_OPTIONS, type HomePlan, type HomeTool, type RailStep, type MapStop } from "@/features/journey";
+import { ArrowRight, Check, Eye, Mic, Pencil, Ranking, Spark } from "@/components/ui/icons";
 import s from "./home.module.css";
 
 export function Rail({ steps }: { steps: RailStep[] }) {
@@ -58,7 +58,8 @@ export function Evidence({ evidence, modules }: { evidence: HomeEvidence | null 
     m.resume && { label: m.resume === "done" ? "Resume downloaded" : "Resume · draft saved", done: m.resume === "done" },
     m.linkedin && { label: m.linkedin === "done" ? "LinkedIn profile kept" : "LinkedIn profile · in review", done: m.linkedin === "done" },
   ].filter((d): d is { label: string; done: boolean } => Boolean(d));
-  if (scores.length === 0 && !interview && docs.length === 0) return null;
+  const awaiting = evidence?.readinessAwaiting ?? null;
+  if (scores.length === 0 && !awaiting && !interview && docs.length === 0) return null;
   const latest = scores[scores.length - 1];
   const change = scores.length > 1 ? latest! - scores[0]! : null;
   return (
@@ -71,6 +72,15 @@ export function Evidence({ evidence, modules }: { evidence: HomeEvidence | null 
             <p className={s.figure}><strong>{latest}</strong><span>/ 100 · latest sitting</span></p>
             <Sparkline scores={scores} />
             <p className={s.small}>{change === null ? "One sitting so far." : `${change >= 0 ? "+" : ""}${change} since your first sitting.`} <Link href="/practice/readiness/results">See your reports</Link></p>
+            {awaiting && <p className={s.small}><Link href={`/practice/readiness/results/${awaiting.runId}`}>{awaiting.count === 1 ? "One more sitting" : `${awaiting.count} more sittings`} waiting for a report</Link></p>}
+          </article>
+        )}
+        {latest === undefined && awaiting && (
+          <article data-waiting>
+            <p className={s.label}>READINESS</p>
+            <p className={s.figure}><strong><Check size={26} /></strong><span>{awaiting.count === 1 ? "Sitting finished" : `${awaiting.count} sittings finished`}</span></p>
+            <p className={s.small}>Your answers are saved, but the report with your score was not written yet. Opening it writes it.</p>
+            <Link href={`/practice/readiness/results/${awaiting.runId}`} className={s.inlineGo}>Get your report<ArrowRight size={14} /></Link>
           </article>
         )}
         {interview && (
@@ -109,37 +119,48 @@ function ToolTile({ tool }: { tool: HomeTool }) {
   );
 }
 
-function ToolGroups({ groups }: { groups: ToolGroup[] }) {
-  return (
-    <div className={s.toolGroups}>
-      {groups.map((g) => (
-        <div key={g.id} className={s.toolGroup}>
-          <h3>{g.title}</h3>
-          <div className={s.tiles}>{g.tools.map((t) => <ToolTile key={t.label} tool={t} />)}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
+const STATION_ICON: Record<MapStop["id"], (p: { size?: number }) => React.ReactElement> = { explore: Eye, readiness: Ranking, presence: Pencil, interview: Mic };
 
-export function Tools({ groups, also }: { groups: ToolGroup[]; also: ToolGroup[] }) {
-  const count = [...groups, ...also].reduce((n, g) => n + g.tools.length, 0);
+/** Every area of Ascend as one road, from choosing a role to the job, with "You are here" on it. */
+export function JourneyMap({ stations, here }: { stations: MapStop[]; here: MapStop["id"] }) {
   return (
-    <>
-      <section className={s.section} aria-labelledby="tools">
-        <div className={s.sectionHead}>
-          <h2 id="tools">{also.length ? "Your toolkit" : "Everything Ascend can do for you"}</h2>
-          <span>{also.length ? "The tools for what you came for." : `${count} tools in four areas. Open any of them, any time.`}</span>
-        </div>
-        <ToolGroups groups={groups} />
-      </section>
-      {also.length > 0 && (
-        <section className={s.section} aria-labelledby="more">
-          <div className={s.sectionHead}><h2 id="more">More ways Ascend can help</h2><span>Here whenever you want them.</span></div>
-          <ToolGroups groups={also} />
-        </section>
-      )}
-    </>
+    <section className={s.section} aria-labelledby="map">
+      <div className={s.sectionHead}>
+        <h2 id="map">How Ascend gets you there</h2>
+        <span>Four stops from choosing a role to getting the job. Each one builds on the last.</span>
+      </div>
+      <ol className={s.map}>
+        {stations.map((st, i) => {
+          const Icon = STATION_ICON[st.id];
+          const isHere = st.id === here;
+          const done = st.tools.filter((t) => t.status === "done").length;
+          return (
+            <li key={st.id} className={s.stop} data-here={isHere || undefined} data-done={done > 0 && !isHere ? true : undefined} data-later={!st.inFocus || undefined} style={{ "--i": i } as React.CSSProperties} aria-current={isHere ? "step" : undefined}>
+              <span className={s.node} aria-hidden="true">{done > 0 && !isHere ? <Check size={16} /> : i + 1}</span>
+              <article className={s.stopCard}>
+                <header className={s.stopHead}>
+                  <span className={s.stopIcon} aria-hidden="true"><Icon size={22} /></span>
+                  <span className={s.stopTitle}>
+                    <small>STOP {i + 1}{!st.inFocus && " · WHEN YOU NEED IT"}</small>
+                    <h3>{st.title}</h3>
+                  </span>
+                  {isHere ? <span className={s.here}>You are here</span> : done > 0 && <span className={s.stopCount}><Check size={12} />{done} done</span>}
+                </header>
+                <p className={s.payoff}>{st.payoff}</p>
+                <div className={s.tiles}>{st.tools.map((t) => <ToolTile key={t.label} tool={t} />)}</div>
+              </article>
+            </li>
+          );
+        })}
+        <li className={s.stop} data-goal style={{ "--i": stations.length } as React.CSSProperties}>
+          <span className={s.node} aria-hidden="true"><Spark size={16} /></span>
+          <article className={s.goalCard}>
+            <h3>The job</h3>
+            <p>You walk in knowing the work, with proof of your skills and answers you have already said out loud.</p>
+          </article>
+        </li>
+      </ol>
+    </section>
   );
 }
 

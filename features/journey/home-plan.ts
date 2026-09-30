@@ -7,7 +7,16 @@ import type { HomeFocus, JourneyState } from "@/lib/api";
 
 export type RailStep = { label: string; state: "done" | "current" | "started" | "ahead"; note: string };
 export type HomeTool = { label: string; href: string; blurb: string; status?: "done" | "in_progress"; note?: string; isNew?: boolean };
-export type ToolGroup = { id: "explore" | "readiness" | "presence" | "interview"; title: string; tools: HomeTool[] };
+/** One area of the journey map: what it gives you, and the tools that do it. */
+export type MapStop = {
+  id: "explore" | "readiness" | "presence" | "interview";
+  title: string;
+  /** Why it matters, in one line - the stake before the tools. */
+  payoff: string;
+  tools: HomeTool[];
+  /** Part of what this student came for, or there for later. */
+  inFocus: boolean;
+};
 export type NextStepPanel = { eyebrow: string; title: string; why: string; cta: string; href: string; meta: string[] };
 export type HomePlan = {
   focus: HomeFocus;
@@ -15,8 +24,10 @@ export type HomePlan = {
   subline: string;
   rail: RailStep[];
   next: NextStepPanel;
-  groups: ToolGroup[];
-  alsoAvailable: ToolGroup[];
+  /** Every area, in journey order. */
+  stations: MapStop[];
+  /** The station the next step sits in: the map's "You are here". */
+  here: MapStop["id"];
 };
 
 export const FOCUS_OPTIONS: Array<{ id: HomeFocus; label: string; detail: string }> = [
@@ -28,41 +39,63 @@ export const FOCUS_OPTIONS: Array<{ id: HomeFocus; label: string; detail: string
 
 const NEW_UNTIL = Date.parse("2026-10-15");
 
+const LEAD: Record<HomeFocus, MapStop["id"][]> = {
+  journey: ["explore", "readiness", "presence", "interview"],
+  interview: ["interview"],
+  practice: ["explore", "readiness"],
+  presence: ["presence"],
+};
+
+/** The station a next step belongs to, read from where it sends them. */
+function stationOf(href: string): MapStop["id"] {
+  if (href.startsWith("/interview") || href.startsWith("/stories") || href.startsWith("/roleplay")) return "interview";
+  if (href.startsWith("/resume") || href.startsWith("/profile") || href.startsWith("/job-fit")) return "presence";
+  if (href.startsWith("/discover")) return "explore";
+  return "readiness";
+}
+
 export function homePlan(state: JourneyState, now: number): HomePlan {
   const focus: HomeFocus = state.progress?.focus ?? "journey";
+  const plan = railAndNext(state, focus);
   const role = state.progress?.role?.title ?? null;
   const m = state.modules ?? {};
-  const weakest = state.evidence?.weakestSkill ?? null;
-  const lastMark = state.evidence?.interview ?? null;
   const fresh = now < NEW_UNTIL;
-
-  const all: Record<ToolGroup["id"], ToolGroup> = {
-    explore: { id: "explore", title: "Explore the role", tools: [{ label: "Discovery", href: "/discover", blurb: "See a role's real working day, then choose one to aim at", status: role ? "done" : undefined }] },
-    readiness: { id: "readiness", title: "Role readiness", tools: [
-      { label: "The Readiness Sitting", href: "/practice/readiness", blurb: "Five questions on the job's own work, scored skill by skill", status: m.readiness },
+  const awaiting = state.evidence?.readinessAwaiting ?? null;
+  const all: Array<Omit<MapStop, "inFocus">> = [
+    { id: "explore", title: "Explore the role", payoff: "Know what the job is really like before you spend months aiming at it.", tools: [
+      { label: "Discovery", href: "/discover", blurb: "See a role's real working day, then choose one to aim at", status: role ? "done" : undefined },
+    ] },
+    { id: "readiness", title: "Build role readiness", payoff: "Find out what you can already do, practise the rest on real tasks, and keep the proof.", tools: [
+      { label: "The Readiness Sitting", href: awaiting ? `/practice/readiness/results/${awaiting.runId}` : "/practice/readiness", blurb: awaiting ? "Your answers are saved. Open your report to get your score" : "Five questions on the job's own work, scored skill by skill", status: m.readiness },
       { label: "Simulation Missions", href: "/practice/missions", blurb: "Real tasks from the role, marked the way the job would", isNew: fresh },
       { label: "Career Passport", href: "/passport", blurb: "The skills you have proved, in one record you can share", isNew: fresh },
     ] },
-    presence: { id: "presence", title: "Professional presence", tools: [
+    { id: "presence", title: "Show it on paper", payoff: "Turn what you have done into a resume and profile that get read.", tools: [
       { label: "Resume Builder", href: "/resume/build", blurb: "A one-page resume written from what you have done", status: m.resume, note: m.resume === "in_progress" ? "draft" : undefined },
       { label: "LinkedIn Profile", href: "/profile/professional", blurb: "A headline and About section in your own voice", status: m.linkedin, note: m.linkedin === "in_progress" ? "in review" : undefined },
       { label: "Job Fit Analyzer", href: "/job-fit", blurb: "How your record matches a real job posting", status: m.jobFit },
     ] },
-    interview: { id: "interview", title: "Interview readiness", tools: [
+    { id: "interview", title: "Win the interview", payoff: "Walk in having already said your answers out loud, and heard what to fix.", tools: [
       { label: "AI Interview", href: "/interview/practice", blurb: "Rehearse out loud and get a mark on every answer", status: m.interview, note: m.interview === "in_progress" ? "open" : undefined },
       { label: "Interview Story Bank", href: "/stories", blurb: "Your best answers, drafted from your own record" },
       { label: "AI Roleplay", href: "/roleplay", blurb: "Practise a tough workplace conversation, safely" },
       { label: "Question library", href: "/interview/questions", blurb: "The questions this role's interviews actually ask" },
     ] },
+  ];
+  return {
+    ...plan,
+    stations: all.map((st) => ({ ...st, inFocus: LEAD[focus].includes(st.id) })),
+    here: stationOf(plan.next.href),
   };
-  const lead: Record<HomeFocus, ToolGroup["id"][]> = {
-    journey: ["explore", "readiness", "presence", "interview"],
-    interview: ["interview"],
-    practice: ["explore", "readiness"],
-    presence: ["presence"],
-  };
-  const groups = lead[focus].map((id) => all[id]);
-  const alsoAvailable = (Object.keys(all) as ToolGroup["id"][]).filter((id) => !lead[focus].includes(id)).map((id) => all[id]);
+}
+
+function railAndNext(state: JourneyState, focus: HomeFocus): Omit<HomePlan, "stations" | "here"> {
+  const role = state.progress?.role?.title ?? null;
+  const m = state.modules ?? {};
+  const weakest = state.evidence?.weakestSkill ?? null;
+  const lastMark = state.evidence?.interview ?? null;
+  const awaiting = state.evidence?.readinessAwaiting ?? null;
+  const readinessNote = awaiting ? "Finished · report waiting" : "Sitting finished";
 
   const missions: NextStepPanel = {
     eyebrow: "YOUR NEXT STEP",
@@ -89,7 +122,7 @@ export function homePlan(state: JourneyState, now: number): HomePlan {
   if (focus === "interview") {
     const done = m.interview === "done";
     return {
-      focus, groups, alsoAvailable,
+      focus,
       heading: role ? `Your interview preparation · ${role}` : "Your interview preparation",
       subline: role ? "Questions are written for this role, from what it actually needs." : "Name the role when you start, and the questions are written for it.",
       rail: [
@@ -114,7 +147,7 @@ export function homePlan(state: JourneyState, now: number): HomePlan {
     ];
     const first = order.find((o) => m[o.key] !== "done");
     return {
-      focus, groups, alsoAvailable,
+      focus,
       heading: "Your resume and LinkedIn",
       subline: role ? `Aimed at ${role}, from what you have actually done.` : "Written from what you have actually done.",
       rail: order.map((o) => { const s = status(m[o.key], "Done", o.key === "linkedin" ? "In review" : "Draft saved"); return s ? step(s.state, o.label, s.note) : step(o === first ? "current" : "ahead", o.label, o === first ? "You are here" : "Next"); }),
@@ -124,7 +157,7 @@ export function homePlan(state: JourneyState, now: number): HomePlan {
 
   if (!role) {
     return {
-      focus, groups, alsoAvailable,
+      focus,
       heading: focus === "practice" ? "Pick a role to practise" : "Let's find work you can see yourself doing",
       subline: "Ascend works from one role you choose. Everything after shapes itself around it.",
       rail: focus === "practice"
@@ -146,12 +179,12 @@ export function homePlan(state: JourneyState, now: number): HomePlan {
 
   if (focus === "practice") {
     return {
-      focus, groups, alsoAvailable,
+      focus,
       heading: `Your ${role} practice`,
       subline: "Real tasks from the job, marked the way it would mark them.",
       rail: [
         step("done", "Pick the role", role),
-        status(m.readiness, "Sitting finished", "Sitting open") ? step(readinessDone ? "done" : "started", "Check where you stand", readinessDone ? "Sitting finished" : "Optional · open") : step("ahead", "Check where you stand", "Optional"),
+        status(m.readiness, "Sitting finished", "Sitting open") ? step(readinessDone ? "done" : "started", "Check where you stand", readinessDone ? readinessNote : "Optional · open") : step("ahead", "Check where you stand", "Optional"),
         step("current", "Try the real work", "You are here"),
         step("ahead", "Prove it", "Opens after two marked missions"),
       ],
@@ -161,12 +194,12 @@ export function homePlan(state: JourneyState, now: number): HomePlan {
 
   const interviewStep = status(m.interview, "Rehearsed", "Started");
   return {
-    focus, groups, alsoAvailable,
+    focus,
     heading: `Your ${role} journey`,
     subline: "Everything below is aimed at this role.",
     rail: [
       step("done", "Explore the role", "Role chosen"),
-      readinessDone ? step("done", "Check your readiness", "Sitting finished") : step(m.readiness === "in_progress" ? "started" : "current", "Check your readiness", m.readiness === "in_progress" ? "Sitting open" : "You are here"),
+      readinessDone ? step("done", "Check your readiness", readinessNote) : step(m.readiness === "in_progress" ? "started" : "current", "Check your readiness", m.readiness === "in_progress" ? "Sitting open" : "You are here"),
       step(readinessDone ? "current" : "ahead", "Try the real work", readinessDone ? "You are here" : "Marked like the job"),
       interviewStep ? step(interviewStep.state, "Practise the interview", interviewStep.note) : step("ahead", "Practise the interview", "Out loud, with feedback"),
       step("ahead", "Prove it", "Opens after two marked missions"),

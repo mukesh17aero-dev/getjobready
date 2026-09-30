@@ -137,6 +137,8 @@ export type HomeEvidence = {
   readiness: Array<{ at: string; score: number }>;
   weakestSkill: string | null;
   interview: { mark: number; bar: number } | null;
+  /** Finished sittings whose report was not written yet, and the newest one to open. */
+  readinessAwaiting?: { runId: string; count: number } | null;
 };
 
 /** Saves what they came to Ascend for. */

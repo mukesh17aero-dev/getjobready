@@ -85,8 +85,6 @@
 @media(max-width:700px){.home{padding:24px 16px 48px;gap:26px}.rail{grid-template-columns:minmax(0,1fr);gap:4px;padding:14px 16px}.rail li{flex-direction:row;flex-wrap:wrap;align-items:center;column-gap:10px;padding:6px 0}.rail li::after{display:none}.rail small{width:100%;padding-left:36px}.next{padding:24px 20px}.nextCta{width:100%;justify-content:center}.focusOptions{grid-template-columns:minmax(0,1fr)}}
 @media(prefers-reduced-motion:reduce){.nextCta,.focusOptions button{transition:none}}
 
-.toolGroups{display:flex;flex-direction:column;gap:22px}
-.toolGroup h3{font-size:13px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .tile{position:relative;display:flex;flex-direction:column;gap:6px;padding:16px 18px 14px;min-height:118px;box-sizing:border-box;background:var(--card);border:1px solid var(--line);border-radius:14px;text-decoration:none;color:var(--ink);transition:border-color .15s,box-shadow .15s,transform .15s}
 .tile:hover{border-color:var(--color-slate-400);box-shadow:0 10px 24px -18px rgba(20,32,30,.45);transform:translateY(-2px)}
@@ -100,3 +98,41 @@
 .tile[data-status=in_progress]{border-style:dashed;border-color:var(--color-slate-400)}
 .tile[data-new] .chip{background:var(--violet-soft);color:var(--violet)}
 @media(prefers-reduced-motion:reduce){.tile{transition:none}.tile:hover{transform:none}}
+
+.inlineGo{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-size:14.5px;font-weight:600;color:var(--teal-ink);text-decoration:none}
+.inlineGo:hover{text-decoration:underline;text-underline-offset:3px}
+.evidence article[data-waiting]{border:1px dashed #9fd3c4}
+
+/* The journey map: one road, a stop per area, "You are here" on it. */
+.map{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.stop{position:relative;display:grid;grid-template-columns:44px minmax(0,1fr);column-gap:18px;padding-bottom:18px;animation:stopIn .5s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0) * 90ms)}
+.stop::before{content:"";position:absolute;left:20px;top:46px;bottom:0;width:4px;border-radius:2px;background:var(--color-slate-200)}
+.stop[data-done]::before{background:var(--teal)}
+.stop[data-goal]{padding-bottom:0}.stop[data-goal]::before{display:none}
+.node{position:relative;z-index:1;width:44px;height:44px;box-sizing:border-box;border-radius:50%;border:2px solid var(--color-slate-300);background:var(--card);display:grid;place-items:center;font-family:var(--font-space-grotesk),sans-serif;font-size:17px;font-weight:600;color:var(--muted)}
+.stop[data-done] .node{border-color:var(--teal);background:var(--teal);color:#fff}
+.stop[data-here] .node{border-color:var(--violet);background:var(--violet);color:#fff;box-shadow:0 8px 20px -8px rgba(91,33,182,.7)}
+.stop[data-here] .node::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:2px solid var(--violet);animation:herePulse 2.2s ease-out infinite}
+.stop[data-goal] .node{border-color:var(--ink);background:var(--ink);color:#fff}
+.stopCard{display:flex;flex-direction:column;gap:12px;padding:20px 22px;background:var(--card);border:1px solid var(--line);border-radius:18px;min-width:0}
+.stop[data-here] .stopCard{border:2px solid var(--violet);background:linear-gradient(135deg,var(--violet-soft) 0%,var(--card) 60%);box-shadow:0 18px 40px -28px rgba(76,29,149,.55)}
+.stop[data-later]:not([data-here]) .stopCard{background:var(--color-slate-50);border-style:dashed}
+.stopHead{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.stopIcon{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;flex-shrink:0;background:var(--color-slate-100);color:var(--ink)}
+.stop[data-done] .stopIcon{background:#e3f3ee;color:var(--teal-ink)}
+.stop[data-here] .stopIcon{background:#ede6ff;color:var(--violet)}
+.stopTitle{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.stopTitle small{font-size:11.5px;font-weight:700;letter-spacing:1.4px;color:var(--muted)}
+.stopTitle h3{font-size:21px;font-weight:600;letter-spacing:-.3px;line-height:1.2}
+.here{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:var(--violet);color:#fff;font-size:13.5px;font-weight:700;white-space:nowrap}
+.here::before{content:"";width:8px;height:8px;border-radius:50%;background:#fff;animation:hereDot 1.6s ease-in-out infinite}
+.stopCount{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:#e3f3ee;color:var(--teal-ink);font-size:12.5px;font-weight:600;white-space:nowrap}
+.payoff{font-size:15.5px;line-height:1.5;color:var(--color-slate-700);max-width:680px}
+.goalCard{display:flex;flex-direction:column;gap:6px;padding:18px 22px;border-radius:18px;background:var(--ink);color:#fff}
+.goalCard h3{font-size:19px;font-weight:600}
+.goalCard p{font-size:15px;line-height:1.5;color:rgba(255,255,255,.86);max-width:640px}
+@keyframes stopIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes herePulse{0%{transform:scale(.9);opacity:.7}80%,100%{transform:scale(1.35);opacity:0}}
+@keyframes hereDot{0%,100%{opacity:1}50%{opacity:.35}}
+@media(max-width:700px){.stop{grid-template-columns:34px minmax(0,1fr);column-gap:12px}.stop::before{left:15px;top:36px}.node{width:34px;height:34px;font-size:15px}.stopCard{padding:16px}.stopIcon{width:40px;height:40px}.stopTitle h3{font-size:19px}.tiles{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){.stop,.stop[data-here] .node::after,.here::before{animation:none}}

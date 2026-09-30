@@ -7,12 +7,13 @@ import type { CareerProfile, JourneyState, HomeWorkItem } from "@/lib/api";
 import { homePlan, pickupReason, progressOf, RememberHub } from "@/features/journey";
 import { toFields } from "@/features/profile";
 import { ArrowRight, Check, Spark } from "@/components/ui/icons";
-import { Evidence, FocusPicker, NextStep, Rail, Tools } from "./home-sections";
+import { Evidence, FocusPicker, JourneyMap, NextStep, Rail } from "./home-sections";
 import s from "./home.module.css";
 
 // The signed-in home, led by the student's goal rather than by our tools: what
 // they came for, where they are on the way to it, the one next step and why,
-// what their own marked work shows, then everything else, quietly.
+// what their own marked work shows, what is left open, then the whole road
+// with "You are here" on it.
 
 function workStatus(item: HomeWorkItem) {
   return item.status === "follow_up" ? "Completed · follow-up" : item.status === "in_review" ? "In review" : "In progress";
@@ -71,7 +72,6 @@ export function StartRouter({
 
     <Evidence evidence={state.evidence} modules={state.modules} />
 
-    <Tools groups={plan.groups} also={plan.alsoAvailable} />
 
     <section className={s.section} aria-labelledby="pickup">
       <div className={s.sectionHead}><h2 id="pickup">Pick up where you left off</h2></div>
@@ -82,5 +82,7 @@ export function StartRouter({
             <span className={s.pickupAction}>{item.action.label}<ArrowRight size={14} /></span>
           </Link>)}</div>}
     </section>
+
+    <JourneyMap stations={plan.stations} here={plan.here} />
   </main>;
 }
