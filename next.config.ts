@@ -24,6 +24,14 @@ const nextConfig: NextConfig = {
     "Daniels-MacBook-Air.local",
     "192.168.4.26",
   ],
+  // Assessment scene pictures live in Supabase Storage's public buckets.
+  // next/image refuses any host not named here, so without this every
+  // pictured question showed a broken image. Public objects only.
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/**" },
+    ],
+  },
   async rewrites() {
     if (process.env.NODE_ENV !== "development") return [];
     const target = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
