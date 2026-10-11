@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* One width for every page, so the edges do not jump as you move between
+   them. "none" lets each page fill the window; every page container and the
+   header row read this one value, so a cap (say 1600px) is a one-line change.
+   Inner columns and cards keep their own widths. */
+:root {
+  --page-max-width: none;
+}
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -8,15 +16,20 @@
 }
 
 @theme {
-  /* Brand palette from the shared home-page design: violet = guidance,
-     teal = progress, ink = trust anchor. */
-  --color-brand-violet: #0d9488;
+  /* October comprehensive review: navy structure, teal action, coral emphasis.
+     Legacy violet names remain aliases to avoid changing feature contracts. */
+  --color-brand-violet: #0E766E;
   --color-brand-violet-deep: #0f766e;
   --color-brand-violet-soft: #2dd4bf;
   --color-brand-teal: #19b8b0;
-  --color-brand-teal-deep: #0e9a95;
+  --color-brand-teal-deep: #0E766E;
   --color-brand-teal-soft: #4fd4c9;
-  --color-brand-ink: #1c2333;
+  --color-brand-ink: #10243E;
+  --color-brand-accent: #E07A4F;
+  --color-brand-border: #C9D5E3;
+  --color-brand-muted: #52657D;
+  --color-brand-success: #DDF3EE;
+  --color-brand-attention: #FFF0E9;
   /* Light mode carries no purple either: the violet/indigo token names
      stay (hundreds of call sites) but resolve to the teal family. */
   --color-violet-50: #f0fdfa;
@@ -28,10 +41,10 @@
   /* The page ground. Warmed a few degrees towards the violet accent rather
      than a neutral grey: a companion should not open on the colour of an
      admin panel. */
-  --color-brand-mist: #f6f4ee;
+  --color-brand-mist: #F7F9FC;
   /* the card/panel surface: white in light, near-black in dark. Kept apart
      from `white` so text-white on coloured buttons stays white in both. */
-  --color-surface: #fbfaf7;
+  --color-surface: #FFFFFF;
   /* deliberately dark in BOTH themes: panels that are meant to read as a
      dark slab, with white text on them */
   --color-brand-panel: #17202f;
@@ -454,7 +467,7 @@
   :root:not([data-theme="light"]) {
     color-scheme: dark;
 
-    --color-surface: #0a1512;
+    --color-surface: #10243E;
     --color-slate-50: #081310;
     --color-slate-100: #0f1c19;
     --color-slate-200: #1a2b26;
@@ -467,11 +480,11 @@
     --color-slate-900: #f2f6fb;
 
     --color-brand-ink: #eef2f8;
-    --color-brand-mist: #060f0d;
+    --color-brand-mist: #091727;
     --color-brand-panel: #102420;
     /* Dark mode is quieter on purpose: the same hues, desaturated and
        darkened, so panels read as surfaces rather than neon. */
-    --color-brand-violet: #159e93;
+    --color-brand-violet: #0E766E;
     --color-brand-violet-deep: #0f7f77;
     --color-brand-violet-soft: #2db8ab;
     --color-brand-teal: #148f89;
@@ -512,7 +525,7 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --color-surface: #0a1512;
+  --color-surface: #10243E;
   --color-slate-50: #081310;
   --color-slate-100: #0f1c19;
   --color-slate-200: #1a2b26;
@@ -525,11 +538,11 @@
   --color-slate-900: #f2f6fb;
 
   --color-brand-ink: #eef2f8;
-  --color-brand-mist: #060f0d;
+  --color-brand-mist: #091727;
   --color-brand-panel: #102420;
   /* Dark mode is quieter on purpose: the same hues, desaturated and
      darkened, so panels read as surfaces rather than neon. */
-  --color-brand-violet: #159e93;
+  --color-brand-violet: #0E766E;
   --color-brand-violet-deep: #0f7f77;
   --color-brand-violet-soft: #2db8ab;
   --color-brand-teal: #148f89;
@@ -574,22 +587,22 @@
  */
 @layer base {
   :root:not([data-theme="dark"]) {
-    --color-slate-50: #f8f7fc;
-    --color-slate-100: #f0eef8;
-    --color-slate-200: #e3e0ef;
-    --color-slate-300: #cbc7dd;
-    --color-slate-400: #8e8aa3;
-    --color-slate-500: #6f6b85;
-    --color-slate-600: #57536b;
-    --color-slate-700: #423f54;
-    --color-slate-800: #2c2a3b;
-    --color-slate-900: #1c1a29;
+    --color-slate-50: #F7F9FC;
+    --color-slate-100: #EEF3F8;
+    --color-slate-200: #C9D5E3;
+    --color-slate-300: #A9BACE;
+    --color-slate-400: #657891;
+    --color-slate-500: #52657D;
+    --color-slate-600: #52657D;
+    --color-slate-700: #324B68;
+    --color-slate-800: #203A57;
+    --color-slate-900: #10243E;
   }
 }
 
 body {
-  background-color: var(--color-surface);
-  color: var(--color-slate-900);
+  background-color: var(--color-brand-mist);
+  color: var(--color-brand-ink);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
@@ -869,4 +882,17 @@ textarea {
   .screen-guard-print {
     display: block !important;
   }
+}
+
+/* Link contrast is independent of the dark teal button background. */
+:root[data-theme="dark"] .text-brand-violet-deep { color: #6fded6; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .text-brand-violet-deep { color: #6fded6; }
+}
+
+/* A consistent, two-tone focus indicator survives light and dark surfaces. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid #10243E;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px #FFFFFF;
 }

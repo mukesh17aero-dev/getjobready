@@ -1,0 +1,60 @@
+.panel{display:grid;gap:12px}
+.panel h2{font-size:18px;line-height:1.35;font-weight:650;color:var(--color-brand-ink);text-wrap:balance}
+.label{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--color-slate-600)}
+.titleRow{display:flex;flex-wrap:wrap;align-items:center;gap:0 4px}
+.titleRow .label{margin:0}
+.showMe{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px 0 0;border:0;border-radius:999px;background:transparent;color:var(--color-brand-violet-deep);font-size:14px;font-weight:600}
+.showMe:hover:not(:disabled){background:var(--color-slate-100)}
+.showMe:disabled{opacity:.55;cursor:not-allowed}
+.showMe span{font-size:12px}
+.working{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:var(--color-brand-ink)}
+.spinner{flex-shrink:0;width:18px;height:18px;border-radius:50%;border:3px solid var(--color-slate-200);border-top-color:var(--color-brand-violet);animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.reply{display:grid;gap:8px;padding:12px 14px;border-radius:12px;border-left:3px solid var(--color-brand-violet);background:var(--color-slate-50)}
+.reply p{font-size:14px;line-height:1.55;color:var(--color-brand-ink)}
+.list{display:grid;gap:10px;list-style:none;margin:0;padding:0}
+.list li{position:relative;display:grid;gap:4px;padding:12px 14px;padding-right:92px;border:1px solid var(--color-slate-200);border-radius:12px;background:var(--color-surface)}
+.where{font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--color-slate-600)}
+.quote{font-size:14px;line-height:1.5;color:var(--color-slate-600);font-style:italic}
+.ask{font-size:15px;line-height:1.5;color:var(--color-brand-ink)}
+.remove{position:absolute;top:6px;right:6px;min-height:44px;padding:0 12px;border:0;background:none;color:var(--color-rose-700);font-size:14px;font-weight:600}
+.chat label,.pickBox label{font-size:14px;font-weight:600;color:var(--color-brand-ink)}
+.chat textarea,.pickBox textarea{min-height:44px;padding:10px 12px;border:1px solid var(--color-slate-400);border-radius:8px;background:var(--color-surface);color:var(--color-brand-ink);font:inherit;font-size:16px}
+.chat textarea,.pickBox textarea{width:100%;resize:vertical;line-height:1.5}
+.chat textarea:focus,.pickBox textarea:focus{outline:2px solid var(--color-brand-violet);outline-offset:1px;border-color:var(--color-brand-violet)}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.actions button,.chat>button,.reply button{min-height:44px;padding:0 18px;border-radius:999px;font-size:14px;font-weight:600}
+.primary{background:var(--color-brand-violet);border:0;color:#fff}
+.quiet{background:transparent;border:1px solid var(--color-slate-300);color:var(--color-slate-700)}
+.actions button:disabled,.chat button:disabled{opacity:.55;cursor:not-allowed}
+.reply button{justify-self:start}
+/* The box beside picked words, inside the preview column. */
+.pickBox{position:absolute;z-index:20;display:grid;gap:8px;width:min(320px,calc(100% - 16px));padding:14px;border:1px solid var(--color-slate-300);border-radius:12px;background:var(--color-surface);box-shadow:0 8px 28px color-mix(in srgb,var(--color-brand-ink) 18%,transparent)}
+@media (prefers-reduced-motion:reduce){.spinner{animation:none}}
+/* The box to ask in: tap a suggested prompt, or write your own. */
+.chat{display:grid;gap:8px}
+.chat>button{justify-self:start}
+.suggested{display:grid;gap:8px}
+.suggested>div{display:flex;flex-wrap:wrap;gap:8px}
+.suggested button{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border:1px solid var(--color-slate-300);border-radius:999px;background:var(--color-surface);color:var(--color-slate-700);font-size:14px;font-weight:500;text-align:left}
+.suggested button span{color:var(--color-brand-violet-deep);font-weight:700}
+.suggested button:hover:not(:disabled){background:var(--color-slate-50);border-color:var(--color-slate-400)}
+/* The number a request carries in the list and in the page's margin. */
+.badge{display:inline-grid;place-items:center;min-width:22px;height:22px;margin-right:8px;padding:0 6px;border-radius:999px;background:color-mix(in srgb,var(--color-brand-accent) 22%,var(--color-surface));color:var(--color-brand-ink);font-size:12px;font-weight:700;letter-spacing:0}
+.list li[data-active]{border-color:var(--color-brand-accent);box-shadow:0 0 0 1px var(--color-brand-accent)}
+.list li:focus-visible{outline:2px solid var(--color-brand-violet-deep);outline-offset:2px}
+.marker{position:absolute;z-index:15;display:grid;place-items:center;width:44px;height:44px;margin:-9px 0 0 -9px;padding:0;border:0;background:none;color:var(--color-brand-ink);font-size:12px;font-weight:700;cursor:pointer}
+.marker::before{content:"";position:absolute;inset:9px;z-index:-1;border-radius:999px 999px 999px 4px;background:color-mix(in srgb,var(--color-brand-accent) 35%,var(--color-surface));border:1px solid color-mix(in srgb,var(--color-brand-accent) 60%,transparent);box-shadow:0 1px 3px color-mix(in srgb,var(--color-brand-ink) 18%,transparent)}
+.marker[data-active]::before{background:var(--color-brand-accent)}
+.marker[data-active]{color:#fff}
+.marker:focus-visible{outline:2px solid var(--color-brand-violet-deep);outline-offset:-4px;border-radius:999px}
+@media print{.marker{display:none}}
+.list li[data-demo]{border-style:dashed}
+.example{margin-left:8px;padding:1px 8px;border-radius:999px;background:var(--color-slate-100);color:var(--color-slate-700);font-size:12px;font-weight:600}
+/* The first thing the Draft panel asks. */
+.question{display:grid;gap:12px;padding:16px;border:1px solid var(--color-slate-200);border-radius:12px;background:var(--color-slate-50)}
+.question p{font-size:16px;font-weight:600;color:var(--color-brand-ink)}
+/* The list sits under the box it is added from, with its own title, and the
+   buttons that act on it right below. */
+.requested{display:grid;gap:10px;padding-top:12px;border-top:1px solid var(--color-slate-200)}
+.requested h3{font-size:15px;font-weight:650;color:var(--color-brand-ink)}

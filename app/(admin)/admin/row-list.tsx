@@ -21,7 +21,7 @@ export function RowList<T>({
   return (
     <div>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+        <span className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-slate-500">
           {label}
         </span>
         <button
@@ -32,10 +32,10 @@ export function RowList<T>({
           + Add
         </button>
       </div>
-      {hint && <p className="mt-0.5 text-[0.75rem] text-slate-400">{hint}</p>}
+      {hint && <p className="mt-0.5 text-[0.75rem] text-slate-500">{hint}</p>}
       <div className="mt-1.5 grid gap-2">
         {rows.length === 0 && (
-          <p className="text-[0.78rem] text-slate-400">Nothing here yet.</p>
+          <p className="text-[0.78rem] text-slate-500">Nothing here yet.</p>
         )}
         {rows.map((row, i) => (
           <div

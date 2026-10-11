@@ -2,18 +2,14 @@
 
 // The resume templates on offer.
 
-// ---- Templates ----
-//
-// Three ATS-safe looks for the same data: single column, no tables or
-// graphics, standard headings in all three. Only spacing, alignment and type
-// change - a screener parses them identically, a person sees three styles.
+// Layout descriptions are guidance, not a guarantee of parser compatibility.
 
 import { type ResumeTemplate } from "./resume-api";
 export const TEMPLATES: Array<{ id: ResumeTemplate; name: string; blurb: string }> = [
   {
     id: "classic",
     name: "Basic",
-    blurb: "Serif and traditional - the trusted look.",
+    blurb: "Recommended for applications: simple, single column.",
   },
   {
     id: "compact",

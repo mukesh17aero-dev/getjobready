@@ -14,7 +14,7 @@ import { EXAMPLE_RESUME } from "@/features/resume";
 // The builder itself lives at /resume/build. Anything still pointing at
 // /resume lands here, which is the intent.
 
-export const metadata = { title: "Professional Presence" };
+export const metadata = { title: "Apply" };
 export const dynamic = "force-dynamic";
 
 export default async function ResumeLandingPage() {

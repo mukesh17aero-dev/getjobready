@@ -1,0 +1,14 @@
+/* The walk-through's pointer: glides between the real controls, and dips when it presses one. */
+.pointer{position:absolute;z-index:40;width:22px;height:22px;margin:-2px 0 0 -2px;pointer-events:none;transition:left .6s cubic-bezier(.4,0,.2,1),top .6s cubic-bezier(.4,0,.2,1),transform .15s}
+.pointer::before{content:"";position:absolute;inset:0;background:var(--color-brand-ink);clip-path:polygon(0 0,0 100%,30% 72%,52% 100%,64% 94%,44% 66%,82% 66%);filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff)}
+.pointer[data-pressed]{transform:scale(.82)}
+.pointer[data-pressed]::after{content:"";position:absolute;left:-12px;top:-12px;width:24px;height:24px;border-radius:50%;background:color-mix(in srgb,var(--color-brand-accent) 45%,transparent)}
+@media (pointer:coarse){.pointer::before{clip-path:none;border-radius:50%;background:color-mix(in srgb,var(--color-brand-ink) 35%,transparent);box-shadow:0 0 0 6px color-mix(in srgb,var(--color-brand-ink) 12%,transparent);filter:none}}
+@media (prefers-reduced-motion:reduce){.pointer{transition:none}}
+
+/* What is being shown, pinned at the top of the workbench while it plays. */
+.caption{position:sticky;top:calc(var(--bar-top,0px) + var(--toolbar-h,72px) + 8px);z-index:41;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;width:fit-content;max-width:calc(100% - 32px);margin:8px auto -52px;padding:6px 6px 6px 14px;border-radius:999px;background:var(--color-brand-ink);color:#fff;font-size:14px;font-weight:600;box-shadow:0 8px 24px color-mix(in srgb,var(--color-brand-ink) 25%,transparent)}
+.count{padding:2px 8px;border-radius:999px;background:color-mix(in srgb,#fff 18%,transparent);font-size:12px}
+.skip{min-height:44px;padding:0 16px;border:0;border-radius:999px;background:color-mix(in srgb,#fff 16%,transparent);color:#fff;font-size:14px;font-weight:600}
+.skip:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@media print{.pointer,.caption{display:none}}

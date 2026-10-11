@@ -102,7 +102,7 @@ export function ScreenGuard({
       {/* Identity, across everything. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-10"
+        className="screen-guard-watermark pointer-events-none absolute inset-0 z-10"
         style={{ backgroundImage: watermarkUrl(mark) }}
       />
 

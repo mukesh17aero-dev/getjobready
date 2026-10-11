@@ -50,21 +50,21 @@ export function JourneyLine({
                   className="flex w-[5.6rem] shrink-0 cursor-pointer flex-col items-center gap-1.5 rounded-lg px-1 py-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal sm:w-auto sm:min-w-0 sm:flex-1"
                 >
                   <span
-                    className={`grid h-9 w-9 place-items-center rounded-full border text-[0.72rem] font-bold transition-colors ${
+                    className={`grid h-9 w-9 place-items-center rounded-full border text-[0.75rem] font-bold transition-colors ${
                       open
                         ? "border-brand-teal bg-brand-teal text-white"
-                        : "border-slate-300 bg-surface text-slate-400"
+                        : "border-slate-300 bg-surface text-slate-500"
                     } ${on ? "ring-4 ring-brand-teal/25" : ""}`}
                   >
                     {i + 1}
                   </span>
                   <span
-                    className={`text-center text-[0.68rem] leading-tight ${
+                    className={`text-center text-[0.75rem] leading-tight ${
                       on
                         ? "font-bold text-brand-ink"
                         : open
                           ? "font-medium text-slate-600"
-                          : "text-slate-400"
+                          : "text-slate-500"
                     }`}
                   >
                     {feature.title}

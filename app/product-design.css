@@ -1,0 +1,189 @@
+/* Architect identity with focused, semantic elevation across product screens. */
+:root{--page-max-width:1218px}
+body{
+ --color-brand-mist:#FFFFFF;
+ --page-background:linear-gradient(135deg,#FFFFFF 0%,#FFFFFF 40%,#F5F7FA 100%);
+ --color-surface:#FFFFFF;
+ --color-brand-ink:#1A3045;
+ --color-brand-muted:#617185;
+ --color-brand-border:#D7E0E8;
+ --color-brand-violet:#175FA0;
+ --color-brand-violet-deep:#175FA0;
+ --color-brand-violet-soft:#E6EFF8;
+ --color-brand-teal-deep:#165C47;
+ --color-brand-accent:#C77C55;
+ --color-brand-success:#D9F5E8;
+ --color-brand-attention:#FFE6D6;
+ --color-brand-panel:#1A3045;
+ --color-violet-50:#EDF3FA;
+ --color-violet-100:#E6EFF8;
+ --color-violet-700:#175FA0;
+ --color-violet-900:#124B7E;
+ --color-teal-50:#D9F5E8;
+ --color-teal-100:#C8ECDD;
+ --color-teal-700:#165C47;
+ --color-emerald-700:#165C47;
+ --color-slate-50:#F4F6F8;
+ --color-slate-100:#EAF0F5;
+ --color-slate-200:#D7E0E8;
+ --color-slate-300:#D7E0E8;
+ --color-slate-400:#7B8A9C;
+ --color-slate-500:#68798C;
+ --color-slate-600:#617185;
+ --color-slate-700:#4C6177;
+ --color-slate-800:#30485F;
+ --color-slate-900:#1A3045;
+ --page-accent-ink:var(--color-brand-violet-deep);
+ --ambience-violet:transparent;
+ --ambience-teal:transparent;
+ background:var(--page-background);color:var(--color-brand-ink);
+ --font-space-grotesk:var(--font-geist-sans),system-ui,sans-serif;
+ font-family:var(--font-geist-sans),system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:16px;line-height:1.5;
+}
+body>header{background:var(--color-surface);border-color:var(--color-brand-border)}
+body>header button[aria-label^="Account menu"]{width:44px;height:44px;background:var(--color-brand-success);color:var(--color-brand-violet-deep);border-color:var(--color-brand-border)}
+body>header svg stop{stop-color:var(--color-brand-violet-deep)}
+body :is(input,textarea,select){accent-color:#175FA0}
+body :is(button,a,input,textarea,select,summary):focus-visible{outline:3px solid var(--color-brand-ink);outline-offset:3px}
+body main{min-width:0}
+body main :is(h1,h2,h3,p){overflow-wrap:break-word}
+body main :is(input,textarea,select){max-width:100%}
+body main>header :is(h1,h2){text-wrap:balance}
+body main>header h1{font-size:clamp(28px,3.1vw,40px);line-height:1.2;letter-spacing:-.035em}
+body main>header>p{font-size:16px;line-height:1.6}
+body main>header>p:first-child:not(:last-child){font-size:14px}
+@media(min-width:1100px){body:has([data-product-sidebar]){padding-left:72px}}
+@media(max-width:639px){
+ body main>header h1{font-size:28px}
+ body :is(input:not([type=checkbox]):not([type=radio]),textarea,select){font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}body *,body *::before,body *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+@media print{body:has([data-product-sidebar]){padding-left:0}}
+/* A backdrop filter would make the header the containing block of the fixed rail. */
+body>header[data-product-header]{backdrop-filter:none}
+
+body:has([data-product-sidebar])>header{background:var(--surface-default);border-bottom:0}
+body:has([data-product-sidebar]) main>header h1{font-size:36px;font-weight:650;letter-spacing:-.035em;line-height:1.2}
+body:has([data-product-sidebar]) main>header>p{font-size:17px}
+@media(max-width:760px){body:has([data-product-sidebar]){padding-bottom:84px}body:has([data-product-sidebar]) main>header h1{font-size:28px}}
+@media(min-width:761px) and (max-width:1099px){body:has([data-product-sidebar]){padding-left:72px}}
+@media(max-width:760px){body:has([data-product-sidebar]){padding-left:0}}
+
+@media(min-width:761px){body:has([data-product-sidebar])>main{padding-left:48px;padding-right:56px}body:has([data-product-sidebar]) main>header>p:first-child:not(:last-child){font-size:12px}}
+
+/* Elevation is semantic: ordinary cards stay flat; one focal panel is raised. */
+body{
+ --surface-default:#FFFFFF;
+ --surface-sunken:#EAF0F5;
+ --surface-raised:#FFFFFF;
+ --surface-overlay:#FFFFFF;
+ --surface-hovered:#EDF2F7;
+ --shadow-raised:0 1px 2px #1A304524,0 0 1px #1A304540;
+ --shadow-overlay:0 8px 20px #1A304526,0 0 1px #1A304540;
+ --focal-surface:var(--surface-raised);
+ --focal-text:var(--color-brand-ink);
+ --focal-muted:var(--color-brand-muted);
+ --navigation-surface:#EAF0F5;
+ --navigation-muted:var(--color-brand-muted);
+ --navigation-active:var(--color-brand-violet-soft);
+ --radius-card:6px;
+}
+body [data-elevation=raised]{background:var(--surface-raised);box-shadow:var(--shadow-raised)}
+body [data-focal-panel]{background:var(--focal-surface);color:var(--focal-text);box-shadow:var(--shadow-raised);border:1px solid var(--color-brand-border);border-left:4px solid var(--color-brand-violet)}
+body [data-focal-panel] :is(h1,h2,h3){color:var(--focal-text)}
+body [data-focal-panel] p{color:var(--focal-muted)}
+body [role=dialog][aria-modal=true],body [role=menu]{background:var(--surface-overlay);box-shadow:var(--shadow-overlay)}
+body [role=dialog] :is(input,textarea,select){color:var(--color-brand-ink)}
+@media print{body [data-focal-panel]{background:white;color:black;box-shadow:none}body [data-focal-panel] :is(h1,h2,h3,p){color:black}}
+
+/* Explicit palette resolution also updates visited links correctly in Safari. */
+:root[data-theme=dark] body{
+ --color-brand-mist:#151B22;
+ --page-background:#151B22;
+ --color-surface:#1E2731;
+ --color-brand-ink:#EDF4FC;
+ --color-brand-muted:#ACBFD1;
+ --color-brand-border:#34475A;
+ --color-brand-violet-deep:#9DCAFA;
+ --color-brand-violet-soft:#293E54;
+ --color-brand-teal-deep:#92DAC3;
+ --color-brand-accent:#F1B895;
+ --color-brand-success:#283F3A;
+ --color-brand-attention:#4C3534;
+ --color-violet-50:#293E54;
+ --color-violet-100:#293E54;
+ --color-violet-700:#9DCAFA;
+ --color-violet-900:#D2E7FF;
+ --color-teal-50:#283F3A;
+ --color-teal-100:#304F44;
+ --color-teal-700:#92DAC3;
+ --color-emerald-700:#92DAC3;
+ --color-slate-50:#151B22;
+ --color-slate-100:#243342;
+ --color-slate-200:#34475A;
+ --color-slate-300:#587086;
+ --color-slate-400:#95A9BC;
+ --color-slate-500:#ACBFD1;
+ --color-slate-600:#ACBFD1;
+ --color-slate-700:#C5D8E8;
+ --color-slate-800:#D9E8F4;
+ --color-slate-900:#EDF4FC;
+ --surface-sunken:#111820;
+ --surface-raised:#27323E;
+ --surface-overlay:#303E4D;
+ --surface-hovered:#2E3C4B;
+ --shadow-raised:0 1px 2px #00000066,0 0 1px #00000099;
+ --shadow-overlay:0 8px 20px #00000080,0 0 1px #00000099;
+ --surface-default:#1E2731;
+ --navigation-surface:#1B2734;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) body{
+ --color-brand-mist:#151B22;
+ --page-background:#151B22;
+ --color-surface:#1E2731;
+ --color-brand-ink:#EDF4FC;
+ --color-brand-muted:#ACBFD1;
+ --color-brand-border:#34475A;
+ --color-brand-violet-deep:#9DCAFA;
+ --color-brand-violet-soft:#293E54;
+ --color-brand-teal-deep:#92DAC3;
+ --color-brand-accent:#F1B895;
+ --color-brand-success:#283F3A;
+ --color-brand-attention:#4C3534;
+ --color-violet-50:#293E54;
+ --color-violet-100:#293E54;
+ --color-violet-700:#9DCAFA;
+ --color-violet-900:#D2E7FF;
+ --color-teal-50:#283F3A;
+ --color-teal-100:#304F44;
+ --color-teal-700:#92DAC3;
+ --color-emerald-700:#92DAC3;
+ --color-slate-50:#151B22;
+ --color-slate-100:#243342;
+ --color-slate-200:#34475A;
+ --color-slate-300:#587086;
+ --color-slate-400:#95A9BC;
+ --color-slate-500:#ACBFD1;
+ --color-slate-600:#ACBFD1;
+ --color-slate-700:#C5D8E8;
+ --color-slate-800:#D9E8F4;
+ --color-slate-900:#EDF4FC;
+ --surface-sunken:#111820;
+ --surface-raised:#27323E;
+ --surface-overlay:#303E4D;
+ --surface-hovered:#2E3C4B;
+ --shadow-raised:0 1px 2px #00000066,0 0 1px #00000099;
+ --shadow-overlay:0 8px 20px #00000080,0 0 1px #00000099;
+ --surface-default:#1E2731;
+ --navigation-surface:#1B2734;
+}}
+
+/* Reserve space for the rail and expand alongside it, like the resume menu. */
+@media(min-width:761px){
+ body:has([data-product-sidebar]){transition:padding-left .2s ease}
+ body:has([data-product-sidebar][data-expanded=true]){padding-left:248px}
+}
+@media(prefers-reduced-motion:reduce){body:has([data-product-sidebar]){transition:none}}
+@media print{body:has([data-product-sidebar]){padding-left:0!important}}
+
+@media(min-width:761px){body>header[data-product-header]{padding:0;border:0;height:0;min-height:0}}

@@ -54,11 +54,11 @@ export function ToolHub({ path, eyebrow, title, accent, intro, role, roleHref, r
     setSelected(tools[next]!.id); tabs.current[next]?.focus();
   }
 
-  return <div className={styles.shell}>
+  return <div className={styles.shell} data-hub={path}>
     <div className={styles.canvas}>
       <main className={styles.main}>
         <RememberHub path={path} />
-        <Link className={styles.back} href="/">← Home</Link>
+        <Link className={styles.back} href={path === "/interview" ? "/practice" : "/"}>{path === "/interview" ? "← Back to Practice" : "← Home"}</Link>
         <header className={styles.header}><div>{eyebrow && <p className={styles.eyebrow}>{eyebrow}</p>}<h1>{title} <span>{accent}</span></h1><p>{intro}</p></div><div className={styles.role}><span className={styles.roleIcon}><Spark size={20} /></span><div><small>YOUR CHOSEN ROLE</small><strong>{role ?? "Still exploring"}</strong><Link href={roleHref}>{roleLabel} <ArrowRight size={13} /></Link></div></div></header>
 
         <div className={styles.tabs} data-layout="compact" role="tablist" aria-label="Tools">{tools.map((item, index) => <button key={item.id} ref={node => { tabs.current[index] = node; }} type="button" role="tab" id={`hub-tab-${item.id}`} aria-selected={selected === item.id} aria-controls="hub-panel" tabIndex={selected === item.id ? 0 : -1} onClick={() => { setSelected(item.id); setActivation(value => value + 1); }} onKeyDown={event => onTabKey(event, index)} className={styles.tab} data-kind={index === 0 ? "resume" : index === 1 ? "linkedin" : "fit"}>

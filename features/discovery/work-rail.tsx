@@ -95,12 +95,12 @@ export function WorkShelf({
         className="inline-flex min-h-11 cursor-pointer items-center gap-2.5 rounded-full border border-slate-300 bg-surface px-4 text-[0.84rem] font-semibold text-brand-ink transition-colors hover:border-brand-teal/60"
       >
         {at === "keep" ? keep.label : make.label}
-        <span className="rounded-full bg-brand-mist px-2 py-0.5 text-[0.72rem] font-bold text-slate-500">
+        <span className="rounded-full bg-brand-mist px-2 py-0.5 text-[0.75rem] font-bold text-slate-500">
           {keep.count} saved
         </span>
         <span
           aria-hidden
-          className={`text-slate-400 transition-transform ${open ? "rotate-180" : ""} motion-reduce:transition-none`}
+          className={`text-slate-500 transition-transform ${open ? "rotate-180" : ""} motion-reduce:transition-none`}
         >
           &#9662;
         </span>
@@ -177,7 +177,7 @@ function Label({ entry, count }: { entry: ShelfEntry; count?: number }) {
           {entry.label}
         </span>
         {typeof count === "number" && (
-          <span className="shrink-0 rounded-full bg-brand-mist px-2 py-0.5 text-[0.72rem] font-bold text-slate-500">
+          <span className="shrink-0 rounded-full bg-brand-mist px-2 py-0.5 text-[0.75rem] font-bold text-slate-500">
             {count}
           </span>
         )}

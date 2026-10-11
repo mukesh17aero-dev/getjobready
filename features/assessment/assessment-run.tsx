@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ClipboardEvent, type DragEvent, type FormEvent, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ClipboardEvent, type DragEvent, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { askPreviewAssistant, askSceneAssistant, beginAssessmentRun, finishAssessmentRun, getAssessmentPreview, saveAssessmentDraft, sendSceneAnswer, startAssessmentRun, transcribeSceneAnswer, type AssessmentAnswerDraft, type AssistTurn, type InteractionResponse, type Readout, type RunState, type StudentScene } from "@/lib/api";
+import { askSceneAssistant, beginAssessmentRun, finishAssessmentRun, getAssessmentPreview, saveAssessmentDraft, sendSceneAnswer, startAssessmentRun, transcribeSceneAnswer, type AssessmentAnswerDraft, type AssistTurn, type InteractionResponse, type Readout, type RunState, type StudentScene } from "@/lib/api";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { emptyInteraction, interactionComplete, interactionText } from "./assessment-presentation";
 import { AssessmentInteraction } from "./assessment-interaction";
@@ -17,14 +17,14 @@ import { AssessmentQuestion } from "./assessment-question";
 import { track, flushFootprints } from "@/lib/footprints";
 import { watchAnswer, type IntegrityWatch, type AnswerSignals } from "./integrity-signals";
 import { chimeMuted, playCompletionChime, setChimeMuted } from "./completion-chime";
-import { QuestionTimer } from "./question-timer";
 import {ScreenGuard} from "./screen-guard";
 import { protectAssessmentCopy,protectAssessmentInputs } from "./assessment-copy";
 import "./assessment-workspace.css";
+import "./assessment-focused.css";
 
 type Helper = "assistant" | "buddy";
 
-export function AssessmentRun({ roleId, roleTitle, backHref, signedOut = false }: { roleId: string; roleTitle: string; backHref: string; signedOut?: boolean }) {
+export function AssessmentRun({ roleId, roleTitle, backHref, signedOut = false, showIntroduction = false, introductionHeader }: { roleId: string; roleTitle: string; backHref: string; signedOut?: boolean; showIntroduction?: boolean; introductionHeader?: ReactNode }) {
   const router = useRouter();
   const [run, setRun] = useState<RunState | null>(null);
   const [scene, setScene] = useState<StudentScene | null>(null);
@@ -125,10 +125,10 @@ export function AssessmentRun({ roleId, roleTitle, backHref, signedOut = false }
       setRun(state); latestRun.current = state;
       if (state.finishedAt || !state.scene) { const done = await finishAssessmentRun(t, state.runId); if (done) setReadout(done); else setError("We couldn’t load your completed assessment. Refresh to retry."); return; }
       showScene(state.scene, state.draft);
-      if (state.begunAt) setBegun(true);
+      if (state.begunAt && !showIntroduction) setBegun(true);
     })();
     return () => { cancelled = true; };
-  }, [roleId, signedOut, token, showScene, router]);
+  }, [roleId, signedOut, showIntroduction, token, showScene, router]);
 
   const sceneId = scene?.id;
   useEffect(() => {
@@ -194,7 +194,7 @@ export function AssessmentRun({ roleId, roleTitle, backHref, signedOut = false }
 
   async function begin() {
     if (!run || sending) return;
-    if (!run.runId) { setBegun(true); return; }
+    if (!run.runId || run.begunAt) { setBegun(true); return; }
     setSending(true); setError(null);
     const t = await token();
     const result = t ? await beginAssessmentRun(t, run.runId) : null;
@@ -228,16 +228,13 @@ export function AssessmentRun({ roleId, roleTitle, backHref, signedOut = false }
   async function ask() {
     if (dock !== "assistant" || !run || !scene || run.answered >= 2 || !["assistant", "both"].includes(scene.support) || !asking.trim() || sending || thinking || closed.current) return;
     if (chats[dock].filter(turn => turn.who === "them").length >= 3) return;
-    // The preview lets a visitor try the assistant on this one situation;
-    // nothing is kept, and the server holds it to the same three questions.
-    const t = run.runId ? await token() : null;
-    if (run.runId && !t) { setError("Sign in again to ask for support."); return; }
+    if (!run.runId) { setGate({ what: "AI assistance", why: "Sign in to ask the assistant about your assessment. Your answer stays here while you decide." }); return; }
+    const t = await token();
+    if (!t) { setGate({ what: "AI assistance", why: "Sign in again to ask for help with your assessment." }); return; }
     const askedScene = scene.id;
     const who = dock, question = asking.trim(), history = chats[who]; setThinking(true); setAsking("");
     setReached(old => ({ ...old, [who]: old[who] ?? Math.round((Date.now() - sceneStart.current) / 1000) }));
-    const result = run.runId && t
-      ? await askSceneAssistant(t, run.runId, { sceneId: scene.id, question, conversation: history, who })
-      : await askPreviewAssistant(run.roleId, { sceneId: scene.id, question, conversation: history });
+    const result = await askSceneAssistant(t, run.runId, { sceneId: scene.id, question, conversation: history, who });
     if (!alive.current || currentScene.current !== askedScene || closed.current) { setThinking(false); return; }
     setDirty(true);
     setChats(old => ({ ...old, [who]: [...history, { who: "them", text: question }, { who: "assistant", text: result.ok ? result.reply : result.reason }] })); setThinking(false);
@@ -301,25 +298,33 @@ export function AssessmentRun({ roleId, roleTitle, backHref, signedOut = false }
   const offered: Helper[] = run.answered < 2 && ["assistant", "both"].includes(scene.support) ? ["assistant"] : [];
   const textChange = (text: string) => { setDirty(true); setResponse(text); setVia(scene.answer === "artefact" ? "artefact" : "typed"); };
 
-  return <ScreenGuard identity={`Ascend assessment · ${run.runId.slice(0,8)||'preview'}`}><section className="assessment-workspace">
-    {begun && focusNotice && <AssessmentFocusPrompt message={focusNotice} onAcknowledge={() => {
+  // The intro is a welcome screen, not sat content: the capture-deterrent
+  // watermark belongs on the questions themselves, so it does not appear until
+  // the sitting has begun.
+  if (!begun) return <section className="assessment-workspace assessment-focused">
+    {gate && <SignUpPrompt action={gate} onClose={() => setGate(null)} />}
+    {introductionHeader}<AssessmentIntroduction roleId={roleId} roleTitle={roleTitle} company={run.company} buddy={run.buddy} fullAssessment={Boolean(run.runId)} questions={questionLimit} resume={Boolean(run.begunAt)} busy={sending} error={errorPanel} onStart={() => void begin()} />
+  </section>;
+
+  return <ScreenGuard identity={`Ascend assessment · ${run.runId.slice(0,8)||'preview'}`}><section className="assessment-workspace assessment-focused">
+    {focusNotice && <AssessmentFocusPrompt message={focusNotice} onAcknowledge={() => {
       if (run.runId) { track({ family: "scenario", event: "assessment_focus_acknowledged", module: "assessment", target: scene.id, meta: { runId: run.runId, sceneId: scene.id, at: new Date().toISOString() } }); void flushFootprints(); }
       setFocusNotice(null);
     }} />}
     {gate && <SignUpPrompt action={gate} onClose={() => setGate(null)} />}
-    {!begun ? <AssessmentIntroduction roleId={roleId} roleTitle={roleTitle} company={run.company} buddy={run.buddy} fullAssessment={Boolean(run.runId)} busy={sending} error={errorPanel} onStart={() => void begin()} /> : <>
-      <header className="assessment-top"><div><p className="assessment-eyebrow">{run.company} · SIMULATED WORKPLACE</p><h1>{roleTitle}</h1></div><div className="assessment-time"><span>{run.runId ? `Question ${Math.min(run.answered + 1, questionLimit)} of ${questionLimit}` : "First question"}</span>{run.runId ? <QuestionTimer key={scene.id} /> : <small>Free preview</small>}</div></header>
+      <header className="assessment-top"><div><p className="assessment-eyebrow">Role readiness / {roleTitle}</p><h1>{scene.title}</h1><p className="assessment-company">{run.company} · Simulated workplace</p></div><div className="assessment-time"><div className="assessment-progress-label"><strong>{run.runId ? `Question ${Math.min(run.answered + 1, questionLimit)} of ${questionLimit}` : "First question · Preview"}</strong><details className="assessment-settings"><summary>Settings</summary><div><button type="button" className="assessment-chime-toggle" aria-pressed={!chimeOn} onClick={() => { const next = !chimeOn; setChimeOn(next); setChimeMuted(!next); }}>{chimeOn ? "Sound: on" : "Sound: off"}</button><p>No time limit. {run.runId ? "Your responses autosave." : "Sign in to keep your response."}</p><p>Stay in this tab. Copy and paste are disabled; tab/window switches and blocked actions are recorded.</p></div></details></div><div className="assessment-progress" role="progressbar" aria-label="Questions completed" aria-valuemin={0} aria-valuemax={questionLimit} aria-valuenow={run.answered}><span style={{ width: `${Math.min(100, run.answered / questionLimit * 100)}%` }} /></div></div></header>
       {errorPanel}
       {integrityWarning && <div className="assessment-notice" role="alert"><p>{integrityWarning}</p><button type="button" onClick={() => setIntegrityWarning(null)}>I understand</button></div>}
-      <div className="assessment-layout"><aside className="assessment-context"><h2>{run.answered === 0 ? "Your shift starts here." : `${run.answered} ${run.answered === 1 ? "moment" : "moments"} completed.`}</h2><div className="assessment-progress" role="progressbar" aria-label="Questions completed" aria-valuemin={0} aria-valuemax={questionLimit} aria-valuenow={run.answered}><span style={{ width: `${Math.min(100, run.answered / questionLimit * 100)}%` }} /></div><button type="button" className="assessment-chime-toggle" aria-pressed={!chimeOn} onClick={() => { const next = !chimeOn; setChimeOn(next); setChimeMuted(!next); }}>{chimeOn ? "Sound: on" : "Sound: off"}</button><details><summary>How this works</summary><p>Respond as you would at work. Complete all {questionLimit} questions at your own pace. That pacing ring is just a rhythm cue — there&rsquo;s no time limit, nothing is scored by speed, and nothing happens when it loops. Your responses autosave, so you can resume unfinished work.</p></details>{offered.length > 0 && <details open className="assessment-ai-offer"><summary>✦ AI assistance available · question {run.answered + 1} of 2</summary><p>The AI assistant can help you think through this question. You decide what to use and write the answer yourself. Up to three requests; your conversation stays with your response.</p><div className="assessment-support"><button disabled={disabled} aria-expanded={dock === "assistant"} onClick={() => setDock(dock === "assistant" ? null : "assistant")}>Ask AI assistant ↗</button></div></details>}</aside>
-      <div ref={assessmentTask} className="assessment-task" onContextMenuCapture={event => { if (!isAnswerField(event.target)) event.preventDefault(); }} onPasteCapture={event => blockClipboard(event, "paste")} onDropCapture={blockDrop} onBeforeInputCapture={blockInsertion} onKeyDownCapture={recordKey}><div key={scene.id} className="assessment-task-card"><p className="assessment-eyebrow">Question {run.answered + 1} · {offered.length ? "AI assistance available" : "Your independent response"}</p><h2>{scene.title}</h2>{scene.image && <div className="assessment-image"><Image src={scene.image} alt="Workplace situation" fill sizes="(max-width: 700px) 100vw, 600px" className="object-contain" /></div>}<AssessmentQuestion brief={scene.brief} kind={scene.interaction?.kind ?? scene.answer} clues responseText={[scene.title, ...scene.fields, scene.interaction ? JSON.stringify(scene.interaction) : ""].join(" ")} />
-      {scene.interaction ? <AssessmentInteraction interaction={scene.interaction} value={interaction} onChange={next => { setDirty(true); setInteraction(next); }} disabled={disabled} /> : <fieldset className="assessment-response" disabled={disabled}><legend>{scene.answer === "spoken" ? "Leave your spoken update" : "Your response"}</legend>{scene.answer === "spoken" && <div className="assessment-recorder"><p>Speak as you would to the person in this situation.</p><button type="button" disabled={transcribing} onClick={() => void record()} className="assessment-record">{recording ? <><span className="assessment-record-dot" aria-hidden="true" /> Stop recording</> : transcribing ? "Transcribing your update…" : <><Mic size={16} aria-hidden="true" /> Record my update</>}</button><small>Press Record to enable your microphone. Stop to transcribe.</small>{audioUrl && <audio src={audioUrl} controls />}<button type="button" disabled={recording || transcribing} className="assessment-text-link" onClick={() => { setWrittenAlternative(true); setVia("typed"); }}>Use a written response</button></div>}
+      <div ref={assessmentTask} className="assessment-task" onContextMenuCapture={event => { if (!isAnswerField(event.target)) event.preventDefault(); }} onPasteCapture={event => blockClipboard(event, "paste")} onDropCapture={blockDrop} onBeforeInputCapture={blockInsertion} onKeyDownCapture={recordKey}>
+      <div key={scene.id} className="assessment-layout">
+        <section className="assessment-context"><h2 className="assessment-step-heading"><span>1</span>Read the situation</h2>{scene.image && <div className="assessment-image"><Image src={scene.image} alt="Workplace situation" fill sizes="(max-width: 800px) 100vw, 550px" className="object-contain" /></div>}<AssessmentQuestion brief={scene.brief} part="context" responseText={[scene.title, ...scene.fields, scene.interaction ? JSON.stringify(scene.interaction) : ""].join(" ")} /></section>
+        <section className="assessment-answer-panel"><h2 className="assessment-step-heading"><span>2</span>Your response</h2><AssessmentQuestion brief={scene.brief} kind={scene.interaction?.kind ?? scene.answer} part="prompt" />
+      {scene.interaction ? <AssessmentInteraction interaction={scene.interaction} value={interaction} onChange={next => { setDirty(true); setInteraction(next); }} disabled={disabled} /> : <fieldset className="assessment-response" disabled={disabled}><legend className={scene.answer === "spoken" ? undefined : "sr-only"}>{scene.answer === "spoken" ? "Leave your spoken update" : "Your response"}</legend>{scene.answer === "spoken" && <div className="assessment-recorder"><p>Speak as you would to the person in this situation.</p><button type="button" disabled={transcribing} onClick={() => void record()} className="assessment-record">{recording ? <><span className="assessment-record-dot" aria-hidden="true" /> Stop recording</> : transcribing ? "Transcribing your update…" : <><Mic size={16} aria-hidden="true" /> Record my update</>}</button><small>Press Record to enable your microphone. Stop to transcribe.</small>{audioUrl && <audio src={audioUrl} controls />}<button type="button" disabled={recording || transcribing} className="assessment-text-link" onClick={() => { setWrittenAlternative(true); setVia("typed"); }}>Use a written response</button></div>}
       {(scene.answer !== "spoken" || writtenAlternative || response) && <><label htmlFor="assessment-answer">{scene.answer === "spoken" && !writtenAlternative ? "Transcript of your recording" : "What would you do or say?"}</label><textarea id="assessment-answer" value={response} rows={4} maxLength={12000} readOnly={via === "spoken" && !writtenAlternative} onChange={e => textChange(e.target.value)} placeholder="A short, clear response is enough…" />{scene.answer === "spoken" && <small>{via === "spoken" ? "Spoken response" : "Written response · not assessed as speaking"}</small>}</>}
-      {scene.fields.length > 0 && <details><summary>What to include</summary><ul>{scene.fields.map(field => <li key={field}>{field}</li>)}</ul></details>}</fieldset>}
-      </div>
+      {scene.fields.length > 0 && <details open><summary>What to include</summary><ul>{scene.fields.map(field => <li key={field}>{field}</li>)}</ul></details>}</fieldset>}
+      {offered.length > 0 && <details className="assessment-ai-offer"><summary>Need help thinking it through? <span>Ask AI</span></summary><p>The AI assistant can help you think through this question. You decide what to use and write the answer yourself.</p><p>Available on questions 1 and 2 · Up to three requests per question. Your conversation stays with your response.</p><div className="assessment-support"><button disabled={disabled} aria-expanded={dock === "assistant"} onClick={() => setDock(dock === "assistant" ? null : "assistant")}>Open AI assistant ↗</button></div></details>}
       <div className="assessment-submit"><button className="assessment-primary" disabled={disabled || !complete || recording || transcribing || thinking} onClick={() => void submit()}>{sending ? "Saving…" : run.runId && run.answered + 1 >= questionLimit ? "Submit & see my report →" : "Save & continue →"}</button><span role="status">{run.runId ? saveState : "Sign in to keep your response."}</span></div>
-      </div></div>
+      </section></div></div>
       {dock && offered.includes(dock) && <section className="assessment-chat" aria-label="Workplace support"><header><h2>{dock === "buddy" ? run.buddy : "AI assistant"}</h2><button aria-label="Close support" onClick={() => setDock(null)}>×</button></header><ol aria-live="polite">{chats[dock].map((turn, i) => <li key={i}><strong>{turn.who === "them" ? "You" : dock === "buddy" ? run.buddy : "Assistant"}</strong><RichText text={turn.text} /></li>)}</ol><p>{Math.max(0, 3 - chats[dock].filter(turn => turn.who === "them").length)} questions remaining for this task.</p><form onSubmit={event => { event.preventDefault(); void ask(); }}><label htmlFor="assessment-help">Your question</label><input id="assessment-help" value={asking} maxLength={2000} disabled={disabled || thinking} onChange={e => setAsking(e.target.value)} /><button disabled={disabled || thinking || !asking.trim() || chats[dock].filter(turn => turn.who === "them").length >= 3}>{thinking ? "Thinking…" : "Ask"}</button></form></section>}
-    </>}
   </section></ScreenGuard>;
 }

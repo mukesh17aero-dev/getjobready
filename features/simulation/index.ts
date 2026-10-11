@@ -5,3 +5,7 @@
 export * from "./simulation-api";
 
 export { WorkplaceOrientation } from "./workplace-orientation";
+
+export { SimulationLearning } from './journey-workspace';
+export { JourneyActivityPlayer, type ActivityDraft } from './journey-activity';
+export { PracticeLanding } from "./practice-landing";

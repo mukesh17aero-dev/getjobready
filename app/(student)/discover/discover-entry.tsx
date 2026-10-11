@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FeatureLandingBody } from "@/features/welcome";
 import { DISCOVER } from "@/features/welcome";
 import { DiscoveryFlow } from "./discovery-flow";
+import type { ExploreIntro } from "@/features/discovery";
 import type { DiscoveryState } from "@/lib/api";
 
 // Discovery has one address. What used to be a separate /discover/start page
@@ -18,11 +19,13 @@ import type { DiscoveryState } from "@/lib/api";
 
 export function DiscoverEntry({
   initial,
+  intro,
   signedOut,
   targetRole,
   initialRole,
 }: {
   initial: DiscoveryState | null;
+  intro: ExploreIntro;
   signedOut: boolean;
   targetRole: string | null;
   initialRole: string | null;
@@ -35,6 +38,7 @@ export function DiscoverEntry({
     return (
       <DiscoveryFlow
         initial={initial}
+        intro={intro}
         signedOut={signedOut}
         initialRole={initialRole}
         onLeave={() => {
@@ -48,7 +52,7 @@ export function DiscoverEntry({
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col px-4 pb-10 pt-4 sm:px-6">
+    <main className="mx-auto flex w-full max-w-(--page-max-width) flex-col px-4 pb-10 pt-4 sm:px-6">
       <FeatureLandingBody
         category={DISCOVER}
         targetRole={targetRole}

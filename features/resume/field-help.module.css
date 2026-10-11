@@ -1,0 +1,7 @@
+/* Small visual badge inside a full touch/keyboard target. Neutral grey at rest,
+   like the rest of the builder; the action teal only on hover and while open. */
+.trigger{display:inline-grid;place-items:center;flex-shrink:0;width:44px;height:44px;min-height:44px;margin:-12px 0 -12px -8px;padding:0;border:0;border-radius:12px;background:transparent;color:var(--color-slate-600);vertical-align:middle;cursor:pointer}
+.badge{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--color-slate-200);border-radius:9px;background:var(--color-slate-100);transition:background .15s,color .15s,box-shadow .15s}
+.trigger:hover .badge,.trigger[aria-expanded=true] .badge{background:var(--color-brand-violet);border-color:var(--color-brand-violet);color:white;box-shadow:0 2px 5px color-mix(in srgb,var(--color-brand-violet) 22%,transparent)}
+.trigger:focus-visible{outline:2px solid var(--color-brand-violet-deep);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.badge{transition:none}}

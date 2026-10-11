@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { ProductNavigation } from "./product-navigation";
+import shell from "./product-navigation.module.css";
 import { Suspense } from "react";
 import { AdminViewAs } from "@/features/admin";
 import { adminAccess } from "@/lib/api";
@@ -15,6 +17,7 @@ import { ThemeSwitch } from "@/components/ui/theme-switch";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { applyTheme } from "@/lib/theme";
 import type { AuthMode } from "@/components/auth/auth-form";
+import { useIsCollegeMember } from "./use-college-member";
 
 // The persistent destinations. Every route in the app belongs to exactly one
 // of them (`match`), so the bar always shows where you are — modules open
@@ -39,130 +42,24 @@ type Destination = {
   label: string;
   href: string;
   match: string[];
-  /** When present the label opens a menu rather than navigating. */
-  items?: Array<{ label: string; href: string }>;
 };
 
 const DESTINATIONS: Destination[] = [
-  { label: "Home", href: "/", match: ["/", "/start", "/journey"] },
-  { label: "Discover", href: "/discover", match: ["/discover"] },
+  { label: "Home", href: "/", match: ["/", "/start"] },
+  { label: "Explore", href: "/discover", match: ["/discover"] },
   {
     label: "Practice",
     href: "/practice",
     match: ["/practice", "/interview", "/roleplay"],
-    items: [
-      { label: "Role readiness", href: "/practice" },
-      { label: "Interview readiness", href: "/interview" },
-      { label: "AI Roleplay", href: "/roleplay" },
-    ],
   },
   // One word, because the bar is a bar.
   {
-    label: "Identity",
+    label: "Apply",
     href: "/resume",
     match: ["/resume", "/profile/professional", "/job-fit"],
   },
-  { label: "Opportunities", href: "/opportunities", match: ["/opportunities"] },
+  { label: "Jobs", href: "/opportunities", match: ["/opportunities"] },
 ];
-
-/**
- * A destination that holds more than one thing, opened as a menu.
- *
- * Positioned fixed rather than absolute: the nav strip scrolls sideways on a
- * phone, and a scroll container clips in both directions - an absolutely
- * placed menu inside it would be cut off at the first item. Measured from
- * the button and clamped to the viewport, it sits over everything instead.
- */
-function NavMenu({
-  label,
-  items,
-  active,
-  className,
-}: {
-  label: string;
-  items: NonNullable<Destination["items"]>;
-  active: boolean;
-  className: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const [at, setAt] = useState<{ left: number; top: number } | null>(null);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const place = () => {
-      const rect = buttonRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      const width = 212;
-      setAt({
-        left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)),
-        top: rect.bottom + 8,
-      });
-    };
-    place();
-    function onPointerDown(e: MouseEvent) {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
-    }
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key !== "Escape") return;
-      setOpen(false);
-      buttonRef.current?.focus();
-    }
-    // A menu measured from a button that has since moved points at nothing,
-    // so it closes rather than drifting.
-    const close = () => setOpen(false);
-    document.addEventListener("mousedown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    window.addEventListener("resize", close);
-    window.addEventListener("scroll", close, true);
-    return () => {
-      document.removeEventListener("mousedown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("resize", close);
-      window.removeEventListener("scroll", close, true);
-    };
-  }, [open]);
-
-  return (
-    <div ref={wrapRef} className="contents">
-      <button
-        ref={buttonRef}
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-current={active ? "page" : undefined}
-        onClick={() => setOpen((v) => !v)}
-        className={`${className} gap-1.5`}
-      >
-        {label}
-        <span aria-hidden className="text-[0.6em] leading-none opacity-70">
-          {"\u25be"}
-        </span>
-      </button>
-      {open && at && (
-        <div
-          role="menu"
-          aria-label={label}
-          style={{ left: at.left, top: at.top, width: 212 }}
-          className="fixed z-30 overflow-hidden rounded-xl border border-slate-200 bg-surface shadow-lg"
-        >
-          {items.map((item) => (
-            <Link
-              key={item.href}
-              role="menuitem"
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className="flex min-h-11 items-center border-b border-slate-100 px-3.5 text-sm font-semibold text-brand-ink last:border-b-0 hover:bg-teal-50"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function isActive(pathname: string, match: string[]): boolean {
   return match.some((m) =>
@@ -345,11 +242,13 @@ function AuthControls({
   account,
   night,
   themeToggle = true,
+  sidebar = false,
 }: {
   account: Account | null | undefined;
   night: boolean;
   /** The welcome page keeps its header to the one door and nothing else. */
   themeToggle?: boolean;
+  sidebar?: boolean;
 }) {
   const [mode, setMode] = useState<AuthMode | null>(null);
   if (account === undefined) return <span className="h-8 w-8" aria-hidden />;
@@ -365,6 +264,8 @@ function AuthControls({
         <button
           type="button"
           onClick={() => setMode("login")}
+          data-auth-entry
+          aria-label="Log in or sign up"
           // 44px: it is the only way into the product for anyone signed out,
           // so it is the last control in the app that should be a small tap.
           className={`inline-flex min-h-11 items-center whitespace-nowrap rounded-xl px-4 text-sm font-bold transition-transform hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 ${
@@ -373,7 +274,8 @@ function AuthControls({
               : "bg-brand-violet text-white hover:translate-y-0 hover:bg-brand-violet-deep"
           }`}
         >
-          Log in or sign up
+          <svg data-auth-icon aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="hidden"><path d="M14 3h6v18h-6M3 12h12m-4-4 4 4-4 4" /></svg>
+          <span data-auth-label>Log in or sign up</span>
         </button>
         {mode && (
           <AuthModal
@@ -386,21 +288,22 @@ function AuthControls({
     );
   }
 
-  return <AccountMenu account={account} night={night} />;
+  return <AccountMenu account={account} night={night} sidebar={sidebar} />;
 }
 
 // Shared with the cinematic welcome header so account and theme controls
 // remain available on every entry point.
-export function WelcomeAccountControls() {
+export function WelcomeAccountControls({ night = true }: { night?: boolean }) {
   const account = useAccount();
-  return <AuthControls account={account} night themeToggle={false} />;
+  return <AuthControls account={account} night={night} themeToggle={false} />;
 }
 
 // Avatar opens an account menu (Blueprint header pattern) instead of showing
 // a bare "Sign out" link next to the photo.
-function AccountMenu({ account, night }: { account: Account; night: boolean }) {
+function AccountMenu({ account, night, sidebar = false }: { account: Account; night: boolean; sidebar?: boolean }) {
   const router = useRouter();
   const plan = usePlan(account);
+  const collegeMember = useIsCollegeMember(true);
   const [open, setOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -434,6 +337,7 @@ function AccountMenu({ account, night }: { account: Account; night: boolean }) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`Account menu for ${account.name}`}
+        data-account-trigger={sidebar || undefined}
         className={`grid h-9 w-9 place-items-center rounded-full border-2 text-sm font-bold transition-shadow focus-visible:outline-2 focus-visible:outline-offset-2 ${
           night
             ? `bg-white/10 text-white/85 backdrop-blur focus-visible:outline-white ${
@@ -448,12 +352,15 @@ function AccountMenu({ account, night }: { account: Account; night: boolean }) {
               }`
         }`}
       >
-        <Avatar
-          src={account.photo}
-          name={account.name}
-          className="h-full w-full rounded-full"
-          fallbackClassName="grid place-items-center"
-        />
+        <span className={sidebar ? shell.accountAvatar : "contents"}>
+          <Avatar
+            src={account.photo}
+            name={account.name}
+            className="h-full w-full rounded-full"
+            fallbackClassName="grid place-items-center"
+          />
+        </span>
+        {sidebar && <span className={shell.accountLabel}><strong>{account.name.split(" ")[0]}</strong><small>Your account</small></span>}
       </button>
 
       {open && (
@@ -494,6 +401,8 @@ function AccountMenu({ account, night }: { account: Account; night: boolean }) {
           >
             Your profile
           </Link>
+          <Link href="/discover?saved=1" role="menuitem" onClick={() => setOpen(false)} className="block min-h-11 border-b border-slate-100 px-3.5 py-2.5 text-sm text-slate-700">Saved roles</Link>
+          <Link href="/passport" role="menuitem" onClick={() => setOpen(false)} className="block min-h-11 border-b border-slate-100 px-3.5 py-2.5 text-sm text-slate-700">Skills Passport</Link>
           {/* The plan they chose in Resume Studio. A choice on their record,
               not a payment - there is no billing yet, so the menu says which
               plan and what it holds, never "paid" or "active". */}
@@ -503,7 +412,7 @@ function AccountMenu({ account, night }: { account: Account; night: boolean }) {
             onClick={() => setOpen(false)}
             className="block border-b border-slate-100 px-3.5 py-2.5 transition-colors hover:bg-slate-50"
           >
-            <span className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-slate-400">
+            <span className="block text-[0.75rem] font-semibold uppercase tracking-[0.12em] text-slate-500">
               Your plan
             </span>
             {plan ? (
@@ -537,10 +446,23 @@ function AccountMenu({ account, night }: { account: Account; night: boolean }) {
             className="block border-b border-slate-100 px-3.5 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
           >
             Admin console
-            <span className="ml-1.5 rounded-full bg-amber-50 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-amber-700">
+            <span className="ml-1.5 rounded-full bg-amber-50 px-1.5 py-0.5 text-[0.75rem] font-bold uppercase tracking-wide text-amber-700">
               admins
             </span>
           </Link>
+          {collegeMember && (
+            <Link
+              href="/college"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="block border-b border-slate-100 px-3.5 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
+            >
+              Cohort portal
+              <span className="ml-1.5 rounded-full bg-violet-50 px-1.5 py-0.5 text-[0.75rem] font-bold uppercase tracking-wide text-violet-700">
+                college
+              </span>
+            </Link>
+          )}
           <Link
             href="/settings"
             role="menuitem"
@@ -550,7 +472,7 @@ function AccountMenu({ account, night }: { account: Account; night: boolean }) {
             Settings
           </Link>
           <div className="border-b border-slate-100 px-3.5 py-2.5">
-            <p className="mb-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-slate-400">
+            <p className="mb-1.5 text-[0.75rem] font-semibold uppercase tracking-[0.12em] text-slate-500">
               Appearance
             </p>
             <ThemeSwitch />
@@ -615,31 +537,35 @@ export function AppHeader() {
   // The approved welcome has its own brand, cohort navigation and account link.
   if (pathname === "/welcome") return null;
 
+  const product = !frontDoor && !/^\/(admin|college|employer|login|signup|auth|reset-password)(\/|$)/.test(pathname);
+
   return (
     <header
+      data-product-header={product || undefined}
       className={`safe-top safe-x sticky top-0 z-40 border-b backdrop-blur ${
         night
           ? "border-white/10 bg-[#0a121a]/85"
           : "border-slate-200 bg-surface/90"
       }`}
     >
+      {product && <ProductNavigation pathname={pathname} account={<AuthControls account={account} night={false} sidebar />} />}
       {/* Narrow screens give the nav its own row rather than a 60px scrolling
           sliver squeezed between the wordmark and the button. From 640px up
           the three sit on one line as before. */}
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5 sm:flex-nowrap sm:py-3">
+      <div className={`${product ? shell.toolbar : ""} mx-auto flex max-w-(--page-max-width) flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5 sm:flex-nowrap sm:py-3`}>
         {/* The wordmark goes to the front door, not to the signed-in home.
             "/" is the person's own journey once they are in; the brand mark
             should still reach the page that says what this is. */}
         <Link
           href="/welcome"
-          className="flex shrink-0 items-center gap-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-violet"
+          className={`${product ? shell.toolbarLogo : ""} flex shrink-0 items-center gap-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-violet`}
         >
           <BrandLogo size={30} />
           {/* Tighter at 360px so the wordmark and the auth button share the
               first row and the nav gets the second - three stacked rows would
               cost a fifth of a phone screen before any content. */}
           <span
-            className={`text-base font-extrabold tracking-[0.06em] sm:text-lg sm:tracking-[0.12em] ${
+            className={`hidden min-[380px]:inline text-base font-extrabold tracking-[0.06em] sm:text-lg sm:tracking-[0.12em] ${
               night ? "text-white" : "text-brand-ink"
             }`}
           >
@@ -655,33 +581,22 @@ export function AppHeader() {
         <nav
           aria-label="Primary"
           hidden={frontDoor}
-          className="strip-scroll order-last -mx-1 flex w-full min-w-0 overflow-x-auto sm:order-none sm:-mx-2 sm:w-auto"
+          className={`${product ? shell.mobileNav : ""} strip-scroll order-last -mx-1 flex w-full min-w-0 overflow-x-auto sm:order-none sm:-mx-2 sm:w-auto`}
         >
           {/* Home is for everybody now. "/" used to render the pitch when
               signed out, so a Home link led back to the page you were already
               on; it is the router for everyone today, signed in or not. */}
-          {DESTINATIONS.map(({ label, href, match, items }) => {
+          {DESTINATIONS.map(({ label, href, match }) => {
             const active = isActive(pathname, match);
-            const look = `inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-2.5 text-sm transition-colors sm:min-h-0 sm:py-1.5 sm:px-3 ${
+            const look = `inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-2 text-[13px] transition-colors sm:text-sm sm:min-h-0 sm:py-1.5 sm:px-3 ${
               active
                 ? night
                   ? "font-semibold text-white"
                   : "font-semibold text-brand-violet-deep"
                 : night
-                  ? "text-white/55 hover:text-white/90"
+                  ? "text-white/70 hover:text-white/90"
                   : "text-slate-600 hover:text-slate-900"
             }`;
-            if (items) {
-              return (
-                <NavMenu
-                  key={href}
-                  label={label}
-                  items={items}
-                  active={active}
-                  className={look}
-                />
-              );
-            }
             return (
               <Link
                 key={href}
@@ -694,12 +609,12 @@ export function AppHeader() {
             );
           })}
         </nav>
-        {isAdmin && (
+        {isAdmin && !product && (
           <Suspense fallback={null}>
             <AdminViewAs />
           </Suspense>
         )}
-        <AuthControls account={account} night={night} />
+        <div className={product ? shell.topAccount : undefined}><AuthControls account={account} night={night} /></div>
       </div>
     </header>
   );

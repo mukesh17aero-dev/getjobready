@@ -3,10 +3,10 @@
 const $=id=>document.getElementById(id);
 let stop=0,paused=matchMedia('(prefers-reduced-motion: reduce)').matches,renderOnce=()=>{},snap=false;
 let data={};try{data=JSON.parse(new URLSearchParams(location.hash.slice(1)).get('content')||'{}');}catch{}
-function motionLabel(){}
+function motionLabel(){} function unavailable(){$('fallback').hidden=false;$('motion').hidden=true;try{parent.postMessage({type:'ascend-tour-unavailable'},location.origin);}catch{}}
 window.addEventListener('message',event=>{if(event.origin!==location.origin||event.source!==parent)return;const value=event.data;if(value?.type==='ascend-tour-stop'&&Number.isInteger(value.stop)&&value.stop>=0&&value.stop<3){stop=value.stop;snap=paused;renderOnce();}if(value?.type==='ascend-tour-motion'){paused=Boolean(value.paused);snap=paused;renderOnce();}});
 const canvas=$('world'),gl=canvas.getContext('webgl2',{antialias:true,alpha:false,powerPreference:'low-power'});
-if(!gl){$('fallback').hidden=false;$('motion').hidden=true;return;}
+if(!gl){unavailable();return;}
 try {
     const norm = a => {const d=Math.hypot(...a)||1;return a.map(v=>v/d);};
     const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
@@ -102,7 +102,7 @@ try {
     renderOnce=()=>{if(!frame){last=performance.now();frame=requestAnimationFrame(draw);}};
     new ResizeObserver(renderOnce).observe(canvas);document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(frame);frame=0;}else renderOnce();});
     matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',e=>{paused=e.matches;snap=paused;motionLabel();renderOnce();});
-    canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(frame);$('fallback').hidden=false;});
+    canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(frame);unavailable();});
     snap=paused;renderOnce();
-  }catch(error){console.error('ASCEND role tour:',error);$('fallback').hidden=false;$('motion').hidden=true;}
+  }catch(error){console.error('ASCEND role tour:',error);unavailable();}
 })();

@@ -4,6 +4,7 @@ import type { Audience } from "@/features/welcome";
 import { FeatureGrid } from "@/features/welcome";
 import { COLLEGE, EMPLOYER } from "@/features/welcome";
 import { StartRouter } from "@/app/(student)/start/start-router";
+import { CollegeInvitations } from "@/features/institution";
 
 // Home is the router, signed in or not.
 //
@@ -68,7 +69,7 @@ export default async function Home({
     // wearing a costume.
     if (isAdmin && viewing !== "student") {
       return (
-        <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-6 sm:px-6">
+        <main className="mx-auto w-full max-w-(--page-max-width) px-4 pb-16 pt-6 sm:px-6">
           <FeatureGrid category={viewing === "college" ? COLLEGE : EMPLOYER} />
         </main>
       );
@@ -77,10 +78,11 @@ export default async function Home({
     return (
       // No opaque ground of its own: the router sits on the app-wide
       // ambience, the same weather as the front door.
-      <main>
+      <>
         {notice && (
           <div className="mx-auto max-w-3xl px-4 pt-6 sm:px-6">{notice}</div>
         )}
+        {session && <CollegeInvitations />}
         <StartRouter
           initialState={state}
           profile={record?.profile ?? null}
@@ -88,7 +90,7 @@ export default async function Home({
             (session?.user.user_metadata?.full_name as string | undefined) ?? ""
           }
         />
-      </main>
+      </>
     );
   }
 
@@ -96,11 +98,11 @@ export default async function Home({
   // retry state for that, so hand it through rather than falling back to a
   // pitch the person did not ask for.
   return (
-    <main>
+    <>
       {notice && (
         <div className="mx-auto max-w-3xl px-4 pt-6 sm:px-6">{notice}</div>
       )}
       <StartRouter initialState={null} />
-    </main>
+    </>
   );
 }

@@ -35,7 +35,7 @@ export function ReadOutProgress() {
               </span>
               <span
                 className={`text-[0.85rem] leading-relaxed ${
-                  now ? "font-semibold text-brand-ink" : "text-slate-400"
+                  now ? "font-semibold text-brand-ink" : "text-slate-500"
                 }`}
               >
                 {label}

@@ -6,6 +6,8 @@ import {
   expandStory,
   patchStory,
   saveStory,
+  bestStrength,
+  isPracticeStory,
   storyStrength,
   type PracticeQuestion,
   type StarPart,
@@ -47,6 +49,11 @@ const TONE: Record<StoryStrength, { chip: string; word: string }> = {
     chip: "bg-amber-50 text-amber-900 ring-amber-600/25",
     word: "Yours, unproven",
   },
+  // Not teal: teal means earned, and the situation in it was not real work.
+  practice: {
+    chip: "bg-sky-50 text-sky-900 ring-sky-600/25",
+    word: "Practice case",
+  },
   draft: {
     chip: "bg-slate-100 text-slate-600 ring-slate-400/25",
     word: "Not said yet",
@@ -63,7 +70,7 @@ const PARTS: Array<[StarPart, string]> = [
 function Chip({ s }: { s: StoryStrength }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-wide ring-1 ring-inset ${TONE[s].chip}`}
+      className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[0.75rem] font-bold uppercase tracking-wide ring-1 ring-inset ${TONE[s].chip}`}
     >
       {TONE[s].word}
     </span>
@@ -333,8 +340,23 @@ export function StoryBank({
             </button>
           </div>
         ) : (
-          <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-            {bank.stories.map((story) => {
+          <div className="mt-5 grid gap-6">
+          {[
+            { id: "real", title: "From your own experience", note: null, stories: bank.stories.filter((x) => !isPracticeStory(x)) },
+            {
+              id: "practice",
+              title: "From Ascend practice cases",
+              note: "The work in these was yours; the situation was one we wrote. Say so when you tell one: \u201cIn a practice case on Ascend, I\u2026\u201d",
+              stories: bank.stories.filter(isPracticeStory),
+            },
+          ]
+            .filter((shelf) => shelf.stories.length > 0)
+            .map((shelf) => (
+          <section key={shelf.id} aria-labelledby={`shelf-${shelf.id}`}>
+            <h2 id={`shelf-${shelf.id}`} className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">{shelf.title}</h2>
+            {shelf.note && <p className="mt-1 max-w-2xl text-[0.8rem] leading-relaxed text-slate-600">{shelf.note}</p>}
+          <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+            {shelf.stories.map((story) => {
               const open = story.id === openId;
               const s = storyStrength(story);
               const hasBlank = PARTS.some(
@@ -349,7 +371,7 @@ export function StoryBank({
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-[0.65rem] font-bold uppercase tracking-wide text-brand-violet-deep">
+                      <p className="text-[0.75rem] font-bold uppercase tracking-wide text-brand-violet-deep">
                         {story.competency}
                       </p>
                       <h2 className="mt-0.5 font-display text-[1rem] font-bold leading-snug text-brand-ink">
@@ -374,7 +396,7 @@ export function StoryBank({
                             key={key}
                             className="rounded-lg bg-brand-mist p-2.5"
                           >
-                            <p className="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-slate-400">
+                            <p className="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-slate-500">
                               {label}
                             </p>
                             {text ? (
@@ -402,7 +424,7 @@ export function StoryBank({
 
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <Chip s={s} />
-                    <span className="text-[0.72rem] text-slate-500">
+                    <span className="text-[0.75rem] text-slate-500">
                       {story.evidence.label}
                     </span>
                     <div className="ml-auto flex items-center gap-2">
@@ -432,6 +454,9 @@ export function StoryBank({
               );
             })}
           </ul>
+          </section>
+            ))}
+          </div>
         ))}
 
       {/* ----------------------------------------------- what they ask */}
@@ -441,14 +466,14 @@ export function StoryBank({
             const mine = q.storyIds
               .map((id) => bank.stories.find((s) => s.id === id))
               .filter((s): s is Story => Boolean(s));
-            const best = mine.length > 0 ? storyStrength(mine[0]!) : null;
+            const best = bestStrength(mine);
             return (
               <li
                 key={q.id}
                 className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-surface px-4 py-3"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-[0.65rem] font-bold uppercase tracking-wide text-slate-400">
+                  <p className="text-[0.75rem] font-bold uppercase tracking-wide text-slate-500">
                     {q.round === "hr" ? "HR round" : "Managerial round"} ·{" "}
                     {q.competency}
                   </p>
@@ -464,7 +489,7 @@ export function StoryBank({
                 {best ? (
                   <Chip s={best} />
                 ) : (
-                  <span className="inline-flex shrink-0 items-center rounded-full bg-slate-100 px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-wide text-slate-600 ring-1 ring-inset ring-slate-400/25">
+                  <span className="inline-flex shrink-0 items-center rounded-full bg-slate-100 px-2 py-0.5 text-[0.75rem] font-bold uppercase tracking-wide text-slate-600 ring-1 ring-inset ring-slate-400/25">
                     Nothing yet
                   </span>
                 )}
@@ -495,7 +520,7 @@ export function StoryBank({
           className="fixed inset-0 z-50 grid place-items-end bg-slate-900/40 p-0 sm:place-items-center sm:p-4"
         >
           <div className="max-h-[92svh] w-full max-w-2xl overflow-y-auto rounded-t-2xl bg-surface p-5 shadow-xl sm:rounded-2xl">
-            <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+            <p className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">
               Building a story for
             </p>
             <p className="mt-0.5 font-display text-[1.1rem] font-bold leading-snug text-brand-ink">
@@ -534,7 +559,7 @@ export function StoryBank({
                         key={key}
                         className="border-l-2 border-brand-violet/35 pl-3"
                       >
-                        <dt className="text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+                        <dt className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">
                           {label}
                         </dt>
                         <dd
@@ -598,7 +623,7 @@ export function StoryBank({
           className="fixed inset-0 z-50 grid place-items-end bg-slate-900/40 p-0 sm:place-items-center sm:p-4"
         >
           <div className="max-h-[92svh] w-full max-w-2xl overflow-y-auto rounded-t-2xl bg-surface p-5 shadow-xl sm:rounded-2xl">
-            <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+            <p className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">
               Filling in
             </p>
             <p className="mt-0.5 font-display text-[1.1rem] font-bold leading-snug text-brand-ink">
@@ -634,7 +659,7 @@ export function StoryBank({
                             : "border-l-2 border-brand-violet/35 pl-3"
                         }
                       >
-                        <dt className="text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+                        <dt className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">
                           {label}
                         </dt>
                         <dd

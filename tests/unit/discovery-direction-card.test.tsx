@@ -42,14 +42,14 @@ function render(extra: Partial<Parameters<typeof RoleList>[0]> = {}) {
 describe("the direction card's controls", () => {
   it("asks why only once, on the left, never beside the buttons", () => {
     const html = render({ ...recommended(), onUnchoose: () => {} });
-    expect(html).toContain("Why this role suits you");
+    expect(html).toContain("Your alignment with this role");
     expect(html).not.toContain("Why this role fits you");
-    expect(html.split("Why this role suits you")).toHaveLength(2);
+    expect(html.split("Your alignment with this role")).toHaveLength(2);
   });
 
   it("keeps the readiness check, the role page and the undo in that order", () => {
     const html = render({ onUnchoose: () => {} });
-    const readiness = html.indexOf("Check your role readiness");
+    const readiness = html.indexOf("See practice options");
     const open = html.indexOf("Open the role");
     const unselect = html.indexOf("Unselect this direction");
     expect(readiness).toBeGreaterThan(-1);
@@ -73,9 +73,9 @@ describe("the direction card's controls", () => {
 
   it("explains itself by what they told us, folded away", () => {
     const html = render({ ...recommended(), industriesPicked: 3 });
-    expect(html).toContain("Why this role suits you");
-    expect(html).toContain("Based on what you have told us");
-    expect(html).toContain("3 industries you chose");
+    expect(html).toContain("Your alignment with this role");
+    expect(html).not.toContain("skills and aims on your profile");
+    expect(html).not.toContain("STRONG FIT");
     // Closed until asked for: the card leads with the role, not the audit.
     expect(html).toMatch(/<details[^>]*>(?![^]*\bopen\b)/);
   });
@@ -109,8 +109,8 @@ describe("the direction card's controls", () => {
     expect(html).not.toMatch(/\b\d+\s+times\b/i);
   });
 
-  it("carries the engine's own caveat when it had one", () => {
-    expect(render(recommended("Two roles scored within a point of each other."))).toContain(
+  it("does not expose score comparisons from ranking caveats", () => {
+    expect(render(recommended("Two roles scored within a point of each other."))).not.toContain(
       "Two roles scored within a point of each other.",
     );
   });
@@ -118,8 +118,34 @@ describe("the direction card's controls", () => {
   it("never puts a confidence word on a direction", () => {
     // A word like "high" beside a role reads as a measurement of the person.
     const chosen = render({ onUnchoose: () => {} });
-    expect(chosen).toContain("Nothing is recorded yet to rank this by");
+    expect(chosen).toContain("Your alignment with this role");
     expect(chosen).not.toContain("Confidence:");
     expect(render(recommended())).not.toContain("Confidence:");
   });
+});
+
+it("keeps the role count and clear button out of the search row, so typing never resizes the search box", async () => {
+  const { readFileSync } = await import("node:fs");
+  const src = readFileSync("features/discovery/discovery-browse.tsx", "utf8");
+  const bar = src.slice(src.indexOf("className={ws.filterbar}"), src.indexOf("className={ws.resultLine}"));
+  expect(bar).not.toContain("list.length");
+  expect(bar).not.toContain("Clear all filters");
+  expect(src).toMatch(/className=\{ws\.resultLine\}><small>\{list\.length\}/);
+});
+
+it("highlights the whole search box on focus, with no second ring on the field inside, and keeps it narrow", async () => {
+  const { readFileSync } = await import("node:fs");
+  const css = readFileSync("features/discovery/discovery-workspace.module.css", "utf8");
+  expect(css).toContain(".frame .search input:focus-visible{outline:none;box-shadow:none}");
+  expect(css).toMatch(/\.search:focus-within\{border-color:var\(--accent\);box-shadow:/);
+  expect(css).toContain(".frame .search{max-width:420px}");
+});
+
+it("uses dropdowns that open below their button, at a fixed width, with long lists scrolling", async () => {
+  const { readFileSync } = await import("node:fs");
+  const src = readFileSync("features/discovery/discovery-browse.tsx", "utf8");
+  expect(src).not.toContain("<select");
+  expect(src.match(/<Picker label="(Industry|Experience level)"/g)).toHaveLength(2);
+  expect(readFileSync("components/ui/picker.tsx", "utf8")).toContain("absolute left-0 top-full z-30 mt-1.5 max-h-72 w-full overflow-y-auto");
+  expect(readFileSync("features/discovery/discovery-workspace.module.css", "utf8")).toContain(".frame .filterField{flex:0 0 240px}");
 });

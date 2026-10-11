@@ -65,7 +65,7 @@ export default async function ReadinessRunPage({
   const unavailable = session ? listed === null : open === null;
   if (unavailable || !picked) {
     return (
-      <main className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6">
+      <main className="mx-auto w-full max-w-(--page-max-width) px-4 py-10 sm:px-6">
         <BackLink fallbackHref="/practice" fallbackLabel="Back to Practice" />
         <h1 className="mt-4 text-xl font-semibold text-slate-900">
           {unavailable ? "We couldn’t load your assessments" : "No assessments are available yet"}
@@ -83,26 +83,21 @@ export default async function ReadinessRunPage({
     );
   }
 
-  // The choice comes before the scenario. Being dropped into a first day at a
-  // company you did not pick, with the job named in a dropdown above it, put
-  // the decision after the thing it decides.
+  // The approved overview includes role selection and its own start action.
   if (!begin) {
     return (
-      <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+      <main className="mx-auto w-full max-w-(--page-max-width) px-4 py-6 sm:px-6 lg:py-8">
         <BackLink fallbackHref="/practice" fallbackLabel="Back to Practice" />
         <div className="mt-5">
-          <ReadinessStart key={picked.roleId} roles={roles} initialRoleId={picked.roleId} />
+          <ReadinessStart key={picked.roleId} roles={roles} initialRoleId={picked.roleId} signedOut={!session} />
         </div>
       </main>
     );
   }
 
-  // Wider than the rest of the app on purpose: the sitting is three columns -
-  // where you are, the work, and whoever you are talking to - and squeezing
-  // that into the two-column reading width is what pushed the answer box off
-  // the screen.
+  // Context and response share the same reading width as other product pages.
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
+    <main className="mx-auto w-full max-w-(--page-max-width) px-4 py-6 sm:px-6">
       {/* A way out that is not "End assessment". Ending scores what you have
           and closes the sitting; leaving keeps saved work for your return; a run is
           resumed rather than redrawn. */}

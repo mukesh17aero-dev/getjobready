@@ -67,7 +67,7 @@ export function InterviewSummary({
             <span className="text-sm font-semibold text-slate-500">/ 100</span>
           </p>
           <div className="mt-3 sm:mt-0">
-            <h2 className="text-[0.72rem] font-bold uppercase tracking-wide text-slate-600">
+            <h2 className="text-[0.75rem] font-bold uppercase tracking-wide text-slate-600">
               Your mark for this rehearsal
             </h2>
             <p className="mt-1 text-sm leading-relaxed text-slate-700">
@@ -89,7 +89,7 @@ export function InterviewSummary({
 
       {summary.progressNote ? (
         <div className="rounded-2xl border border-brand-teal/40 bg-teal-50 p-4">
-          <p className="text-[0.7rem] font-bold uppercase tracking-wide text-teal-700">
+          <p className="text-[0.75rem] font-bold uppercase tracking-wide text-teal-700">
             Progress you have earned
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-slate-700">
@@ -101,7 +101,7 @@ export function InterviewSummary({
       {/* The verdict, as a trio. */}
       <div className="grid gap-3 sm:grid-cols-3">
         <section className="rounded-2xl border border-slate-200 bg-surface p-4">
-          <h2 className="text-[0.72rem] font-bold uppercase tracking-wide text-teal-700">
+          <h2 className="text-[0.75rem] font-bold uppercase tracking-wide text-teal-700">
             What went well
           </h2>
           <ul className="mt-2.5 space-y-2">
@@ -116,13 +116,13 @@ export function InterviewSummary({
           </ul>
         </section>
         <section className="rounded-2xl border border-slate-200 bg-surface p-4">
-          <h2 className="text-[0.72rem] font-bold uppercase tracking-wide text-slate-500">
+          <h2 className="text-[0.75rem] font-bold uppercase tracking-wide text-slate-500">
             What to improve
           </h2>
           <ul className="mt-2.5 space-y-2">
             {summary.toImprove.map((point) => (
               <li key={point} className="flex gap-2 text-sm leading-relaxed text-slate-700">
-                <span aria-hidden className="mt-0.5 text-slate-400">
+                <span aria-hidden className="mt-0.5 text-slate-500">
                   →
                 </span>
                 {point}
@@ -131,7 +131,7 @@ export function InterviewSummary({
           </ul>
         </section>
         <section className="rounded-2xl border border-brand-violet/40 bg-violet-50 p-4">
-          <h2 className="text-[0.72rem] font-bold uppercase tracking-wide text-violet-700">
+          <h2 className="text-[0.75rem] font-bold uppercase tracking-wide text-violet-700">
             Focus on this next
           </h2>
           <p className="mt-2.5 text-sm font-semibold leading-relaxed text-slate-700">
@@ -154,7 +154,7 @@ export function InterviewSummary({
                     <span className="min-w-0">
                       {q ? (
                         <span
-                          className={`inline-block rounded-md border px-1.5 py-0.5 text-[0.68rem] font-bold ${held ? "border-teal-200 bg-teal-50 text-teal-700" : "border-amber-200 bg-amber-50 text-amber-800"}`}
+                          className={`inline-block rounded-md border px-1.5 py-0.5 text-[0.75rem] font-bold ${held ? "border-teal-200 bg-teal-50 text-teal-700" : "border-amber-200 bg-amber-50 text-amber-800"}`}
                         >
                           {q.mark} / 100 · bar {mark?.bar}
                         </span>
@@ -171,7 +171,7 @@ export function InterviewSummary({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       aria-hidden
-                      className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180 motion-reduce:transition-none"
+                      className="h-4 w-4 shrink-0 text-slate-500 transition-transform group-open:rotate-180 motion-reduce:transition-none"
                     >
                       <path d="m6 9 6 6 6-6" />
                     </svg>
@@ -190,7 +190,7 @@ export function InterviewSummary({
                         {CRITERIA.map((c) => (
                           <li
                             key={c.id}
-                            className={`rounded-md border px-2 py-1 text-[0.68rem] font-semibold ${q.ratings[c.id] >= 2 ? "border-teal-200 text-teal-700" : "border-amber-200 text-amber-800"}`}
+                            className={`rounded-md border px-2 py-1 text-[0.75rem] font-semibold ${q.ratings[c.id] >= 2 ? "border-teal-200 text-teal-700" : "border-amber-200 text-amber-800"}`}
                           >
                             {c.label} {q.ratings[c.id]}/3
                           </li>

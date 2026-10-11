@@ -14,7 +14,7 @@ const overview = {
   sources: { journey: "pending" as const, assessments: "pending" as const, training: "pending" as const, interviews: "pending" as const },
   journey: [], skills: [], training: [], interviews: [], evidence: [],
   summary: { completedModules: 0, totalModules: 6, assessedSkills: 0, evidenceCount: 0 },
-  sharing: { enabled: true, active: { token: "tok", expiresAt: "2026-10-20T00:00:00Z" }, reason: "x" },
+  sharing: { enabled: true, lifetimeDays: 30, active: { token: "tok", expiresAt: "2026-10-20T00:00:00Z" }, reason: "x" },
   limitations: [],
 };
 

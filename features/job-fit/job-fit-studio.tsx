@@ -54,7 +54,7 @@ export function JobFitStudio({ checks: initialChecks, signedOut = false, opportu
     {gate && <SignUpPrompt action={gate} onClose={() => setGate(null)} />}
     <div className={s.canvas}><main className={s.main}>
       <Link href="/opportunities" className={s.back}>← Job opportunities</Link>
-      <header className={s.heading}><div><p className={s.eyebrow}>START WITH WHERE YOU ARE TODAY</p><h1 ref={heading} tabIndex={-1}>How does your profile fit this job?</h1><p>Compare your current skills, education and experience with the role. See your initial fit before deciding whether to prepare further.</p></div></header>
+      <header className={s.heading}><div><p className={s.eyebrow}>APPLY / JOB FIT</p><h1 ref={heading} tabIndex={-1}>See how your experience fits.</h1><p>Paste the job description. See what your profile supports and what’s missing.</p></div></header>
       {error && <p className={s.status} role="alert">{error}</p>}
       {busy && <p className={s.status} role="status" aria-live="polite">Comparing the job requirements with your current profile and resume…</p>}
       {selected ? <>
@@ -68,11 +68,11 @@ export function JobFitStudio({ checks: initialChecks, signedOut = false, opportu
               <p>{[opportunity?.company, opportunity?.location].filter(Boolean).join(" · ")}</p>
               <details className={s.details}><summary>View the job requirements</summary><p className="whitespace-pre-wrap">{opportunity?.description}</p><p className="whitespace-pre-wrap">{opportunity?.requirements}</p><p>{opportunity?.skills}</p><p>{opportunity?.experience}</p></details>
             </>}
-          </> : <><h2>Start with a job you are considering.</h2><label className={s.field}><span>Job description</span><textarea value={posting} disabled={busy} onChange={e => setPosting(e.target.value)} placeholder="Paste the responsibilities, skills, education and experience requirements…" /></label></>}
-          <p className={s.hint}>We use your saved profile and latest saved resume. Uploading a resume only adds suggestions until you confirm and save them.</p>
-          <div className="flex flex-wrap gap-3"><button type="button" className={s.primary} disabled={busy || Boolean(listingError)} onClick={() => void compare()}>{busy ? "Comparing…" : "See my profile fit"}</button><Link className={s.secondary} href={profileHref}>Update profile or upload resume</Link></div>
+          </> : <><h2>The job you’re considering</h2><label className={s.field}><span>Job description</span><textarea value={posting} disabled={busy} onChange={e => setPosting(e.target.value)} placeholder="Paste the responsibilities, skills, education and experience requirements…" /></label></>}
+          <p className={s.hint}>{signedOut ? "This is a worked example. Sign in to compare this job with your own profile and resume." : "Using your saved profile and latest resume. Review imported details before saving them."}</p>
+          <div className="flex flex-wrap gap-3"><button type="button" className={s.primary} disabled={busy || Boolean(listingError)} onClick={() => void compare()}>{busy ? "Comparing…" : "Check this job"}</button><Link className={s.secondary} href={profileHref}>Review my information →</Link></div>
         </section>
-        <aside className="space-y-4"><section className={s.card}><h2>A starting point you can act on.</h2><p>See the requirements your profile supports, what is only partly supported, and what needs more information.</p><p>Then choose whether AI interview practice or an available job simulation would help. They are optional next steps.</p></section>
+        <aside className="space-y-4"><section className={s.card}><h2>Understand the gaps.</h2><dl className={s.evidenceGuide}><div><dt>Supported</dt><dd>Relevant experience or skills in your profile.</dd></div><div><dt>Needs more detail</dt><dd>A requirement that needs clearer evidence.</dd></div><div><dt>Not shown yet</dt><dd>Information your profile does not include.</dd></div></dl><p>A profile comparison, not a hiring prediction. You can still apply when some details are missing.</p></section>
           {checks.length > 0 && <section className={s.card}><h3>{signedOut ? "See an example" : "Your saved comparisons"}</h3><div className={s.checks}>{checks.map(c => <button key={c.id} disabled={busy} onClick={() => openCheck(c)}><span><strong>{c.roleTitle}</strong><small>{signedOut ? "Illustrative example" : c.createdAt.slice(0, 10)}</small></span><b>{c.profileFit?.score ?? "—"}</b></button>)}</div></section>}
         </aside>
       </div>}

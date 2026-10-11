@@ -86,7 +86,7 @@ export function RoleBatch({
   return (
     <section className="rounded-xl border border-slate-200 bg-slate-50/60 p-3.5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-slate-500">
+        <span className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-slate-500">
           Do several roles at once
         </span>
         <button
@@ -142,12 +142,12 @@ export function RoleBatch({
                       {role.title || "Untitled role"}
                       {s && (
                         <span
-                          className={`ml-1.5 text-[0.72rem] ${
+                          className={`ml-1.5 text-[0.75rem] ${
                             s.state === "failed"
                               ? "text-rose-700"
                               : s.state === "done"
                                 ? "text-brand-teal-deep"
-                                : "text-slate-400"
+                                : "text-slate-500"
                           }`}
                         >
                           {s.state === "waiting" && "queued"}
@@ -192,7 +192,7 @@ export function RoleBatch({
                 : `${actionLabel} (${chosen.length})`}
             </button>
             {!aiConfigured && (
-              <span className="text-[0.75rem] text-slate-400">
+              <span className="text-[0.75rem] text-slate-500">
                 No AI key configured.
               </span>
             )}

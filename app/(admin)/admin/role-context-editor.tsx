@@ -139,34 +139,34 @@ export function RoleContextEditor({
   return (
     <div className="rounded-xl border border-slate-200 p-3.5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+        <span className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-slate-500">
           What the student is actually wondering
         </span>
         <button
           type="button"
           onClick={() => setShowPrompt((v) => !v)}
-          className="text-[0.72rem] font-semibold text-brand-violet-deep hover:underline"
+          className="text-[0.75rem] font-semibold text-brand-violet-deep hover:underline"
         >
           {showPrompt ? "Hide" : "Read"} the built-in instruction
         </button>
       </div>
-      <p className="mt-0.5 text-[0.75rem] text-slate-400">
+      <p className="mt-0.5 text-[0.75rem] text-slate-500">
         Everything else on a role describes the job. These describe the path
         into it. Leave any of them empty and it stays off the student&apos;s
         screen.
       </p>
 
       {showPrompt && (
-        <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-[0.7rem] leading-relaxed text-slate-600">
+        <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-[0.75rem] leading-relaxed text-slate-600">
           {builtIn ?? "Loading…"}
         </pre>
       )}
 
       <label className="mt-3 block">
-        <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+        <span className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-slate-500">
           Your sources and corrections
         </span>
-        <span className="mt-0.5 block text-[0.75rem] leading-snug text-slate-400">
+        <span className="mt-0.5 block text-[0.75rem] leading-snug text-slate-500">
           Paste what you know and where it came from - an employer
           conversation, a report, a correction. This overrides the drafter. The
           three questions marked &ldquo;needs a source&rdquo; below are left
@@ -191,7 +191,7 @@ export function RoleContextEditor({
           {busy ? "Drafting…" : "Draft these six"}
         </button>
         {!aiConfigured && (
-          <span className="text-[0.75rem] text-slate-400">
+          <span className="text-[0.75rem] text-slate-500">
             No AI key configured — write them by hand below.
           </span>
         )}
@@ -217,7 +217,7 @@ export function RoleContextEditor({
             <span className="text-[0.78rem] font-semibold text-slate-700">
               {q.label}
             </span>
-            <span className="mt-0.5 block text-[0.72rem] text-slate-400">
+            <span className="mt-0.5 block text-[0.75rem] text-slate-500">
               {q.hint}
             </span>
             <textarea

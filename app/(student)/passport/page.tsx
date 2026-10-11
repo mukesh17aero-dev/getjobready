@@ -1,3 +1,4 @@
+import {RecipientShares} from "@/features/passport";
 import { getServerSession } from "@/lib/supabase-server";
 import { getApplicationReview, getPassportOverview } from "@/lib/api";
 import { BackLink } from "@/components/ui/back-link";
@@ -34,7 +35,7 @@ export default async function PassportPage() {
     return (
       <Frame>
         <div className="rounded-2xl border border-slate-200 bg-brand-mist px-5 py-6">
-          <p className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-brand-violet-deep">
+          <p className="text-[0.75rem] font-bold uppercase tracking-[0.14em] text-brand-violet-deep">
             In development
           </p>
           <h1 className="mt-1.5 font-display text-[1.4rem] font-bold text-brand-ink">
@@ -53,7 +54,7 @@ export default async function PassportPage() {
           </p>
           <Link
             href="/practice"
-            className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-brand-teal-deep px-5 text-[0.85rem] font-bold text-white transition-colors hover:bg-brand-teal"
+            className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-brand-violet px-5 text-[0.85rem] font-bold text-white transition-colors hover:bg-brand-violet-deep"
           >
             Go to Practice
           </Link>
@@ -69,17 +70,16 @@ export default async function PassportPage() {
       <Frame>
         <div className="rounded-2xl border border-slate-200 bg-brand-mist px-5 py-6">
           <h1 className="font-display text-[1.4rem] font-bold text-brand-ink">
-            Your Passport
+            Show the work behind your skills.
           </h1>
           <p className="mt-2 max-w-2xl text-[0.9rem] leading-relaxed text-slate-600">
-            A booklet with your name on it, and a page for every skill you have
-            proved — each one naming the work behind it. It is made the moment
-            you choose a role, and sealed by Ascend once there is measured work
-            in it.
+            Keep your evidence together. Preview exactly what others can see.
+            Sign in to connect your work to your chosen role. Nothing is shared
+            until you choose what to include and create a share link.
           </p>
           <Link
             href="/welcome?auth=signup&next=%2Fpassport"
-            className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-brand-teal-deep px-5 text-[0.85rem] font-bold text-white transition-colors hover:bg-brand-teal"
+            className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-brand-violet px-5 text-[0.85rem] font-bold text-white transition-colors hover:bg-brand-violet-deep"
           >
             Create an account
           </Link>
@@ -116,15 +116,15 @@ export default async function PassportPage() {
             No passport yet
           </h1>
           <p className="mt-2 max-w-2xl text-[0.9rem] leading-relaxed text-slate-600">
-            A passport is made the moment you choose a role — it needs a name
-            and an aim on the cover before it is anything at all. Choose one in
-            Discovery and the record is yours, empty, that same minute.
+            Choose a role to start your evidence record. Skills you have not
+            assessed stay separate from your completed work. You control what
+            is shared, and can preview it before creating a link.
           </p>
           <Link
             href="/discover"
-            className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-brand-teal-deep px-5 text-[0.85rem] font-bold text-white transition-colors hover:bg-brand-teal"
+            className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-brand-violet px-5 text-[0.85rem] font-bold text-white transition-colors hover:bg-brand-violet-deep"
           >
-            Choose a role in Discovery
+            Explore roles
           </Link>
         </div>
       </Frame>
@@ -145,11 +145,10 @@ export default async function PassportPage() {
     <Frame>
       <header className="mb-4">
         <h1 className="font-display text-[clamp(1.6rem,3.2vw,2.1rem)] font-bold leading-tight tracking-tight text-brand-ink">
-          Your Passport
+          Show the work behind your skills.
         </h1>
         <p className="mt-1.5 max-w-2xl text-[0.9rem] leading-relaxed text-slate-600">
-          A private record of your journey, built from work that was watched
-          and marked. Nothing here is shared until you say so.
+          Keep your evidence together. Preview exactly what others can see.
         </p>
       </header>
 
@@ -159,13 +158,14 @@ export default async function PassportPage() {
         photo={photo}
         afterShowcase={review ? <ApplicationReviewCard status={review} /> : null}
       />
+      <RecipientShares enabled={overview.sharing.enabled} />
     </Frame>
   );
 }
 
 function Frame({ children }: { children: React.ReactNode }) {
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 pb-16 pt-4 sm:px-6">
+    <main className="mx-auto w-full max-w-(--page-max-width) px-4 pb-16 pt-4 sm:px-6">
       <BackLink fallbackHref="/" fallbackLabel="Back to Home" />
       <div className="mt-4">{children}</div>
     </main>

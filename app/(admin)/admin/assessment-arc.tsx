@@ -354,7 +354,7 @@ export function AssessmentArcEditor({
       {/* ---- the built-in prompt ---- */}
       <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[0.72rem] font-bold uppercase tracking-wide text-slate-500">
+          <p className="text-[0.75rem] font-bold uppercase tracking-wide text-slate-500">
             Built-in prompt · always applied · not editable
           </p>
           <button
@@ -382,7 +382,7 @@ export function AssessmentArcEditor({
       <div className="mt-3">
         <label
           htmlFor="arc-guidance"
-          className="text-[0.72rem] font-bold uppercase tracking-wide text-slate-500"
+          className="text-[0.75rem] font-bold uppercase tracking-wide text-slate-500"
         >
           Your prompt · optional
         </label>
@@ -442,7 +442,7 @@ export function AssessmentArcEditor({
                   .join(", ")}. Asking for more than ${possible.length} would mean inventing one, so it will return ${possible.length}.`}
           </span>
         )}
-        <span className="w-full text-slate-400">
+        <span className="w-full text-slate-500">
           A pool, not a sitting — a student is served whatever fits fifteen
           minutes, all of it from one industry. The number is split across the
           industries and rounded up, so each has enough to fill a sitting on
@@ -599,7 +599,7 @@ export function AssessmentArcEditor({
                     onClick={() =>
                       patchScene(existing, i, { image: undefined })
                     }
-                    className="text-[0.75rem] font-semibold text-slate-400 hover:text-rose-600"
+                    className="text-[0.75rem] font-semibold text-slate-500 hover:text-rose-600"
                   >
                     Remove picture
                   </button>
@@ -620,7 +620,7 @@ export function AssessmentArcEditor({
                 {scene.measures.map((m) => (
                   <span
                     key={m}
-                    className="rounded-full bg-slate-100 px-2 py-0.5 text-[0.7rem] font-semibold text-slate-600"
+                    className="rounded-full bg-slate-100 px-2 py-0.5 text-[0.75rem] font-semibold text-slate-600"
                   >
                     {m}
                   </span>
@@ -628,7 +628,7 @@ export function AssessmentArcEditor({
               </div>
 
               {(scene.easier || scene.harder) && (
-                <p className="mt-1.5 text-[0.75rem] leading-snug text-slate-400">
+                <p className="mt-1.5 text-[0.75rem] leading-snug text-slate-500">
                   {scene.easier && <>Easier: {scene.easier} </>}
                   {scene.harder && <>· Harder: {scene.harder}</>}
                 </p>

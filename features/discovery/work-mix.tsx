@@ -42,7 +42,7 @@ export function WorkMix({ mix }: { mix: RoleDetail["workMix"] }) {
       >
         <div className="grid h-[7.4rem] w-[7.4rem] place-content-center rounded-full bg-surface text-center">
           <span className="text-[1.3rem] font-semibold leading-none text-slate-900">A day</span>
-          <span className="mt-1 text-[0.72rem] text-slate-500">in this role</span>
+          <span className="mt-1 text-[0.75rem] text-slate-500">in this role</span>
         </div>
       </div>
 

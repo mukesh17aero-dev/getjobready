@@ -148,7 +148,7 @@ export function AuthForm({
       >
         {copy.title}
       </h1>
-      <p className={dark ? "mt-2 text-sm text-white/55" : "mt-2 text-sm text-slate-500"}>
+      <p className={dark ? "mt-2 text-sm text-white/70" : "mt-2 text-sm text-slate-500"}>
         {copy.sub}
       </p>
 
@@ -173,7 +173,7 @@ export function AuthForm({
 
       <div
         className={`mt-5 flex items-center gap-3 text-xs uppercase tracking-wide ${
-          dark ? "text-white/35" : "text-slate-400"
+          dark ? "text-white/70" : "text-slate-500"
         }`}
       >
         <span className={`h-px flex-1 ${dark ? "bg-white/10" : "bg-slate-200"}`} />
@@ -207,7 +207,7 @@ export function AuthForm({
             onChange={(e) => setEmail(e.target.value)}
             className={`w-full rounded-xl border px-3.5 py-2.5 text-[0.95rem] outline-none transition-colors ${
               dark
-                ? "border-white/15 bg-white/[0.06] text-white placeholder:text-white/30 focus:border-[#2dd4bf] focus:ring-2 focus:ring-[#2dd4bf]/25"
+                ? "border-white/15 bg-white/[0.06] text-white placeholder:text-white/70 focus:border-[#2dd4bf] focus:ring-2 focus:ring-[#2dd4bf]/25"
                 : "border-slate-300 bg-surface focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/25"
             }`}
           />
@@ -230,7 +230,7 @@ export function AuthForm({
             onChange={(e) => setPassword(e.target.value)}
             className={`w-full rounded-xl border px-3.5 py-2.5 text-[0.95rem] outline-none transition-colors ${
               dark
-                ? "border-white/15 bg-white/[0.06] text-white placeholder:text-white/30 focus:border-[#2dd4bf] focus:ring-2 focus:ring-[#2dd4bf]/25"
+                ? "border-white/15 bg-white/[0.06] text-white placeholder:text-white/70 focus:border-[#2dd4bf] focus:ring-2 focus:ring-[#2dd4bf]/25"
                 : "border-slate-300 bg-surface focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/25"
             }`}
           />
@@ -270,7 +270,7 @@ export function AuthForm({
         </button>
       </form>
 
-      <p className={`mt-6 text-sm ${dark ? "text-white/55" : "text-slate-500"}`}>
+      <p className={`mt-6 text-sm ${dark ? "text-white/70" : "text-slate-500"}`}>
         {copy.footer}{" "}
         <button
           type="button"

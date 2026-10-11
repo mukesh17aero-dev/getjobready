@@ -1,0 +1,9 @@
+'use client';
+import {useState} from 'react';
+import type {LearnerJourneyActivity,LearningJourneyView} from '@/lib/api/simulation-journey';
+import {simulationRequest} from './simulation-api';
+export function CaseAppeal({journey,activity,onSaved}:{journey:LearningJourneyView;activity:LearnerJourneyActivity;onSaved:(v:LearningJourneyView)=>void}){
+ const [reason,setReason]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ async function submit(){setBusy(true);setError('');try{await simulationRequest('/reviews',{runId:journey.runId,activityId:activity.id,reason});onSaved(await simulationRequest<LearningJourneyView>(`/journeys/${encodeURIComponent(journey.roleId)}${journey.readOnly?`/history/${journey.runId}`:''}`));}catch(e){setError(e instanceof Error?e.message:'Could not request review.');}finally{setBusy(false);}}
+ return <section className="mt-5 rounded-xl border p-4"><h3>Request a human review</h3>{activity.review?<><p>Status: {activity.review.status}</p><p>Your concern: {activity.review.reason}</p>{activity.review.resolution&&<p>Reviewer response: {activity.review.resolution}</p>}{activity.review.status!=='upheld'&&<p>This case cannot count as passed verification while the review is pending or invalidated.</p>}</>:<form onSubmit={e=>{e.preventDefault();void submit();}}><p>If the case or result seems wrong, identify the action and explain why. Your original actions stay unchanged.</p><label>What should the reviewer check? (required)<textarea required minLength={10} maxLength={4000} className="my-2 min-h-28 w-full rounded-lg border p-3" value={reason} onChange={e=>setReason(e.target.value)}/></label><button className="min-h-11 rounded-lg border px-4" disabled={busy}>{busy?'Requesting review…':'Request review'}</button></form>}{error&&<p role="alert">{error}</p>}</section>;
+}

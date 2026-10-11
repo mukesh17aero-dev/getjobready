@@ -109,7 +109,9 @@ export type PassportCandidate = {
 };
 
 /** Something achieved toward the role: marked or submitted work only. */
+export type PassportCaseVerification={roleId:string;runId:string;activityId:string;releaseVersion:number;ruleVersion:number;equivalenceGroup:string;caseFingerprint:string;confidence:'medium';scope:'case';unseen:true;criteria:{id:string;label:string;score:number;weight:number;required:number;observations:{points:number;evidence:string;actionId:string}[]}[]};
 export type PassportAchievement = {
+  verification?:PassportCaseVerification;
   id: string;
   kind: "assessment" | "interview" | "training" | "roleplay";
   title: string;
@@ -161,6 +163,8 @@ export type PassportSharing = {
   enabled: boolean;
   /** The one currently live share link, if any. */
   active: ActivePassportShare | null;
+  /** How long a new link stays open. From the backend, never typed here. */
+  lifetimeDays: number;
   reason: string;
 };
 
@@ -227,10 +231,11 @@ export async function revokePassportShare(token: string): Promise<boolean> {
 }
 
 /** Public: what anyone holding a share link sees. No account, no token. */
-export async function getSharedPassport(shareToken: string): Promise<{ overview: PassportOverview } | null> {
+export async function getSharedPassport(shareToken: string, viewerToken?: string): Promise<{ overview: PassportOverview } | null> {
   try {
     const res = await fetch(`${API_URL}/v1/passport/share/${encodeURIComponent(shareToken)}`, {
       cache: "no-store",
+      headers: viewerToken ? requestHeaders({token:viewerToken}) : undefined,
     });
     if (!res.ok) return null;
     return (await res.json()) as { overview: PassportOverview };
@@ -238,3 +243,9 @@ export async function getSharedPassport(shareToken: string): Promise<{ overview:
     return null;
   }
 }
+
+export type RecipientShare={id:string;token:string;recipientEmail:string;createdAt:string;expiresAt:string;revokedAt:string|null;accesses:string[];outcomes?:{action:string;note:string;recordedAt:string}[]};
+export const getRecipientShares=(token:string)=>apiCall<{shares:RecipientShare[]}>(token,'/v1/passport/recipients');
+export const createRecipientShare=(token:string,email:string,days:number)=>apiCall<{ok:boolean;token:string;expiresAt:string}>(token,'/v1/passport/recipients',{method:'POST',body:{email,days,consent:true}});
+export const revokeRecipientShare=(token:string,id:string)=>apiCall<{ok:boolean}>(token,`/v1/passport/recipients/${encodeURIComponent(id)}`,{method:'DELETE'});
+export const recordRecipientOutcome=(token:string,shareToken:string,action:'shortlisted'|'interview'|'onboarding',note:string,evidenceId?:string)=>apiCall<{ok:boolean}>(token,'/v1/passport/recipient-outcomes',{method:'POST',body:{token:shareToken,action,note,evidenceId,consent:true}});

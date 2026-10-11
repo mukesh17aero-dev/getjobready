@@ -22,8 +22,6 @@ export const STANDING_LABEL_GENERAL: Record<Standing, string> = {
 };
 
 import { type ResumeData, type ResumeReview, type ResumeTemplate } from "./resume-api";
-export const standingLabel = (level: Standing, targetRole: string): string =>
-  targetRole ? STANDING_LABEL[level] : STANDING_LABEL_GENERAL[level];
 
 /** The three ways this builder is used, said out loud as equals. */
 export type Making = "role" | "general" | "improve";
@@ -34,30 +32,7 @@ export const MAKING_OPTIONS: Array<{ id: Making; label: string }> = [
   { id: "improve", label: "Improve a resume I already have" },
 ];
 
-export const NEXT_STEP_HREF: Record<string, string> = {
-  readiness: "/practice",
-  practice: "/practice",
-  interview: "/interview",
-  profile: "/profile",
-};
 
-export const NEXT_STEP_LABEL: Record<string, string> = {
-  readiness: "Prove these skills →",
-  practice: "Do the real work →",
-  interview: "Rehearse for it →",
-  profile: "Fill in what is missing →",
-};
-
-// What can be asked for, shown one at a time in Scribe's own box - a person
-// who has never edited a resume does not know that "this one is not true" is
-// a thing they are allowed to say.
-export const SCRIBE_EXAMPLES = [
-  "Make the profile shorter",
-  "Move the college fest above the store job",
-  "Add that I handled about 60 customers a day",
-  "This bullet is not true - take it out",
-  "Say more about the stock work",
-];
 
 export type LedgerEntry = {
   role: string;
@@ -65,31 +40,13 @@ export type LedgerEntry = {
   skillsHighlighted?: string[];
   resume?: ResumeData;
   template?: ResumeTemplate;
+  displayTemplate?: ResumeTemplate;
   /** When they took it away, if they have. */
   downloadedAt?: string;
   /** The read-out they were given on the version they downloaded. */
   review?: ResumeReview;
-};
-
-// One turn of the revision loop, kept so the change log can show what was
-// asked, what happened, and can put any change back.
-export type Revision = {
-  ask: string;
-  /** What Scribe said back - always present. */
-  reply: string;
-  changed: string[];
-  /** Whether the document actually differs from `before`. The model does not
-      always describe what it did, but the page can always tell. */
-  didChange: boolean;
-  /** Facts this instruction brought in, which are the person's own claim. */
-  added: string[];
-  /** One question that would make the change stronger, if there was one. */
-  followUp?: string;
-  declined: string | null;
-  /** A better change Scribe would suggest, applied with one press. */
-  offer?: { label: string; instruction: string };
-  /** The resume as it was BEFORE this revision, for "Put it back". */
-  before: ResumeData;
+  /** The job posting it was tailored to, so reopening it keeps the target. */
+  jobDescription?: string;
 };
 
 // The read-out takes a few seconds because a model is genuinely reading the

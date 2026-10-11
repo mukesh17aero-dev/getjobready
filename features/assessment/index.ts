@@ -13,3 +13,4 @@ export * from "./assessment-wording-import";
 export * from "./integrity-signals";
 export * from "./samples";
 export * from "./screen-guard";
+export * from "./sitting-count";

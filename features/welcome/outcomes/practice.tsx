@@ -10,7 +10,7 @@ import { Check } from "@/components/ui/icons";
 export function PracticeLibrary() {
   return (
     <div className="rounded-xl border border-slate-200 bg-surface p-3">
-      <div className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-[0.72rem] text-slate-400">
+      <div className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-[0.75rem] text-slate-500">
         Search questions…
       </div>
       <div className="mt-1.5 flex flex-wrap gap-1">
@@ -21,7 +21,7 @@ export function PracticeLibrary() {
         ].map(([label, on]) => (
           <span
             key={label as string}
-            className={`rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ${
+            className={`rounded-full px-2 py-0.5 text-[0.75rem] font-semibold ${
               on
                 ? "bg-brand-teal-deep text-white"
                 : "bg-surface text-slate-600 ring-1 ring-inset ring-slate-300"
@@ -66,23 +66,23 @@ export function PracticeLibrary() {
             key={c.q}
             className="flex flex-col rounded-lg border border-slate-200 p-2.5"
           >
-            <span className="text-[0.55rem] font-bold uppercase tracking-wide text-slate-400">
+            <span className="text-[0.75rem] font-bold uppercase tracking-wide text-slate-500">
               HR round
             </span>
-            <span className="mt-0.5 text-[0.74rem] font-bold leading-snug text-brand-ink">
+            <span className="mt-0.5 text-[0.75rem] font-bold leading-snug text-brand-ink">
               {c.q}
             </span>
-            <span className="mt-1 text-[0.66rem] leading-snug text-slate-500">
+            <span className="mt-1 text-[0.75rem] leading-snug text-slate-500">
               {c.note}
             </span>
             <span className="mt-auto flex flex-wrap items-center gap-1 pt-1.5">
               <span
-                className={`rounded-full px-1.5 py-0.5 text-[0.55rem] font-bold uppercase tracking-wide ring-1 ring-inset ${c.tone}`}
+                className={`rounded-full px-1.5 py-0.5 text-[0.75rem] font-bold uppercase tracking-wide ring-1 ring-inset ${c.tone}`}
               >
                 {c.chip}
               </span>
               {c.story && (
-                <span className="rounded-full bg-brand-violet/10 px-1.5 py-0.5 text-[0.55rem] font-semibold text-brand-violet-deep">
+                <span className="rounded-full bg-brand-violet/10 px-1.5 py-0.5 text-[0.75rem] font-semibold text-brand-violet-deep">
                   You have a story
                 </span>
               )}
@@ -98,27 +98,27 @@ export function PracticeLibrary() {
 export function PracticeAnswer() {
   return (
     <div className="rounded-xl border border-slate-200 bg-surface p-3">
-      <p className="text-[0.55rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+      <p className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">
         HR round · Taking ownership
       </p>
       <p className="mt-0.5 text-[0.85rem] font-bold leading-snug text-brand-ink">
         Give me an example of a mistake you made.
       </p>
-      <p className="mt-1 text-[0.7rem] leading-snug text-slate-600">
+      <p className="mt-1 text-[0.75rem] leading-snug text-slate-600">
         <strong className="font-semibold text-brand-ink">
           What it is testing:
         </strong>{" "}
         Whether you can name a real one. An answer with no mistake in it is the
         wrong answer.
       </p>
-      <div className="mt-2 min-h-[4.5rem] rounded-lg border border-slate-300 px-2.5 py-2 text-[0.72rem] leading-relaxed text-slate-500">
+      <div className="mt-2 min-h-[4.5rem] rounded-lg border border-slate-300 px-2.5 py-2 text-[0.75rem] leading-relaxed text-slate-500">
         Two tickets went onto the wrong account mid-shift. I caught it at the
         handover and flagged it myself rather than waiting to be asked…
       </div>
-      <p className="mt-1 text-[0.64rem] text-slate-500">
+      <p className="mt-1 text-[0.75rem] text-slate-500">
         Long enough. One note comes back, not a report.
       </p>
-      <span className="mt-2 inline-flex min-h-8 items-center gap-1.5 rounded-lg bg-brand-teal-deep px-3 text-[0.7rem] font-bold text-white">
+      <span className="mt-2 inline-flex min-h-8 items-center gap-1.5 rounded-lg bg-brand-teal-deep px-3 text-[0.75rem] font-bold text-white">
         <Check size={11} />
         See how it landed
       </span>
@@ -131,7 +131,7 @@ export function PracticeNote() {
   return (
     <div className="grid gap-2">
       <div className="rounded-xl border border-brand-violet/30 bg-brand-violet/[0.06] p-3">
-        <p className="text-[0.55rem] font-bold uppercase tracking-[0.12em] text-brand-violet-deep">
+        <p className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-brand-violet-deep">
           One thing
         </p>
         <p className="mt-1 text-[0.78rem] leading-relaxed text-slate-700">
@@ -145,12 +145,12 @@ export function PracticeNote() {
         <p className="text-[0.8rem] font-bold text-brand-ink">
           That would hold up.
         </p>
-        <p className="mt-0.5 text-[0.74rem] leading-relaxed text-slate-700">
+        <p className="mt-0.5 text-[0.75rem] leading-relaxed text-slate-700">
           An interviewer would move on rather than press. Nothing to change.
         </p>
       </div>
 
-      <p className="text-[0.66rem] leading-snug text-slate-400">
+      <p className="text-[0.75rem] leading-snug text-slate-500">
         Sometimes there is nothing to say, and saying so is better than
         manufacturing a criticism. Your answer is kept either way.
       </p>

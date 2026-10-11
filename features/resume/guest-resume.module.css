@@ -1,0 +1,57 @@
+/* The signed-out builder: the same builder, a calm header, and one clear
+   card for what an account adds. */
+.page{width:100%;min-width:0;margin:0 auto;padding:24px 24px 48px;color:var(--color-brand-ink)}
+.back{display:inline-flex;align-items:center;min-height:44px;font-size:14px;font-weight:500;color:var(--color-brand-violet-deep);text-decoration:none}
+.header{display:grid;gap:6px;margin:12px 0 20px}
+.header h1{font-size:34px;line-height:1.2;font-weight:400}
+.header p{font-size:15px;color:var(--color-slate-600)}
+.account{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px 24px;margin-bottom:20px;padding:18px 20px;border:1px solid var(--color-slate-200);border-radius:16px;background:var(--color-surface)}
+.account>div:first-child{flex:1 1 360px;display:grid;gap:4px;min-width:0}
+.account h2{font-size:17px;font-weight:650}
+.account p{font-size:14px;line-height:1.55;color:var(--color-slate-600)}
+.accountActions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.primary,.secondary{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 20px;border-radius:999px;font-size:14px;font-weight:600;text-decoration:none}
+.primary{background:var(--color-brand-violet);color:#fff}
+.secondary{border:1px solid var(--color-slate-300);color:var(--color-brand-ink);background:var(--color-surface)}
+.primary:focus-visible,.secondary:focus-visible,.back:focus-visible,.startOver button:focus-visible{outline:2px solid var(--color-brand-violet-deep);outline-offset:2px}
+/* Your experience: two choices, styled as the signed-in builder's. */
+.track{margin:0 0 20px;padding:0;border:0;display:grid;gap:8px}
+.track legend{margin-bottom:8px;font-size:14px;font-weight:600}
+.track>div{display:flex;flex-wrap:wrap;gap:8px}
+.track label{position:relative;display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border:1px solid var(--color-slate-300);border-radius:999px;background:var(--color-surface);font-size:14px;font-weight:500;cursor:pointer}
+.track label[data-on]{border-color:var(--color-brand-violet);box-shadow:0 0 0 1px var(--color-brand-violet);background:var(--color-slate-50);font-weight:600}
+.track input{position:absolute;opacity:0;width:1px;height:1px}
+.track label:has(input:focus-visible){outline:2px solid var(--color-brand-violet-deep);outline-offset:2px}
+.message{margin:0 0 16px;padding:10px 14px;border-radius:10px;background:var(--color-slate-50);font-size:14px}
+.locked{display:grid;gap:10px;padding:18px;border:1px solid var(--color-slate-200);border-radius:14px;background:var(--color-surface)}
+.locked h3{font-size:16px;font-weight:650}
+.locked p{font-size:14px;line-height:1.55;color:var(--color-slate-600)}
+.locked .primary{justify-self:start}
+.startOver{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;margin-top:20px;font-size:13px;color:var(--color-slate-600)}
+.startOver button{min-height:44px;padding:0 4px;border:0;background:none;color:var(--color-slate-700);font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:600px){.page{padding:16px 16px 40px}.header h1{font-size:28px}}
+/* How to start: three ways, the ones an account opens marked as such. */
+.choose{display:grid;gap:16px;padding:24px;border:1px solid var(--color-slate-200);border-radius:16px;background:var(--color-surface)}
+.choose h2{font-size:20px;font-weight:500}
+.ways{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.way{display:grid;justify-items:center;align-content:start;gap:8px;min-height:44px;padding:22px 16px;border:1px solid var(--color-slate-200);border-radius:14px;background:var(--color-surface);color:var(--color-brand-ink);text-align:center;text-decoration:none;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.way:hover{border-color:var(--color-brand-violet);box-shadow:0 0 0 1px var(--color-brand-violet)}
+.way:focus-visible{outline:2px solid var(--color-brand-violet-deep);outline-offset:2px}
+.way strong{font-size:16px;font-weight:650}
+.wayIcon{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:var(--color-slate-100)}
+.wayNote{font-size:13px;color:var(--color-slate-600)}
+.wayBadge{padding:2px 10px;border-radius:999px;background:var(--color-slate-100);font-size:12px;font-weight:600;color:var(--color-slate-700)}
+.signIn{font-size:14px;color:var(--color-slate-600)}
+.signIn a{font-weight:600;color:var(--color-brand-violet-deep)}
+@media (prefers-reduced-motion:reduce){.way{transition:none}}
+.tourToggle{flex-basis:100%;justify-self:start;min-height:44px;padding:0;border:0;background:none;color:var(--color-brand-violet-deep);font-size:14px;font-weight:600;text-align:left;text-decoration:underline;text-underline-offset:3px}
+.tourToggle:focus-visible{outline:2px solid var(--color-brand-violet-deep);outline-offset:2px}
+.tour{flex-basis:100%;min-width:0}
+.needsAccount{display:grid;gap:12px;padding:16px 18px;border:1px solid var(--color-slate-200);border-left:3px solid var(--color-brand-violet);border-radius:12px;background:var(--color-slate-50)}
+.needsAccount p{font-size:15px;line-height:1.55;color:var(--color-brand-ink)}
+.textButton{min-height:44px;padding:0 8px;border:0;background:none;color:var(--color-slate-700);font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.textButton:focus-visible{outline:2px solid var(--color-brand-violet-deep);outline-offset:2px}
+
+
+/* Guest drafts are editable on screen; exported documents require an account. */
+@media print { .page { display:none!important; } }

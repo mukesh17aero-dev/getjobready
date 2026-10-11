@@ -1,0 +1,49 @@
+.page{max-width:var(--page-max-width);width:100%;margin:0 auto;padding:28px 24px 64px;color:var(--color-brand-ink)}
+.back{display:inline-flex;align-items:center;min-height:44px;text-decoration:underline;font-size:14px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:24px;margin:20px 0 32px;flex-wrap:wrap}
+.header h1{font-size:36px;font-weight:700;letter-spacing:-1px}.titleRow{display:flex;align-items:center;gap:6px;min-width:0}.header p{margin-top:8px;color:var(--color-slate-600)}
+.primary{display:inline-flex;align-items:center;justify-content:center;min-height:48px;background:var(--color-brand-violet);color:white;padding:12px 20px;border-radius:12px;font-weight:600}
+.list{display:grid;gap:12px;list-style:none;padding:0}.list li{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;padding:24px;border:1px solid var(--color-slate-200);border-radius:16px;background:var(--color-surface)}
+.list h2,.empty h2{font-size:18px;font-weight:600;overflow-wrap:anywhere}.list p,.list span{font-size:14px;color:var(--color-slate-600);margin-top:6px}.list a,.empty a,.empty button{display:inline-flex;align-items:center;min-height:44px;font-weight:600;text-decoration:underline}
+.empty{padding:28px;background:var(--color-surface);border:1px solid var(--color-slate-200);border-radius:16px}.empty p{margin:12px 0;color:var(--color-slate-600)}.empty a{margin-right:24px}
+.pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:24px;font-size:14px}.pagination button{min-height:44px;padding:8px 14px;border:1px solid var(--color-slate-200);border-radius:8px}.pagination button:disabled{opacity:.45}.pagination span{text-align:center}.pagination small{display:block}
+@media(max-width:400px){.page{padding:16px}.header h1{font-size:32px}.primary{width:100%}.list li{padding:18px;gap:12px}}
+
+/* Architect + Focused elevation */
+
+.card{background:var(--surface-default);box-shadow:none;border-radius:var(--radius-card)}
+
+/* ===== Material 3 ===== */
+.page .header h1{font-weight:400;letter-spacing:0;line-height:1.25}
+.page .back{text-decoration:none;color:var(--m3-primary);font-weight:500}
+.page .primary{border-radius:999px;min-height:40px;padding:0 24px;font-weight:500;letter-spacing:.1px;background:var(--m3-primary);color:var(--m3-on-primary);border:0}
+.page .primary:hover{box-shadow:var(--m3-elev1)}
+/* Each saved resume: a filled card; its action, a text button. */
+.page .list li{background:var(--m3-surface-container-low);border:0;border-radius:12px}
+.page .list h2,.page .empty h2{font-weight:400;font-size:20px}
+.page .list a,.page .empty a,.page .empty button{text-decoration:none;color:var(--m3-primary);font-weight:500;border-radius:999px;padding:0 12px}
+.page .list a:hover,.page .empty a:hover{background:color-mix(in srgb,var(--m3-primary) 8%,transparent)}
+.page .empty{background:var(--m3-surface-container-low);border:0;border-radius:16px}
+.page .pagination button{border:1px solid var(--m3-outline);border-radius:999px;padding:0 20px;color:var(--m3-primary);font-weight:500}
+/* Saved resumes as a grid of cards: a picture of each, then what it is. */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;list-style:none;margin:0;padding:0}
+.grid>li{display:flex;min-width:0}
+.card{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr auto;width:100%;min-width:0;overflow:hidden;border:1px solid var(--color-slate-200);border-radius:16px;background:var(--color-surface);color:inherit;text-decoration:none;transition:border-color .15s,box-shadow .15s,transform .15s}
+a.card:hover{border-color:var(--color-slate-400);box-shadow:0 8px 24px color-mix(in srgb,var(--color-brand-ink) 10%,transparent);transform:translateY(-2px)}
+a.card:focus-visible{outline:2px solid var(--color-brand-violet-deep);outline-offset:3px}
+/* min-width:0 keeps the picture to the card's width: grown to the page's own
+   794px, the preview measured no room to shrink into and was cut off. */
+.thumb{display:block;min-width:0;overflow:hidden;padding:16px 16px 0;background:var(--color-slate-100)}
+.thumb>*{border-bottom-left-radius:0;border-bottom-right-radius:0}
+.noDraft{display:grid;place-items:center;aspect-ratio:1/1.414;max-height:160px;border:1px dashed var(--color-slate-300);border-radius:8px;font-size:14px;color:var(--color-slate-600);background:var(--color-surface)}
+.meta{display:grid;gap:4px;padding:14px 16px 4px;min-width:0}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+.badge{padding:2px 10px;border-radius:999px;background:var(--color-slate-100);font-size:12px;font-weight:600;color:var(--color-slate-700)}
+.badge[data-tone=latest]{background:var(--color-brand-violet);color:#fff}
+.title{font-size:17px;font-weight:650;line-height:1.35;color:var(--color-brand-ink);overflow-wrap:anywhere}
+.detail,.when{font-size:14px;color:var(--color-slate-600)}
+.open{padding:8px 16px 16px;font-size:14px;font-weight:600;color:var(--color-brand-violet-deep)}
+[data-unavailable] .open{color:var(--color-slate-600);font-weight:500}
+@media (prefers-reduced-motion:reduce){.card{transition:none}a.card:hover{transform:none}}
+/* Fills the width beside the navigation rail, like the builder. */
+.page{max-width:none}

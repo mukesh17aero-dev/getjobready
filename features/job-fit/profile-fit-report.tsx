@@ -34,6 +34,7 @@ export function ProfileFitReportView({ check, profileHref, onCompare, busy = fal
         <div className={s.cardHead}><h3>{r.need}</h3><span className={`${s.chip} ${r.status === "supported" ? s.neutral : s.amber}`}>{LABELS[r.status]}</span></div>
         <p className={s.hint}>{r.category === "education" || r.category === "qualification" || r.category === "experience" ? "Check this eligibility requirement carefully. Practice does not replace the qualification or experience the employer asks for." : "A profile match describes your current record, not verified job performance."}</p>
         {r.facets.map((f, index) => <div className={s.perQuestion} key={index}><strong>{f.text}</strong>{f.quote ? <><blockquote>“{f.quote}”</blockquote><small>{f.sourceLabel} · self-reported</small></> : <p>No supporting detail was found. If you already have this experience or skill, add it to your profile.</p>}</div>)}
+        {r.status !== "supported" && <Link className={s.secondary} href={profileHref}>Add evidence for: {r.need} →</Link>}
       </article>)}
     </section>
     {report.score !== null && <section className="space-y-3" aria-labelledby="preparation-title">

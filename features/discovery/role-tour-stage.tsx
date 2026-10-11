@@ -42,6 +42,7 @@ import {
 } from "./discovery-assistant";
 import { AssistantBubble } from "./assistant-bubble";
 import type { RoleDetail } from "@/lib/api";
+import { useSavedRoles } from "./use-saved-roles";
 import { MIN_ANSWER, OpenAnswer, type TourNote } from "./role-tour";
 import { ArrowRight, Check } from "@/components/ui/icons";
 import { Blurred, LockedNote } from "@/components/ui/locked-blur";
@@ -70,16 +71,11 @@ export function RoleTourStage({
   chosenRoleId,
   choosing,
   onChoose,
-  onNote,
+  onNote, initialNote, onDraftNote,
   onAdvance,
   onLeave,
 }: {
-  /**
-   * Signed out, the tour is one stop long. The itinerary still shows every
-   * stop so the length is honest, but leaving the first one asks for the
-   * account - the rest of the tour is written for a person we would be
-   * keeping notes on.
-   */
+  /** Guests can complete the tour; account-only actions keep their own gates. */
   signedOut?: boolean;
   /** The itinerary, in order. */
   roles: RoleDetail[];
@@ -90,10 +86,12 @@ export function RoleTourStage({
   onChoose: (roleId: string) => void;
   /** What they made of this stop, handed up as they leave it. */
   onNote: (note: TourNote) => void;
+  initialNote?: TourNote; onDraftNote?: (note: TourNote) => void;
   /** Move to the next stop, or finish when this was the last. */
   onAdvance: () => void;
   onLeave: () => void;
 }) {
+  const {saved, toggleSaved, busy: savingRole, error: saveError} = useSavedRoles(signedOut);
   const role = roles[at];
   const total = roles.length;
   const last = at >= total - 1;
@@ -114,11 +112,12 @@ export function RoleTourStage({
   const [chatOpen, setChatOpen] = useState(false);
   // The conventional description, on demand.
   const [reading, setReading] = useState(false);
-  const [thoughts, setThoughts] = useState("");
+  const [noteAdded, setNoteAdded] = useState(false);
+  const [thoughts, setThoughts] = useState(initialNote?.thoughts ?? "");
   // Their verdict per stop, kept by role so moving on starts the next stop
   // clean without resetting state in an effect.
-  const [verdicts, setVerdicts] = useState<Record<string, "curious" | "not-for-me">>({});
-  const asked = useRef<string[]>([]);
+  const [verdicts, setVerdicts] = useState<Record<string, "curious" | "not-for-me">>(initialNote?.reaction?{[initialNote.roleId]:initialNote.reaction}:{});
+  const asked = useRef<string[]>(initialNote?.asked ?? []);
   const card = useRef<HTMLDivElement>(null);
 
   // Arriving. Top of the page, nothing moving, for as long as it takes to read
@@ -206,22 +205,9 @@ export function RoleTourStage({
     return () => clearTimeout(t);
   }, [phase]);
 
-  // Leaving the first stop is where a signed-out visitor stops.
-  //
-  // The stop itself is the whole point of a tour - one role, read properly.
-  // What comes after is written against notes we would be keeping for this
-  // person, so it is the account's job, not a preview's.
+  // Guests can finish the itinerary they were promised; saving a direction still asks for an account.
   const [gate, setGate] = useState<GatedAction | null>(null);
-  const advance = useCallback(() => {
-    if (signedOut) {
-      setGate({
-        what: "the rest of the tour",
-        why: "The stops after this one build on what you said about this one, and those notes have to belong to somebody - so the tour carries on once there is an account to keep them in.",
-      });
-      return;
-    }
-    onAdvance();
-  }, [signedOut, onAdvance]);
+  const advance = useCallback(() => onAdvance(), [onAdvance]);
 
   // Moving on. A beat, cancellable, then the next stop.
   useEffect(() => {
@@ -236,23 +222,17 @@ export function RoleTourStage({
   const verdict = verdicts[role.roleId] ?? null;
   // Either is enough to move on: a verdict, or a sentence of their own.
   const ready = verdict !== null || thoughts.trim().length >= MIN_ANSWER;
-  const setVerdict = (next: "curious" | "not-for-me") => {
-    setVerdicts((all) => ({ ...all, [role.roleId]: all[role.roleId] === next ? undefined : next } as Record<string, "curious" | "not-for-me">));
-    // "Interested" is the shortlist by another name: the heart on the roles
-    // list and this button keep the same list in this browser.
-    try {
-      const raw = localStorage.getItem("ascend:discovery-shortlist");
-      const list: unknown = raw ? JSON.parse(raw) : [];
-      const kept = Array.isArray(list) ? list.filter((x): x is string => typeof x === "string") : [];
-      const has = kept.includes(role.roleId);
-      const wants = next === "curious" && verdicts[role.roleId] !== "curious";
-      const nextList = wants && !has ? [...kept, role.roleId] : !wants && has && next === "curious" ? kept.filter((x) => x !== role.roleId) : kept;
-      localStorage.setItem("ascend:discovery-shortlist", JSON.stringify(nextList));
-    } catch { /* storage unavailable */ }
+  const remember = (patch: Partial<TourNote> = {}) => onDraftNote?.({roleId:role.roleId,title,thoughts,reaction:verdict??undefined,asked:asked.current,...patch});
+  const setVerdict = async (next: "curious" | "not-for-me") => {
+    if (next === "curious" && !await toggleSaved(role.roleId)) return;
+    const reaction = next === "curious"
+      ? (saved.includes(role.roleId) ? undefined : next)
+      : (verdict === next ? undefined : next);
+    remember({reaction});
+    setVerdicts(all => ({ ...all, [role.roleId]: reaction } as Record<string, "curious" | "not-for-me">));
   };
 
   const leave = () => {
-    if (!ready) return;
     onNote({
       roleId: role.roleId,
       title,
@@ -260,17 +240,6 @@ export function RoleTourStage({
       ...(verdict ? { reaction: verdict } : {}),
       asked: asked.current,
     });
-    // Signed out, this is the end of the line - and the right moment to ask,
-    // because they have just written something worth keeping. Asked here
-    // rather than after the handover beat, so the answer is still on screen
-    // when the reason for the account is given.
-    if (signedOut) {
-      setGate({
-        what: "what you just wrote, and the rest of the tour",
-        why: "That is your read on this role, and the stops after this one build on it. Notes have to belong to somebody, so the tour carries on once there is an account to keep them in.",
-      });
-      return;
-    }
     setPhase("leaving");
   };
 
@@ -300,7 +269,7 @@ export function RoleTourStage({
           shape of is just a series of surprises. */}
         <div className="sticky top-[6.4rem] z-20 -mx-4 mb-4 border-b border-slate-200 bg-surface/90 px-4 py-2.5 backdrop-blur sm:top-[4.2rem] sm:-mx-6 sm:px-6">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-            <span className="text-[0.72rem] font-bold uppercase tracking-[0.08em] text-brand-violet-deep">
+            <span className="text-[0.75rem] font-bold uppercase tracking-[0.08em] text-brand-violet-deep">
               Stop {at + 1} of {total}
             </span>
             <span aria-hidden className="flex flex-1 items-center gap-1">
@@ -352,7 +321,7 @@ export function RoleTourStage({
         >
           <aside className="lg:sticky lg:top-[7.5rem] lg:self-start">
             <div className="rounded-2xl border border-slate-200 bg-surface p-4">
-              <p className="text-[0.78rem] font-semibold uppercase tracking-[0.08em] text-slate-400">
+              <p className="text-[0.78rem] font-semibold uppercase tracking-[0.08em] text-slate-500">
                 {role.sector}
               </p>
               <h1 className="mt-0.5 font-display text-[1.3rem] font-bold leading-tight tracking-tight text-brand-ink">
@@ -401,14 +370,14 @@ export function RoleTourStage({
               </dl>
               <p className="mt-3 border-t border-slate-200 pt-3 text-[0.84rem] font-bold text-brand-ink">
                 {payRange(role.payMonthly)}
-                <span className="font-normal text-slate-400"> to start</span>
+                <span className="font-normal text-slate-500"> to start</span>
               </p>
 
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <button
                   type="button"
                   disabled={choosing || chosenRoleId === role.roleId}
-                  onClick={() => onChoose(role.roleId)}
+                  onClick={() => {remember();onChoose(role.roleId);}}
                   className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-5 text-[0.88rem] font-bold text-white transition-colors disabled:opacity-70 ${
                     chosenRoleId === role.roleId
                       ? "bg-brand-teal"
@@ -452,6 +421,15 @@ export function RoleTourStage({
             <div
               role="tablist"
               aria-label={`${title}: what we know`}
+              onKeyDown={event => {
+                if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+                const buttons = [...event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+                const current = buttons.indexOf(event.target as HTMLButtonElement);
+                if (current < 0) return;
+                event.preventDefault();
+                const next = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1 : (current + (event.key === "ArrowRight" ? 1 : -1) + buttons.length) % buttons.length;
+                buttons[next]?.focus(); buttons[next]?.click();
+              }}
               className="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-1.5"
             >
               {tabs.map((t, i) => {
@@ -461,6 +439,9 @@ export function RoleTourStage({
                     key={t.id}
                     type="button"
                     role="tab"
+                    id={`tour-tab-${t.id}`}
+                    aria-controls="tour-panel"
+                    tabIndex={on ? 0 : -1}
                     aria-selected={on}
                     onClick={() => {
                       setTab(i);
@@ -489,7 +470,7 @@ export function RoleTourStage({
                       {t.label}
                     </span>
                     <span
-                      className={`block text-[0.72rem] ${on ? "opacity-80" : "text-slate-400"}`}
+                      className={`block text-[0.75rem] ${on ? "opacity-80" : "text-slate-500"}`}
                     >
                       {t.note}
                     </span>
@@ -498,7 +479,7 @@ export function RoleTourStage({
               })}
             </div>
 
-            <ol className="mt-5 grid gap-5">
+            <div id="tour-panel" role="tabpanel" tabIndex={0} aria-labelledby={`tour-tab-${tabs[tab]?.id}`}><ol className="mt-5 grid gap-5">
               {(tabs[tab]?.list ?? []).map((c) => {
                 const locked = signedOut && tab > 0;
                 return (
@@ -522,7 +503,7 @@ export function RoleTourStage({
                   </li>
                 );
               })}
-            </ol>
+            </ol></div>
 
             {signedOut && chapters.length > 1 && (
               <LockedNote label="The rest of this briefing - what decides who moves up, where the role leads, and what the work is turning into - is behind an account." />
@@ -559,29 +540,31 @@ export function RoleTourStage({
                   </div>
                 ) : (
                   <>
-                    <p className="text-[0.72rem] font-bold uppercase tracking-[0.08em] text-brand-violet-deep">
+                    <p className="text-[0.75rem] font-bold uppercase tracking-[0.08em] text-brand-violet-deep">
                       Before we move on
                     </p>
                     {/* One question, and the stop does not end without it. Two
                       questions per role over five roles is a form; one is a
                       thought somebody actually has. */}
+                    {saveError && <p role="alert">{saveError}</p>}
                     <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Is this role for you?">
                       {([
-                        { id: "curious", label: "Add to interested roles" },
+                        { id: "curious", label: "Save this role" },
                         { id: "not-for-me", label: "Not interested" },
                       ] as const).map((item) => (
                         <button
                           key={item.id}
                           type="button"
-                          aria-pressed={verdict === item.id}
-                          onClick={() => setVerdict(item.id)}
+                          aria-pressed={item.id === "curious" ? saved.includes(role.roleId) : verdict === item.id}
+                          disabled={savingRole}
+                          onClick={() => void setVerdict(item.id)}
                           className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-[0.84rem] font-bold transition-colors motion-reduce:transition-none ${
-                            verdict === item.id
+                            (item.id === "curious" ? saved.includes(role.roleId) : verdict === item.id)
                               ? "border-teal-700 bg-teal-50 text-teal-700"
                               : "border-slate-300 bg-surface text-slate-700 hover:border-slate-400"
                           }`}
                         >
-                          {item.id === "curious" ? "♡" : "–"} {item.label}
+                          {item.id === "curious" ? "♡" : "–"} {item.id === "curious" && saved.includes(role.roleId) ? "Saved · remove" : item.label}
                         </button>
                       ))}
                     </div>
@@ -592,24 +575,24 @@ export function RoleTourStage({
                         hint="Not whether it is a good job - whether it is you. In your own words."
                         placeholder="Honestly, what stood out was…"
                         value={thoughts}
-                        onChange={setThoughts}
+                        onChange={value=>{setThoughts(value);setNoteAdded(false);remember({thoughts:value});}}
                         optional
                       />
                     </div>
 
+                    <button type="button" disabled={!thoughts.trim()} className="min-h-11 underline text-sm" onClick={() => { onNote({roleId:role.roleId,title,thoughts:thoughts.trim(),reaction:verdict??undefined,asked:asked.current}); setNoteAdded(true); }}>Add my note</button>{noteAdded && <p role="status" className="text-sm">Note added to this tour. Your draft is kept in this browser while the tour is open.</p>}
                     <div className="mt-5 flex flex-wrap items-center gap-3">
                       <button
                         type="button"
-                        disabled={!ready}
                         onClick={leave}
                         className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-violet px-5 text-[0.88rem] font-bold text-white transition-colors hover:bg-brand-violet-deep disabled:opacity-40"
                       >
-                        {last ? "See what I said" : "On to the next one"}
+                        {last ? "Finish tour" : "On to the next one"}
                         <ArrowRight size={15} />
                       </button>
                       {!ready && (
                         <span className="text-[0.8rem] text-slate-500">
-                          Say whether it interests you, or write a sentence, and we move on.
+                          Your reaction and note are optional. Continue whenever you are ready.
                         </span>
                       )}
                     </div>
@@ -633,7 +616,7 @@ export function RoleTourStage({
           openQuestions
           role={role}
           onAsked={(question) => {
-            asked.current = [...asked.current, question];
+            asked.current = [...asked.current, question];remember();
           }}
           onOpenChange={setChatOpen}
         />
@@ -647,7 +630,7 @@ export function RoleTourStage({
             chosen={chosenRoleId === role.roleId}
             choosing={choosing}
             onClose={() => setReading(false)}
-            onChoose={() => onChoose(role.roleId)}
+            onChoose={() => {remember();onChoose(role.roleId);}}
           />
         )}
       </main>

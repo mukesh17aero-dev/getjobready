@@ -14,7 +14,7 @@ export default async function CollegePortalPage() {
   const access = await collegeAccess(token);
   if (!access?.isMember) {
     return (
-      <main className="mx-auto max-w-xl px-4 py-16 text-center">
+      <main className="mx-auto max-w-(--page-max-width) px-4 py-16 text-center">
         <h1 className="text-2xl font-semibold text-brand-ink">
           This account isn&apos;t set up as a college partner
         </h1>

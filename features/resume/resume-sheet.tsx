@@ -6,6 +6,8 @@ export const A4_WIDTH = "210mm";
 export const A4_PX = 794; // 210mm at 96dpi, for working out how far to scale it
 export const A4_PAGE_PX = 297 * (96 / 25.4); // one page, top to bottom
 import { TEMPLATES } from "./templates";
+import { contactMark, entryMark, nameMark, type SheetFocus } from "./sheet-focus";
+export type { SheetFocus } from "./sheet-focus";
 import { useEffect, useRef, useState } from "react";
 import { type ResumeData, type ResumeTemplate } from "./resume-api";
 const PAGE_GUTTER_PX = 24; // the gap between two sheets on a desk
@@ -57,6 +59,7 @@ function Page({
 
       for (const pushed of el.querySelectorAll<HTMLElement>("[data-pushed]")) {
         pushed.style.paddingTop = "";
+        pushed.style.removeProperty("--push-gap");
         delete pushed.dataset.pushed;
       }
 
@@ -94,7 +97,11 @@ function Page({
           const movable = box.height <= Math.min(room, A4_PAGE_PX * 0.35);
           if (movable || child.children.length === 0 || depth >= 3) {
             if (box.height > room) continue;
-            child.style.paddingTop = `${(page + 1) * unit + pad - from}px`;
+            const gap = `${(page + 1) * unit + pad - from}px`;
+            child.style.paddingTop = gap;
+            // The editor's highlight starts below this gap, not across the
+            // foot of the page before.
+            child.style.setProperty("--push-gap", gap);
             child.dataset.pushed = "true";
           } else {
             clear(child, depth + 1);
@@ -415,14 +422,19 @@ function Section({
   title,
   styles,
   children,
+  name,
+  editing,
 }: {
   title: string;
   styles: SheetStyles;
   children: React.ReactNode;
+  /** Which part of the resume this is, so the editor can point at it. */
+  name?: string;
+  editing?: SheetFocus | null;
 }) {
   const caps = styles.heading.includes("uppercase");
   return (
-    <section className={styles.section}>
+    <section className={styles.section} data-resume-section={name} data-editing={name === "header" ? contactMark(editing) : editing && editing.section === name && editing.entry === undefined ? "" : undefined}>
       <h3 className={`${styles.heading} text-[#111827]`}>
         {caps ? title : sentenceCase(title)}
       </h3>
@@ -478,6 +490,7 @@ export function ResumeSheet({
   onPages,
   watermark,
   track = "early_career",
+  focus = null,
 }: {
   resume: ResumeData;
   template: ResumeTemplate;
@@ -498,23 +511,28 @@ export function ResumeSheet({
    * this the written page came back in the wrong order whatever it said.
    */
   track?: "student" | "early_career";
+  /**
+   * What the person is editing, highlighted in the editor's preview. Absent
+   * everywhere else - downloads, printing and the layout cards never get it.
+   */
+  focus?: SheetFocus | null;
 }) {
   const t = SHEET_STYLES[template];
   const student = track === "student";
 
   // The sections, built once and arranged differently per layout.
   const profile = resume.summary ? (
-    <Section title={resume.summaryHeading || "Summary"} styles={t}>
+    <Section name="summary" editing={focus} title={resume.summaryHeading || "Summary"} styles={t}>
       <p className={`whitespace-pre-line ${t.body}`}>{resume.summary}</p>
     </Section>
   ) : null;
 
   const skills = resume.skills.length > 0 && (
-    <Section title="Skills" styles={t}>
+    <Section name="skills" editing={focus} title="Skills" styles={t}>
       <ul className="grid gap-1">
-        {resume.skills.map((group) => (
-          <li key={group.group} className={t.body}>
-            <strong className="font-semibold">{group.group}:</strong>{" "}
+        {resume.skills.map((group, i) => (
+          <li key={group.group} className={t.body} {...entryMark(focus, "skills", i)}>
+            {group.group.trim() && <><strong className="font-semibold">{group.group}:</strong>{" "}</>}
             {group.items.join(", ")}
           </li>
         ))}
@@ -524,12 +542,14 @@ export function ResumeSheet({
 
   const experience = resume.experience.length > 0 && (
     <Section
+      name="experience"
+      editing={focus}
       title={resume.experienceHeading || "Employment history"}
       styles={t}
     >
       <div className={t.stack}>
         {resume.experience.map((item, i) => (
-          <div key={`${item.title}-${i}`}>
+          <div key={`${item.title}-${i}`} {...entryMark(focus, "experience", i)}>
             <ItemLine
               title={[item.title, item.organisation].filter(Boolean).join(", ")}
               period={item.period}
@@ -549,10 +569,10 @@ export function ResumeSheet({
   );
 
   const education = resume.education.length > 0 && (
-    <Section title="Education" styles={t}>
+    <Section name="education" editing={focus} title="Education" styles={t}>
       <div className="grid gap-2">
         {resume.education.map((item, i) => (
-          <div key={`${item.qualification}-${i}`}>
+          <div key={`${item.qualification}-${i}`} {...entryMark(focus, "education", i)}>
             <ItemLine
               title={[item.qualification, item.institution]
                 .filter(Boolean)
@@ -572,10 +592,10 @@ export function ResumeSheet({
   // The sections a fresher's resume is mostly made of. Each is absent rather
   // than empty: a heading with nothing under it advertises a gap.
   const projects = (resume.projects?.length ?? 0) > 0 && (
-    <Section title="Projects" styles={t}>
+    <Section name="projects" editing={focus} title="Projects" styles={t}>
       <div className={t.stack}>
-        {resume.projects!.map((project) => (
-          <div key={project.title}>
+        {resume.projects!.map((project, i) => (
+          <div key={project.title} {...entryMark(focus, "projects", i)}>
             <p className={t.itemTitle}>{project.title}</p>
             {project.detail && <p className={t.item}>{project.detail}</p>}
             {project.tools.length > 0 && (
@@ -590,10 +610,10 @@ export function ResumeSheet({
   );
 
   const certifications = (resume.certifications?.length ?? 0) > 0 && (
-    <Section title="Certifications" styles={t}>
+    <Section name="certifications" editing={focus} title="Certifications" styles={t}>
       <ul className="grid gap-0.5 pl-4">
-        {resume.certifications!.map((c) => (
-          <li key={c.title} className={`list-disc ${t.item}`}>
+        {resume.certifications!.map((c, i) => (
+          <li key={c.title} className={`list-disc ${t.item}`} {...entryMark(focus, "certifications", i)}>
             {c.title}
             {c.issuer ? `, ${c.issuer}` : ""}
             {c.year ? ` (${c.year})` : ""}
@@ -604,7 +624,7 @@ export function ResumeSheet({
   );
 
   const achievements = (resume.achievements?.length ?? 0) > 0 && (
-    <Section title="Achievements" styles={t}>
+    <Section name="achievements" editing={focus} title="Achievements" styles={t}>
       <ul className="grid gap-0.5 pl-4">
         {resume.achievements!.map((line) => (
           <li key={line} className={`list-disc ${t.item}`}>
@@ -616,19 +636,19 @@ export function ResumeSheet({
   );
 
   const interests = (resume.interests?.length ?? 0) > 0 && (
-    <Section title="Interests" styles={t}>
+    <Section name="interests" editing={focus} title="Interests" styles={t}>
       <p className={t.body}>{resume.interests!.join(", ")}</p>
     </Section>
   );
 
   const languages = resume.languages.length > 0 && (
-    <Section title="Languages" styles={t}>
+    <Section name="languages" editing={focus} title="Languages" styles={t}>
       <p className={t.body}>{resume.languages.join(", ")}</p>
     </Section>
   );
 
   const activities = resume.activities.length > 0 && (
-    <Section title="Activities" styles={t}>
+    <Section name="activities" editing={focus} title="Activities" styles={t}>
       <ul className="grid gap-0.5 pl-4">
         {resume.activities.map((activity) => (
           <li key={activity} className={`list-disc ${t.item}`}>
@@ -653,7 +673,7 @@ export function ResumeSheet({
       resume.header.email ||
       resume.header.phone ||
       resume.header.link) && (
-      <Section title="Info" styles={t}>
+      <Section name="header" editing={focus} title="Info" styles={t}>
         <div className="grid gap-1.5">
           {resume.header.city && <p className={t.item}>{resume.header.city}</p>}
           {resume.header.phone && (
@@ -674,10 +694,12 @@ export function ResumeSheet({
         onPages={onPages}
         watermark={watermark}
       >
-        <h2 className={t.name}>{resume.header.name}</h2>
-        {roleLine && (
-          <p className={`${t.contact} text-[#6b7280]`}>{roleLine}</p>
-        )}
+        <div data-resume-section="header" data-editing={nameMark(focus)}>
+          <h2 className={t.name}>{resume.header.name}</h2>
+          {roleLine && (
+            <p className={`${t.contact} text-[#6b7280]`}>{roleLine}</p>
+          )}
+        </div>
         {/* One layout grid, real headings in both columns: reading order is
             the narrow column then the wide one. */}
         {/* min-w-0 lets the narrow column shrink, and overflow-wrap breaks a
@@ -720,13 +742,13 @@ export function ResumeSheet({
       watermark={watermark}
     >
       {t.headerLayout === "split" ? (
-        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-1 border-b border-[#d1d5db] pb-3">
-          <h2 className={t.name}>{resume.header.name}</h2>
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-1 border-b border-[#d1d5db] pb-3" data-resume-section="header">
+          <h2 className={t.name} data-editing={nameMark(focus)}>{resume.header.name}</h2>
           {(resume.header.city ||
             resume.header.email ||
             resume.header.phone ||
             resume.header.link) && (
-            <p className={`${t.contact} text-[#6b7280] sm:text-right`}>
+            <p className={`${t.contact} text-[#6b7280] sm:text-right`} data-editing={contactMark(focus)}>
               {[
                 resume.header.city,
                 resume.header.phone,
@@ -739,13 +761,13 @@ export function ResumeSheet({
           )}
         </div>
       ) : (
-        <div className={t.headerLayout === "center" ? "border-b border-[#d1d5db] pb-3 text-center" : ""}>
-          <h2 className={t.name}>{resume.header.name}</h2>
+        <div className={t.headerLayout === "center" ? "border-b border-[#d1d5db] pb-3 text-center" : ""} data-resume-section="header">
+          <h2 className={t.name} data-editing={nameMark(focus)}>{resume.header.name}</h2>
           {(resume.header.city ||
             resume.header.email ||
             resume.header.phone ||
             resume.header.link) && (
-            <p className={`${t.contact} text-[#6b7280]`}>
+            <p className={`${t.contact} text-[#6b7280]`} data-editing={contactMark(focus)}>
               {[
                 resume.header.city,
                 resume.header.phone,

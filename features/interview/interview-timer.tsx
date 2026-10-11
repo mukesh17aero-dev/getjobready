@@ -55,7 +55,7 @@ export function InterviewTimer({
       </svg>
       <span
         className={`absolute font-mono font-bold tabular-nums ${
-          compact ? "text-[0.6rem]" : "text-[0.7rem]"
+          compact ? "text-[0.75rem]" : "text-[0.75rem]"
         } ${closing ? "text-amber-700" : "text-brand-ink"}`}
       >
         {minutes}:{String(seconds).padStart(2, "0")}

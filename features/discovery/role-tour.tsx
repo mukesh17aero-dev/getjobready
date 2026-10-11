@@ -91,10 +91,10 @@ export function OpenAnswer({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="mt-2 w-full rounded-xl border border-slate-300 bg-surface px-3.5 py-2.5 text-[0.9rem] leading-relaxed text-brand-ink outline-none placeholder:text-slate-400 focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/30"
+        className="mt-2 w-full rounded-xl border border-slate-300 bg-surface px-3.5 py-2.5 text-[0.9rem] leading-relaxed text-brand-ink outline-none placeholder:text-slate-500 focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/30"
       />
       <p
-        className={`mt-1 text-[0.75rem] ${left > 0 ? "text-slate-400" : "text-brand-teal-deep"}`}
+        className={`mt-1 text-[0.75rem] ${left > 0 ? "text-slate-500" : "text-brand-teal-deep"}`}
       >
         {optional && value.trim() === ""
           ? "Optional. A reason helps us understand you and recommend roles that fit your interests and potential."
@@ -350,7 +350,7 @@ export function RoleTour({
 
         {distinct.length > 0 && (
           <div className="mt-4 rounded-xl bg-slate-50 p-3.5">
-            <p className="text-[0.72rem] font-bold uppercase tracking-[0.08em] text-slate-400">
+            <p className="text-[0.75rem] font-bold uppercase tracking-[0.08em] text-slate-500">
               What you stopped to ask
             </p>
             <ul className="mt-1.5 grid gap-1 text-[0.82rem] text-slate-600">
@@ -358,14 +358,14 @@ export function RoleTour({
                 <li key={q}>{q}</li>
               ))}
             </ul>
-            <p className="mt-2 text-[0.74rem] leading-snug text-slate-400">
+            <p className="mt-2 text-[0.75rem] leading-snug text-slate-500">
               Worth knowing about yourself: the thing you check first is usually
               the thing you are actually deciding on.
             </p>
           </div>
         )}
 
-        <p className="mt-4 text-[0.78rem] leading-relaxed text-slate-400">
+        <p className="mt-4 text-[0.78rem] leading-relaxed text-slate-500">
           This is a record of what you said, not a result. Nothing here has
           been scored.
         </p>
@@ -424,7 +424,7 @@ export function RoleTour({
                       {c.title}
                     </span>
                     {chosenRoleId === c.id && (
-                      <span className="inline-flex shrink-0 items-center gap-1 text-[0.68rem] font-bold text-brand-teal-deep">
+                      <span className="inline-flex shrink-0 items-center gap-1 text-[0.75rem] font-bold text-brand-teal-deep">
                         <Check size={12} /> Chosen
                       </span>
                     )}
@@ -432,7 +432,7 @@ export function RoleTour({
                   <span className="text-[0.78rem] leading-snug text-slate-500">
                     {c.summary}
                   </span>
-                  <span className="mt-auto pt-1.5 text-[0.72rem] font-semibold text-slate-400">
+                  <span className="mt-auto pt-1.5 text-[0.75rem] font-semibold text-slate-500">
                     {payRange(role.payMonthly)} to start
                   </span>
                 </button>
@@ -476,7 +476,7 @@ export function RoleTour({
                 <span className="text-[0.8rem] leading-snug text-slate-500">
                   {w.caption}
                 </span>
-                <span className="mt-auto pt-1.5 text-[0.72rem] font-semibold text-brand-violet-deep">
+                <span className="mt-auto pt-1.5 text-[0.75rem] font-semibold text-brand-violet-deep">
                   {count === 0
                     ? "Nothing published here yet"
                     : `${count} role${count === 1 ? "" : "s"} to look at`}
@@ -697,7 +697,7 @@ function TourPacer({
               style={{ width: `${percent}%` }}
             />
           </span>
-          <span className="shrink-0 text-[0.72rem] text-slate-400">
+          <span className="shrink-0 text-[0.75rem] text-slate-500">
             about a minute
           </span>
           <button

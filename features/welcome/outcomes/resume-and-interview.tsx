@@ -30,14 +30,14 @@ export function ResumeOutcome({ compact = false }: { compact?: boolean }) {
             />
           </A4Frame>
         </div>
-        <p className="mt-1.5 text-center text-[0.55rem] uppercase tracking-[0.15em] text-slate-400">
+        <p className="mt-1.5 text-center text-[0.75rem] uppercase tracking-[0.15em] text-slate-500">
           Example — not a real person
         </p>
       </div>
 
       <div className="min-w-0 space-y-2.5">
         <div className="rounded-xl border border-teal-600/25 bg-teal-50/60 px-3.5 py-2.5">
-          <p className="text-[0.72rem] font-bold uppercase tracking-wide text-teal-800">
+          <p className="text-[0.75rem] font-bold uppercase tracking-wide text-teal-800">
             Read by the filter — {SAMPLE_ATS.found.length} role keywords found
           </p>
           <p className="mt-1 text-[0.76rem] leading-snug text-teal-900">
@@ -65,7 +65,7 @@ export function ResumeOutcome({ compact = false }: { compact?: boolean }) {
         ))}
 
         <div className="rounded-xl border border-slate-200 bg-surface px-3.5 py-2.5">
-          <p className="text-[0.72rem] font-bold uppercase tracking-wide text-brand-teal-deep">
+          <p className="text-[0.75rem] font-bold uppercase tracking-wide text-brand-teal-deep">
             Where this stands · {SAMPLE_REVIEW.standing.level}
           </p>
           <p className="mt-1 text-[0.78rem] leading-relaxed text-slate-600">
@@ -74,7 +74,7 @@ export function ResumeOutcome({ compact = false }: { compact?: boolean }) {
         </div>
 
         <div>
-          <p className="text-[0.66rem] font-bold uppercase tracking-[0.1em] text-slate-400">
+          <p className="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-slate-500">
             What works
           </p>
           <ul className="mt-1.5 space-y-1.5">
@@ -93,7 +93,7 @@ export function ResumeOutcome({ compact = false }: { compact?: boolean }) {
         </div>
 
         <div>
-          <p className="text-[0.66rem] font-bold uppercase tracking-[0.1em] text-slate-400">
+          <p className="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-slate-500">
             What to fix, and how
           </p>
           <ul className="mt-1.5 space-y-2">
@@ -121,7 +121,7 @@ export function ResumeOutcome({ compact = false }: { compact?: boolean }) {
 export function ResumeScribe() {
   return (
     <div className="rounded-2xl border border-slate-200 bg-surface p-3.5">
-      <h4 className="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-brand-violet-deep">
+      <h4 className="text-[0.75rem] font-bold uppercase tracking-[0.14em] text-brand-violet-deep">
         Work on it with Scribe
       </h4>
 
@@ -131,17 +131,17 @@ export function ResumeScribe() {
           thing Scribe is not - there is nothing to pick from. */}
       <ol className="mt-2.5 grid gap-2">
         <li className="grid gap-1.5">
-          <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-teal-50 px-3 py-2 text-[0.74rem] leading-relaxed text-teal-900">
+          <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-teal-50 px-3 py-2 text-[0.75rem] leading-relaxed text-teal-900">
             Move the college fest above the store job
           </p>
           <div className="max-w-[92%] rounded-2xl rounded-bl-md border border-slate-200 px-3 py-2">
-            <p className="text-[0.74rem] leading-relaxed text-slate-700">
+            <p className="text-[0.75rem] leading-relaxed text-slate-700">
               Done — the placement drive is now your first entry and the store
               job sits under it. The dates still read correctly.
             </p>
             <span
               aria-hidden
-              className="mt-1 grid h-6 w-6 place-items-center rounded-full text-slate-400"
+              className="mt-1 grid h-6 w-6 place-items-center rounded-full text-slate-500"
               title="Undo this change"
             >
               <svg
@@ -160,11 +160,11 @@ export function ResumeScribe() {
           </div>
         </li>
         <li className="grid gap-1.5">
-          <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-teal-50 px-3 py-2 text-[0.74rem] leading-relaxed text-teal-900">
+          <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-teal-50 px-3 py-2 text-[0.75rem] leading-relaxed text-teal-900">
             Add that I handled about 60 customers a day
           </p>
           <div className="max-w-[92%] rounded-2xl rounded-bl-md border border-slate-200 px-3 py-2">
-            <p className="text-[0.74rem] leading-relaxed text-slate-700">
+            <p className="text-[0.75rem] leading-relaxed text-slate-700">
               Added to the store job. Make sure you can stand behind that number
               in the interview.
             </p>
@@ -175,7 +175,7 @@ export function ResumeScribe() {
       {/* The box itself: a text area you type into, send inside it bottom
           right, exactly where a chat box puts it. */}
       <div className="relative mt-2.5">
-        <div className="min-h-[3.6rem] w-full rounded-xl border border-slate-300 py-2 pl-2.5 pr-11 text-[0.74rem] leading-relaxed text-slate-400">
+        <div className="min-h-[3.6rem] w-full rounded-xl border border-slate-300 py-2 pl-2.5 pr-11 text-[0.75rem] leading-relaxed text-slate-500">
           This bullet is not true — take it out
         </div>
         <span
@@ -195,7 +195,7 @@ export function ResumeScribe() {
           </svg>
         </span>
       </div>
-      <p className="mt-1 text-[0.64rem] text-slate-400">
+      <p className="mt-1 text-[0.75rem] text-slate-500">
         Enter to send, Shift + Enter for a new line.
       </p>
     </div>
@@ -226,8 +226,8 @@ export function InterviewSetup() {
           settled before the clock starts. */}
       <div className="rounded-xl bg-brand-panel p-2.5">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[0.68rem] font-bold text-white/85">You</p>
-          <span className="flex items-center gap-1.5 text-[0.58rem] font-bold uppercase tracking-wide text-white/60">
+          <p className="text-[0.75rem] font-bold text-white/85">You</p>
+          <span className="flex items-center gap-1.5 text-[0.75rem] font-bold uppercase tracking-wide text-white/60">
             <span
               aria-hidden
               className="h-1.5 w-1.5 rounded-full bg-white/40"
@@ -242,7 +242,7 @@ export function InterviewSetup() {
           >
             A
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[0.7rem] font-semibold text-white/90">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[0.75rem] font-semibold text-white/90">
             <Mic />
             Check my microphone
           </span>
@@ -251,7 +251,7 @@ export function InterviewSetup() {
 
       <div className="mt-2 grid gap-2 sm:grid-cols-2">
         <div>
-          <p className="text-[0.58rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+          <p className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">
             Round
           </p>
           <div className="mt-1 flex gap-1">
@@ -261,7 +261,7 @@ export function InterviewSetup() {
             ].map(([label, on]) => (
               <span
                 key={label as string}
-                className={`flex-1 rounded-md px-1.5 py-1 text-center text-[0.66rem] font-semibold ${
+                className={`flex-1 rounded-md px-1.5 py-1 text-center text-[0.75rem] font-semibold ${
                   on
                     ? "bg-brand-teal-deep text-white"
                     : "bg-brand-mist text-slate-500"
@@ -273,7 +273,7 @@ export function InterviewSetup() {
           </div>
         </div>
         <div>
-          <p className="text-[0.58rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+          <p className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">
             Your interviewer
           </p>
           <div className="mt-1 flex gap-1">
@@ -283,15 +283,15 @@ export function InterviewSetup() {
             ].map(([name, on]) => (
               <span
                 key={name as string}
-                className={`flex flex-1 items-center justify-center gap-1 rounded-md px-1.5 py-1 text-[0.66rem] font-semibold ${
+                className={`flex flex-1 items-center justify-center gap-1 rounded-md px-1.5 py-1 text-[0.75rem] font-semibold ${
                   on
                     ? "bg-brand-mist text-brand-ink ring-1 ring-brand-teal"
-                    : "bg-brand-mist text-slate-400"
+                    : "bg-brand-mist text-slate-500"
                 }`}
               >
                 <span
                   aria-hidden
-                  className={`grid h-4 w-4 place-items-center rounded-full text-[0.55rem] font-bold ${
+                  className={`grid h-4 w-4 place-items-center rounded-full text-[0.75rem] font-bold ${
                     on
                       ? "bg-brand-teal-deep text-white"
                       : "bg-slate-300 text-slate-600"
@@ -306,7 +306,7 @@ export function InterviewSetup() {
         </div>
       </div>
 
-      <p className="mt-2 text-[0.7rem] leading-snug text-slate-600">
+      <p className="mt-2 text-[0.75rem] leading-snug text-slate-600">
         Practising for{" "}
         <strong className="font-semibold text-brand-ink">
           Customer Success Associate
@@ -320,7 +320,7 @@ export function InterviewSetup() {
         <Mic />
         Join the interview
       </span>
-      <p className="mt-1.5 text-center text-[0.66rem] text-slate-500">
+      <p className="mt-1.5 text-center text-[0.75rem] text-slate-500">
         No mic today?{" "}
         <span className="font-semibold text-slate-600 underline underline-offset-2">
           Type your answers instead
@@ -334,7 +334,7 @@ export function InterviewSetup() {
 export function InterviewAudio() {
   return (
     <div className="rounded-xl border border-slate-200 bg-surface p-3">
-      <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+      <p className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">
         Question 2 of 6
       </p>
       <p className="mt-1 text-[0.85rem] font-semibold leading-snug text-brand-ink">
@@ -366,7 +366,7 @@ export function InterviewAudio() {
             />
           ))}
         </span>
-        <span className="shrink-0 text-[0.68rem] font-bold text-brand-teal-deep">
+        <span className="shrink-0 text-[0.75rem] font-bold text-brand-teal-deep">
           Listening
         </span>
       </div>
@@ -375,7 +375,7 @@ export function InterviewAudio() {
         &ldquo;I&rsquo;d ask what they actually needed first, because a refund
         is not always the thing they came for…&rdquo;
       </p>
-      <p className="mt-1.5 text-[0.68rem] text-slate-400">
+      <p className="mt-1.5 text-[0.75rem] text-slate-500">
         Answer out loud or type — the transcript is kept either way, and the
         feedback quotes what you actually said.
       </p>
@@ -406,13 +406,13 @@ export function ResumeRead() {
           <span className="block text-[0.8rem] font-semibold text-brand-ink">
             Reading your resume…
           </span>
-          <span className="block text-[0.7rem] text-slate-500">
+          <span className="block text-[0.75rem] text-slate-500">
             PDF, Word or a LinkedIn export
           </span>
         </span>
       </div>
 
-      <p className="mt-2.5 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+      <p className="mt-2.5 text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">
         Found and filled in
       </p>
       <ul className="mt-1.5 grid gap-1">
@@ -430,17 +430,17 @@ export function ResumeRead() {
               <Check size={8} />
             </span>
             <span className="min-w-0">
-              <span className="block text-[0.7rem] font-semibold text-brand-ink">
+              <span className="block text-[0.75rem] font-semibold text-brand-ink">
                 {k}
               </span>
-              <span className="block truncate text-[0.7rem] text-slate-500">
+              <span className="block truncate text-[0.75rem] text-slate-500">
                 {v}
               </span>
             </span>
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-[0.68rem] text-slate-400">
+      <p className="mt-2 text-[0.75rem] text-slate-500">
         Nothing is retyped. Anything it could not find is asked for, and only
         that.
       </p>
@@ -457,7 +457,7 @@ export function InterviewOutcome() {
     // somebody most wants to read the hardest one to.
     <div className="rounded-xl border border-slate-200 bg-surface p-3.5 [&_h2]:text-[0.95rem] [&_h3]:text-[0.82rem] [&_li]:leading-relaxed [&_p]:leading-relaxed">
       <InterviewSummary summary={past.summary} roleTitle={past.roleTitle} />
-      <p className="mt-2 text-center text-[0.55rem] uppercase tracking-[0.15em] text-slate-400">
+      <p className="mt-2 text-center text-[0.75rem] uppercase tracking-[0.15em] text-slate-500">
         Example — not a real person
       </p>
     </div>

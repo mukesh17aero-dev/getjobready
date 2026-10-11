@@ -1,5 +1,4 @@
 "use client";
-
 // The interview itself.
 
 import {
@@ -81,7 +80,7 @@ export function InterviewFlow({
   const [micLevel, setMicLevel] = useState(0);
   // Chosen in the green room by someone with no mic today: the room opens in
   // typing mode instead of waiting for a recording that will never come.
-  const [preferTyping, setPreferTyping] = useState(false);
+  const [preferTyping, setPreferTyping] = useState(true);
   const micStopRef = useRef<(() => void) | null>(null);
 
   // ---- room state ----
@@ -624,7 +623,7 @@ export function InterviewFlow({
   // read-out itself when the write lands, so nobody has to watch for a badge.
   if (view === "wrapup") {
     return (
-      <main className="mx-auto flex min-h-[calc(100dvh-3.5rem)] max-w-lg flex-col items-center justify-center px-4 py-10 text-center sm:px-6">
+      <main className="mx-auto flex min-h-[calc(100dvh-3.5rem)] max-w-(--page-max-width) flex-col items-center justify-center px-4 py-10 text-center sm:px-6">
         <InterviewerAvatar />
         <p className="mt-4 text-lg font-semibold text-brand-ink">
           {summaryError
@@ -677,7 +676,7 @@ export function InterviewFlow({
 
   if (view === "summary" && summary && session) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+      <main className="mx-auto max-w-(--page-max-width) px-4 py-8 sm:px-6">
         <BackLink fallbackHref="/interview" fallbackLabel="Back to Interview" />
         <div className="mt-4">
           <InterviewSummary
@@ -732,7 +731,7 @@ export function InterviewFlow({
         type="button"
         onClick={confirmEarlyEnd}
         disabled={cannotEndYet}
-        className={`cursor-pointer text-[0.72rem] font-semibold text-slate-400 underline underline-offset-2 transition-colors hover:text-rose-600 disabled:cursor-default disabled:opacity-40 motion-reduce:transition-none ${className}`}
+        className={`cursor-pointer text-[0.75rem] font-semibold text-slate-500 underline underline-offset-2 transition-colors hover:text-rose-600 disabled:cursor-default disabled:opacity-40 motion-reduce:transition-none ${className}`}
       >
         End interview early
       </button>
@@ -762,7 +761,7 @@ export function InterviewFlow({
               <div className="min-w-0">
                 {/* Who is taking it, named in view: the voice you hear should
                     never be a surprise, and it settles at the start. */}
-                <p className="truncate text-[0.65rem] font-bold uppercase tracking-wide text-brand-violet-deep">
+                <p className="truncate text-[0.75rem] font-bold uppercase tracking-wide text-brand-violet-deep">
                   Practice interview ·{" "}
                   {session.round === "hr" ? "HR round" : "Managerial round"}
                   {session.interviewer ? ` · with ${session.interviewer}` : ""}
@@ -815,7 +814,7 @@ export function InterviewFlow({
                           aria-hidden
                         >
                           <span className="h-px flex-1 bg-slate-200" />
-                          <span className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                          <span className="text-[0.75rem] font-semibold uppercase tracking-[0.12em] text-slate-500">
                             {STAGE_LABEL[turn.stage]}
                           </span>
                           <span className="h-px flex-1 bg-slate-200" />
@@ -830,9 +829,9 @@ export function InterviewFlow({
                           <InterviewerAvatar />
                         </span>
                         <div className="min-w-0">
-                          <p className="text-[0.72rem] font-semibold text-slate-500">
+                          <p className="text-[0.75rem] font-semibold text-slate-500">
                             {session.interviewer ?? "Your interviewer"}
-                            <span className="ml-2 font-normal text-slate-400">
+                            <span className="ml-2 font-normal text-slate-500">
                               Question {turn.index + 1}
                             </span>
                           </p>
@@ -868,7 +867,7 @@ export function InterviewFlow({
                       {/* Your answer, on your side of the thread. */}
                       {turn.answer ? (
                         <div className="mt-2 flex flex-col items-end">
-                          <p className="mr-1 text-[0.72rem] font-semibold text-teal-700">
+                          <p className="mr-1 text-[0.75rem] font-semibold text-teal-700">
                             You
                             {voiceTurns.has(turn.index) ? (
                               <span className="ml-1.5 inline-flex translate-y-0.5 items-center gap-1">
@@ -936,7 +935,7 @@ export function InterviewFlow({
                 <div className="flex items-start gap-2.5">
                   <InterviewerAvatar />
                   <div className="min-w-0 max-w-[38rem] rounded-2xl rounded-tl-sm border border-slate-200 bg-surface px-3.5 py-2.5">
-                    <p className="text-[0.68rem] font-bold uppercase tracking-wide text-slate-400">
+                    <p className="text-[0.75rem] font-bold uppercase tracking-wide text-slate-500">
                       Interviewer
                     </p>
                     <p className="mt-1 text-sm leading-relaxed text-slate-600">
@@ -953,7 +952,7 @@ export function InterviewFlow({
               <div className="mt-4 flex items-end gap-2">
                 <InterviewerAvatar />
                 <div className="min-w-0 max-w-[85%] rounded-2xl rounded-bl-md border border-brand-teal/30 bg-teal-50 px-4 py-3">
-                  <p className="text-[0.68rem] font-bold uppercase tracking-wide text-teal-700">
+                  <p className="text-[0.75rem] font-bold uppercase tracking-wide text-teal-700">
                     {STAGE_LABEL.close}
                   </p>
                   <p className="mt-1 text-base font-semibold leading-relaxed text-teal-700">
@@ -1152,7 +1151,7 @@ export function InterviewFlow({
   );
 
   return (
-    <InterviewWorkspaceFrame current="practice" eyebrow="YOUR INTERVIEW STARTS HERE" title="A little preparation. A better rehearsal." subtitle="Choose the role, round and way you want to answer.">
+    <InterviewWorkspaceFrame current="practice" eyebrow="YOUR INTERVIEW STARTS HERE" title="A little practice. Less interview panic." subtitle="Choose your format, then rehearse one answer at a time.">
       {initial.history.length > 0 && (
         <div className={s.inlineContext}><div><span>{exampleHistory ? "WHAT YOU GET AFTERWARDS" : "YOUR INTERVIEWS"}</span><strong>{exampleHistory ? "A worked example read-out" : `${initial.history.length} ${initial.history.length === 1 ? "interview" : "interviews"} with their feedback`}</strong></div><button type="button" className={s.textButton} onClick={() => setPane(pane === "keep" ? "make" : "keep")}>{pane === "keep" ? "Back to setup" : exampleHistory ? "See the example →" : "View past interviews →"}</button></div>
       )}
@@ -1196,10 +1195,8 @@ export function InterviewFlow({
               </div>
               <div className={s.formSection}><div className={s.formLabel}>Which conversation are you preparing for?</div><div className={s.choose}>{ROUNDS.map((option) => choice(option.title, option.line, round === option.id, () => setRound(option.id)))}</div></div>
               <div className={s.formSection}><div className={s.formLabel}>Choose your AI interviewer</div><div className={s.choose}>{INTERVIEWERS.map((person) => choice(person.title, "AI interviewer", chosenInterviewer === person.id, () => setInterviewer(person.id), person.title.charAt(0)))}</div></div>
-              {/* Speaking is the default and typing is always there in the
-                  room, so the setup only checks the microphone. A browser
-                  that refuses it switches the room to typing from here. */}
-              <div className={s.formSection}><div className={s.formLabel}>Your microphone</div>
+              {/* Typing is available before any microphone permission. */}
+              <div className={s.formSection}><div className={s.formLabel}>How would you like to answer?</div>
                 {!preferTyping && (
                   <div className={s.device}><span className={s.dot} /><div>
                     <strong>{micState === "live" ? (micLevel > 0.12 ? "We can hear you. That is all we needed." : "Say something. The bars should move.") : micState === "denied" ? "Your browser is not letting us use the microphone." : micState === "asking" ? "Waiting for permission…" : "Check your microphone before joining"}</strong>
@@ -1227,9 +1224,9 @@ export function InterviewFlow({
               <div className={s.focusBox}><span className={s.chip}>YOUR CHOSEN FOCUS</span><h3>{focus.trim() || "Make your actions easy to follow."}</h3><p>Explain the situation briefly, spend time on what you did, and end with the result.</p></div>
               <div className={s.checkline}><b>◷</b> 10 minutes, up to ten questions, ends on time</div>
               <div className={s.checkline}><b>✓</b> One question at a time{first ? `, ${first}` : ""}</div>
-              <div className={s.checkline}><b>↗</b> Feedback on every answer afterwards</div>
+              <div className={s.checkline}><b>↗</b> Feedback on every answer afterwards</div><p className={s.lockedNote}>Feedback looks at the situation, your own actions, outcome, relevance and clarity. This rehearsal score is separate from role readiness and does not predict hiring.</p><p className={s.lockedNote}>Afterwards, practise a weak answer in the question library or use a role task to build stronger evidence. Your submitted answers and feedback are saved to your account.</p>
               <p className={s.lockedNote}>{initial.speechAvailable ? "The questions are written for your role as you go. Answer out loud, or type." : "Questions arrive as text; answer by voice or typing."}</p>
-              <div style={{ marginTop: 22 }}><button type="button" className={s.primary} disabled={starting} onClick={begin}>{starting ? "Setting up your interviewer…" : "Join the interview →"}</button></div>
+              <div style={{ marginTop: 22 }}><button type="button" className={s.primary} disabled={starting} onClick={begin}>{starting ? "Setting up your interviewer…" : "Start practice →"}</button></div>
             </aside>
           </div>
 

@@ -3,7 +3,7 @@
 // How strongly a role needs each skill.
 
 const NEED_STYLE = [
-  "border-slate-200 bg-surface text-slate-400 hover:border-slate-300",
+  "border-slate-200 bg-surface text-slate-500 hover:border-slate-300",
   "border-violet-200 bg-violet-50 text-violet-800",
   "border-violet-300 bg-violet-100 text-violet-900",
   "border-brand-violet bg-brand-violet text-white",
@@ -23,7 +23,7 @@ export function SkillNeeds({
 }) {
   if (skills.length === 0) {
     return (
-      <p className="mt-1.5 text-[0.8rem] text-slate-400">
+      <p className="mt-1.5 text-[0.8rem] text-slate-500">
         No skills defined yet — add them on the Skills &amp; mappings page.
       </p>
     );

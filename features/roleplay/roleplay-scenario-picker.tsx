@@ -36,7 +36,7 @@ export function RoleplayScenarioPicker({
             >
               <p className="text-sm font-bold text-brand-ink">{scenario.title}</p>
               <p className="mt-1.5 text-xs leading-relaxed text-slate-600">{scenario.description}</p>
-              <p className="mt-2 text-[0.7rem] font-semibold uppercase tracking-wide text-slate-400">
+              <p className="mt-2 text-[0.75rem] font-semibold uppercase tracking-wide text-slate-500">
                 Plays {scenario.personaName}
               </p>
             </button>
@@ -55,7 +55,7 @@ export function RoleplayScenarioPicker({
             {chosen.rubric.map((c) => (
               <li
                 key={c.id}
-                className="rounded-md border border-slate-200 px-2 py-1 text-[0.7rem] font-semibold text-slate-600"
+                className="rounded-md border border-slate-200 px-2 py-1 text-[0.75rem] font-semibold text-slate-600"
               >
                 {c.label}
               </li>

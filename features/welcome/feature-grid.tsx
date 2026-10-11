@@ -33,7 +33,7 @@ export function FeatureGrid({ category }: { category: FeatureCategory }) {
         {openCount === 0 && (
           // Said once, up front. Somebody who reads five cards before working
           // out that none of them opens has been wasted.
-          <p className="mt-3 inline-flex rounded-full bg-white/15 px-3 py-1 text-[0.74rem] font-semibold ring-1 ring-white/30">
+          <p className="mt-3 inline-flex rounded-full bg-white/15 px-3 py-1 text-[0.75rem] font-semibold ring-1 ring-white/30">
             None of this is released yet — it is here so you can see what is
             coming.
           </p>
@@ -70,7 +70,7 @@ export function FeatureGrid({ category }: { category: FeatureCategory }) {
               <p className="mt-1 text-[0.78rem] leading-snug text-slate-500">
                 {feature.blurb}
               </p>
-              <p className="mt-2 flex-1 text-[0.74rem] leading-snug text-slate-400">
+              <p className="mt-2 flex-1 text-[0.75rem] leading-snug text-slate-500">
                 <span className="font-semibold uppercase tracking-wide">
                   For
                 </span>{" "}
@@ -88,7 +88,7 @@ export function FeatureGrid({ category }: { category: FeatureCategory }) {
               ) : (
                 // No button, because there is nothing to press. The card says
                 // what it will do and stops there.
-                <p className="mt-3 text-[0.72rem] font-semibold text-slate-400">
+                <p className="mt-3 text-[0.75rem] font-semibold text-slate-500">
                   Not available yet
                 </p>
               )}

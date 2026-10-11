@@ -89,6 +89,7 @@ export function QuestionPractice({ initial, signedOut = false, openId }: { initi
 
   return <>
     {gate && <SignUpPrompt action={gate} onClose={() => setGate(null)} />}
+    <p className="mb-4 text-sm text-slate-600">Allow about 3–5 minutes per question. Open one to practise your answer and get feedback; a full interview is optional.</p>
     <div className={s.questionToolbar}>
       <label><span className={s.srOnly}>Search questions</span><input type="search" value={search} placeholder="Search a question or competency…" onChange={e => { setSearch(e.target.value); setPage(0); }} /></label>
       <label><span className={s.srOnly}>Interview round</span><select value={round} onChange={e => { setRound(e.target.value as "all" | "hr" | "managerial"); setPage(0); }}><option value="all">All rounds</option><option value="hr">HR round</option><option value="managerial">Managerial round</option></select></label>

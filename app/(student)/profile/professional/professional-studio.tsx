@@ -293,6 +293,7 @@ export function ProfessionalStudio({ initial, signedOut = false }: { initial: Pr
   }
 
   async function copySection(id: Section) {
+    if (signedOut) { needsAccount("your LinkedIn sections", "Sign in to keep and copy your own LinkedIn profile. You can continue exploring the example here."); return; }
     try { await navigator.clipboard.writeText(textFor(kept, id)); setCopied({ ...copied, [id]: true }); setStatus(`${sections.find(item => item.id === id)?.title} copied to your clipboard. Paste it into LinkedIn when ready.`); }
     catch { setStatus("Clipboard access was unavailable. Select the text below and copy it manually."); }
   }

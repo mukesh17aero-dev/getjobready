@@ -19,7 +19,7 @@ export function NetworkWelcome({ audience }: { audience: string }) {
     setAccountSlot(node?.querySelector<HTMLElement>(".welcome-account") ?? null);
   }, []);
   // The renderer owns this subtree. Account/session renders must not reset its DOM.
-  const surface = useMemo(() => <div className="network-welcome" ref={attachRoot} dangerouslySetInnerHTML={welcomeHtml} />, [attachRoot]);
+  const surface = useMemo(() => <div className="network-welcome" data-palette="modern-neutral" ref={attachRoot} dangerouslySetInnerHTML={welcomeHtml} />, [attachRoot]);
   useEffect(() => {
     let cancelled = false;
     let dispose: (() => void) | undefined;
@@ -33,5 +33,5 @@ export function NetworkWelcome({ audience }: { audience: string }) {
     });
     return () => { cancelled = true; dispose?.(); };
   }, [audience]);
-  return <>{surface}{accountSlot && createPortal(<WelcomeAccountControls />, accountSlot)}<AuthDeepLink /></>;
+  return <>{surface}{accountSlot && createPortal(<WelcomeAccountControls night={false} />, accountSlot)}<AuthDeepLink /></>;
 }

@@ -396,7 +396,7 @@ export function DiscoveryAssistant({
           >
             <Face arriving={entry === "arriving"} />
             <span className="min-w-0 flex-1">
-              <span className="block text-[0.7rem] font-bold uppercase tracking-[0.08em] text-brand-violet-deep">
+              <span className="block text-[0.75rem] font-bold uppercase tracking-[0.08em] text-brand-violet-deep">
                 {muted ? "Still here" : "Discovery assistant"}
               </span>
               <span
@@ -562,7 +562,7 @@ export function DiscoveryAssistant({
               <button
                 type="button"
                 onClick={onTour}
-                className="mt-2 w-full text-center text-[0.74rem] font-semibold text-brand-violet-deep"
+                className="mt-2 w-full text-center text-[0.75rem] font-semibold text-brand-violet-deep"
               >
                 Not sure this is the one? Walk me through the others in{" "}
                 {sectorName(role)} →

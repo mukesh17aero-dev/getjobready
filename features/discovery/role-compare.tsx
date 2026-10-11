@@ -41,12 +41,14 @@ export function RoleCompare({
   onClose,
   onChoose,
   chosenRoleId,
+  interests = [],
 }: {
   roles: RoleDetail[];
   titles: Record<string, string>;
   onClose: () => void;
   onChoose?: (roleId: string) => void;
   chosenRoleId?: string | null;
+  interests?: string[];
 }) {
   return (
     <Dialog
@@ -55,11 +57,12 @@ export function RoleCompare({
       onClose={onClose}
       wide
     >
-      <div className="overflow-x-auto">
+      <section className="mb-4 rounded-xl border border-slate-200 p-4"><h2 className="text-lg font-semibold">What might fit you</h2><p className="text-sm text-slate-600">{interests.length ? `You selected ${interests.join(", ")}. Compare the sectors, daily work and trade-offs below with those interests. This is not a ranking of your ability.` : "Compare the daily work, hours and trade-offs with what matters to you. No role is ranked best without evidence."}</p></section>
+      <div className="max-h-[65vh] overflow-auto">
         <table className="w-full min-w-[560px] border-collapse text-[0.82rem]">
-          <thead>
+          <thead className="sticky top-0 z-10 bg-surface">
             <tr>
-              <th className="w-32 border-b border-slate-200 pb-2 text-left text-[0.68rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+              <th className="w-32 border-b border-slate-200 pb-2 text-left text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">
                 &nbsp;
               </th>
               {roles.map((role) => (
@@ -77,7 +80,7 @@ export function RoleCompare({
           <tbody>
             {ROWS.map((row) => (
               <tr key={row.label} className="align-top">
-                <th className="border-b border-slate-100 py-2.5 pr-3 text-left text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+                <th className="border-b border-slate-100 py-2.5 pr-3 text-left text-sm font-semibold text-slate-600">
                   {row.label}
                 </th>
                 {roles.map((role) => (
@@ -118,7 +121,7 @@ export function RoleCompare({
           </tbody>
         </table>
       </div>
-      <p className="mt-4 text-[0.72rem] leading-snug text-slate-400">
+      <p className="mt-4 text-[0.75rem] leading-snug text-slate-500">
         Pay bands are indicative pilot estimates for India.
       </p>
     </Dialog>

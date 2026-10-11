@@ -27,7 +27,7 @@ export default async function PricingPage() {
   const result = await getPricing();
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 pb-16 pt-4 sm:px-6">
+    <main className="mx-auto w-full max-w-(--page-max-width) px-4 pb-16 pt-4 sm:px-6">
       <BackLink fallbackHref="/" fallbackLabel="Back to Home" />
 
       <header className="mt-4 mb-4">

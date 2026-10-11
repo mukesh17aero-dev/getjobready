@@ -47,6 +47,7 @@ export default async function ReadinessResultsPage({
     searchParams,
     session ? listAssessmentRuns(session.access_token) : null,
   ]);
+  if (session && !listed) return <main className="mx-auto max-w-(--page-max-width) px-5 py-8"><BackLink fallbackHref="/practice" fallbackLabel="Back to Practice" /><h1 className="my-6 text-3xl font-semibold text-brand-ink">Your skills check</h1><div className="grid gap-6 md:grid-cols-[2fr_1fr]"><section className="rounded-2xl border border-slate-200 bg-surface p-8"><h2 className="text-2xl font-semibold">Your report could not load.</h2><p className="my-4 text-base leading-relaxed text-slate-600">Try again, or return to Practice and come back later. Your saved assessments are unchanged.</p><div className="flex flex-wrap gap-4"><a className="inline-flex min-h-11 items-center rounded-xl bg-brand-violet px-5 text-white" href={`/practice/readiness/results${role ? `?role=${encodeURIComponent(role)}` : ""}`}>Try again</a><Link className="inline-flex min-h-11 items-center rounded-xl border border-slate-300 px-5" href="/practice">Back to Practice</Link></div></section><aside className="rounded-2xl border border-slate-200 bg-brand-mist p-8"><h2 className="text-xl font-semibold">The work behind the score</h2><p className="mt-4 text-base leading-relaxed text-slate-600">Your results stay connected to the role and questions you answered. Skills not assessed are kept separate from scored work.</p></aside></div></main>;
   // A visitor sees one worked example, labelled as one: what a finished
   // sitting produces, from a sitting that was never theirs.
   const example: PastRun | null = session
@@ -58,6 +59,7 @@ export default async function ReadinessResultsPage({
         startedAt: SAMPLE_READINESS.readout.finishedAt ?? "",
         finishedAt: SAMPLE_READINESS.readout.finishedAt ?? "",
         scenesAttempted: SAMPLE_READINESS.readout.scenesAttempted,
+        scenesInSitting: SAMPLE_READINESS.readout.scenesInSitting,
         readiness: SAMPLE_READINESS.review.readiness.score,
         confidence: SAMPLE_READINESS.review.confidence,
       };
@@ -69,10 +71,10 @@ export default async function ReadinessResultsPage({
   const only = role ? (runs[0]?.roleTitle ?? null) : null;
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+    <main className="mx-auto w-full max-w-(--page-max-width) px-4 py-8 sm:px-6">
       <BackLink fallbackHref="/practice" fallbackLabel="Back to Practice" />
 
-      <h1 className="mt-4 text-xl font-semibold tracking-tight text-slate-900">
+      <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900">
         {example ? "What a result looks like" : only ? `Your results — ${only}` : "Your past results"}
       </h1>
       <p className="mt-1.5 max-w-2xl text-[0.9rem] leading-relaxed text-slate-600">
@@ -92,8 +94,8 @@ export default async function ReadinessResultsPage({
       {runs.length === 0 ? (
         <div className="mt-6 rounded-xl border border-slate-200 p-5">
           <p className="text-[0.9rem] leading-relaxed text-slate-600">
-            Nothing here yet. Your first assessment is 5 questions about one
-            job&apos;s actual work, and what it finds turns up on this page.
+            Nothing here yet. Your first assessment asks about one job&apos;s
+            actual work, and what it finds turns up on this page.
           </p>
           <Link
             href="/practice/readiness"
@@ -118,12 +120,12 @@ export default async function ReadinessResultsPage({
                     <p className="text-2xl font-semibold leading-none text-slate-900">
                       {r.readiness}
                     </p>
-                    <p className="mt-0.5 text-[0.66rem] uppercase tracking-[0.1em] text-slate-400">
+                    <p className="mt-0.5 text-[0.75rem] uppercase tracking-[0.1em] text-slate-500">
                       of 100
                     </p>
                   </>
                 ) : (
-                  <p className="text-[0.78rem] leading-tight text-slate-400">
+                  <p className="text-[0.78rem] leading-tight text-slate-500">
                     Not read
                   </p>
                 )}
@@ -133,7 +135,7 @@ export default async function ReadinessResultsPage({
                 <p className="text-[0.95rem] font-semibold text-slate-900">
                   {r.roleTitle}
                   {example && (
-                    <span className="ml-2 rounded-full bg-amber-50 px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-wide text-amber-700">
+                    <span className="ml-2 rounded-full bg-amber-50 px-2 py-0.5 text-[0.75rem] font-bold uppercase tracking-wide text-amber-700">
                       Example
                     </span>
                   )}

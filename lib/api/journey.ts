@@ -70,6 +70,8 @@ export type HomeWorkItem = {
 };
 
 export type JourneyState = {
+  /** Published practice roles; null means availability could not be checked. */
+  practiceRoles?: string[] | null;
   routes: JourneyRouteInfo[];
   current: JourneySelection | null;
   /** Null/missing means unavailable, never an empty saved-work shelf. */
@@ -134,7 +136,7 @@ export type HomeFocus = "journey" | "interview" | "practice" | "presence";
 
 export type HomeEvidence = {
   /** Overall readiness score of each finished sitting, oldest first. */
-  readiness: Array<{ at: string; score: number }>;
+  readiness: Array<{ at: string; score: number; stale?: boolean; runId?: string; roleId?: string; roleTitle?: string; confidence?: string | null; basis?: {scenesAttempted:number;scenesInSitting:number} | null }>;
   weakestSkill: string | null;
   interview: { mark: number; bar: number } | null;
   /** Finished sittings whose report was not written yet, and the newest one to open. */

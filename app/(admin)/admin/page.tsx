@@ -13,7 +13,7 @@ export default async function AdminPage({searchParams}:{searchParams:Promise<{vi
   if (!session) redirect("/login?next=/admin");
 
   const token = session.access_token;
-  if(query.view!=="content"&&!query.role&&!query.add){const access=await adminAccess(token);if(!access?.isAdmin)return <main className="p-10">Admin access is unavailable. Sign in as an administrator and retry.</main>;return <RoleStudio/>;}
+  if(query.view!=="content"&&!query.role&&!query.add){const access=await adminAccess(token);if(!access?.isAdmin)return <main className="p-10">Admin access is unavailable. Sign in as an administrator and retry.</main>;return <><nav className="px-6 pt-4"><a className="inline-flex min-h-11 items-center underline" href="/admin/simulation-reviews">Simulation review queue</a></nav><RoleStudio/></>;}
   const [
     access,
     discovery,
@@ -32,7 +32,7 @@ export default async function AdminPage({searchParams}:{searchParams:Promise<{vi
 
   if (access && !access.isAdmin) {
     return (
-      <main className="mx-auto max-w-xl px-4 py-16 text-center">
+      <main className="mx-auto max-w-(--page-max-width) px-4 py-16 text-center">
         <h1 className="text-2xl font-semibold text-slate-900">
           You don&apos;t have access to the admin console
         </h1>

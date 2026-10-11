@@ -183,7 +183,7 @@ function SimpleAssessment({
           <ol className="mt-3 space-y-2">
             {draft.scenes.map((s) => (
               <li key={s.id} className="rounded-lg border border-slate-200 p-3">
-                <span className="text-[0.7rem] font-bold uppercase tracking-wide text-violet-700">{typeOf(s)}</span>
+                <span className="text-[0.75rem] font-bold uppercase tracking-wide text-violet-700">{typeOf(s)}</span>
                 <p className="mt-0.5 text-[0.9rem] font-semibold text-slate-900">{s.title}</p>
                 <p className="mt-0.5 text-[0.82rem] text-slate-600">{assessmentQuestionCards(s.brief).question}</p>
               </li>

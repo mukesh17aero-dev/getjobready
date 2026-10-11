@@ -1,8 +1,11 @@
+import {AccountSettings} from "@/features/profile";
+import {getNotificationPreferences} from "@/lib/api";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/supabase-server";
 import { BackLink } from "@/components/ui/back-link";
 import { DeleteProfile } from "./delete-profile";
+import { CollegeLinksSettings } from "@/features/institution";
 
 export const metadata = { title: "Settings" };
 export const dynamic = "force-dynamic";
@@ -13,8 +16,9 @@ export default async function SettingsPage() {
   const session = await getServerSession();
   if (!session) redirect("/login?next=/settings");
 
+  const preferences=await getNotificationPreferences(session.access_token);
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 pb-16 sm:px-6">
+    <main className="mx-auto w-full max-w-(--page-max-width) px-4 pb-16 sm:px-6">
       <div className="pt-4">
         <BackLink fallbackHref="/" fallbackLabel="Back to Home" />
       </div>
@@ -40,6 +44,8 @@ export default async function SettingsPage() {
         </Link>
       </section>
 
+      <CollegeLinksSettings />
+      <AccountSettings preferences={preferences} identities={session.user.identities ?? []} />
       <DeleteProfile />
     </main>
   );

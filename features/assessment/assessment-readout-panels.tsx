@@ -42,11 +42,11 @@ export function OverviewPanel({
           {/* Wide enough to read: below the ring on a phone, beside it otherwise. */}
           <div className="min-w-[14rem] flex-1">
             <span
-              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold uppercase tracking-[0.08em] ${heroTone.bg} ${heroTone.text}`}
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.75rem] font-bold uppercase tracking-[0.08em] ${heroTone.bg} ${heroTone.text}`}
             >
               {heroTone.label}
             </span>
-            <p className="mt-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+            <p className="mt-1.5 text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-slate-500">
               Productive readiness for this role
             </p>
             {review.readiness.why && (
@@ -81,7 +81,7 @@ export function OverviewPanel({
           )}
           {review.scenes.length > 0 && (
             <div className="rounded-xl border border-slate-200 p-4">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+              <p className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-slate-500">
                 How much of what you wrote had something to read
               </p>
               <div className="mt-2">
@@ -112,7 +112,7 @@ export function OverviewPanel({
           ] as const
         ).map(({ label, value }) => (
           <div key={label} className="rounded-xl border border-slate-200 p-3.5">
-            <dt className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+            <dt className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-slate-500">
               {label}
             </dt>
             <dd className="mt-0.5 text-lg font-semibold text-slate-900">{value}</dd>
@@ -170,7 +170,7 @@ export function OverviewPanel({
 
       {review.summary && (
         <div className={`rounded-xl border-l-[3px] p-4 ${heroTone.border} ${heroTone.bg}`}>
-          <p className="text-[0.68rem] font-bold uppercase tracking-[0.1em] text-slate-500">
+          <p className="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-slate-500">
             The bottom line
           </p>
           <p className="mt-1 text-[0.9rem] leading-relaxed text-slate-700">
@@ -256,7 +256,7 @@ export function SkillsPanel({
                       <span className={`font-semibold ${TONE[toneOf(s.score)].text}`}>
                         {s.score}
                       </span>
-                      <ChevronRight size={13} className="text-slate-400" />
+                      <ChevronRight size={13} className="text-slate-500" />
                     </span>
                   </summary>
                   {s.why && (
@@ -286,7 +286,7 @@ export function SkillsPanel({
               <li key={s.skill}>
                 <div className="flex items-baseline justify-between gap-3 text-[0.84rem]">
                   <span className="font-medium text-slate-700">{s.skill}</span>
-                  <span className="shrink-0 text-[0.78rem] text-slate-400">
+                  <span className="shrink-0 text-[0.78rem] text-slate-500">
                     {s.attempted} of {s.inSitting}
                   </span>
                 </div>
@@ -333,7 +333,7 @@ export function AiPanel({ usingAI }: { usingAI: NonNullable<AssessmentReview["us
         </h2>
         <span className={`text-[1.1rem] font-semibold ${tone.text}`}>
           {usingAI.score}
-          <span className="ml-1 text-[0.78rem] font-normal text-slate-400">of 100</span>
+          <span className="ml-1 text-[0.78rem] font-normal text-slate-500">of 100</span>
         </span>
       </div>
       <div

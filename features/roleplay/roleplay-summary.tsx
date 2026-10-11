@@ -43,7 +43,7 @@ export function RoleplaySummary({
             <span className="text-sm font-semibold text-slate-500">/ 100</span>
           </p>
           <div className="mt-3 sm:mt-0">
-            <h2 className="text-[0.72rem] font-bold uppercase tracking-wide text-slate-600">
+            <h2 className="text-[0.75rem] font-bold uppercase tracking-wide text-slate-600">
               Your score for this rehearsal
             </h2>
             <p className="mt-1 text-sm leading-relaxed text-slate-700">
@@ -64,7 +64,7 @@ export function RoleplaySummary({
 
       <div className="grid gap-3 sm:grid-cols-3">
         <section className="rounded-2xl border border-slate-200 bg-surface p-4">
-          <h2 className="text-[0.72rem] font-bold uppercase tracking-wide text-teal-700">
+          <h2 className="text-[0.75rem] font-bold uppercase tracking-wide text-teal-700">
             What went well
           </h2>
           <ul className="mt-2.5 space-y-2">
@@ -79,13 +79,13 @@ export function RoleplaySummary({
           </ul>
         </section>
         <section className="rounded-2xl border border-slate-200 bg-surface p-4">
-          <h2 className="text-[0.72rem] font-bold uppercase tracking-wide text-slate-500">
+          <h2 className="text-[0.75rem] font-bold uppercase tracking-wide text-slate-500">
             What to improve
           </h2>
           <ul className="mt-2.5 space-y-2">
             {summary.improvements.map((point) => (
               <li key={point} className="flex gap-2 text-sm leading-relaxed text-slate-700">
-                <span aria-hidden className="mt-0.5 text-slate-400">
+                <span aria-hidden className="mt-0.5 text-slate-500">
                   →
                 </span>
                 {point}
@@ -94,7 +94,7 @@ export function RoleplaySummary({
           </ul>
         </section>
         <section className="rounded-2xl border border-brand-violet/40 bg-violet-50 p-4">
-          <h2 className="text-[0.72rem] font-bold uppercase tracking-wide text-violet-700">
+          <h2 className="text-[0.75rem] font-bold uppercase tracking-wide text-violet-700">
             Focus on this next
           </h2>
           <p className="mt-2.5 text-sm font-semibold leading-relaxed text-slate-700">
@@ -110,7 +110,7 @@ export function RoleplaySummary({
             {score.perCriterion.map((c) => (
               <li
                 key={c.id}
-                className={`rounded-md border px-2.5 py-1.5 text-[0.72rem] font-semibold ${c.rating >= 2 ? "border-teal-200 text-teal-700" : "border-amber-200 text-amber-800"}`}
+                className={`rounded-md border px-2.5 py-1.5 text-[0.75rem] font-semibold ${c.rating >= 2 ? "border-teal-200 text-teal-700" : "border-amber-200 text-amber-800"}`}
               >
                 {c.label} {c.rating}/3
               </li>

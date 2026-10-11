@@ -58,12 +58,12 @@ export function CopyButton({
       type="button"
       onClick={() => void copy()}
       aria-label={state === "done" ? `${label} copied` : `Copy ${label}`}
-      className={`inline-flex min-h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2 text-[0.72rem] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal ${
+      className={`inline-flex min-h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2 text-[0.75rem] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal ${
         state === "done"
           ? "text-teal-700"
           : state === "failed"
             ? "text-amber-800"
-            : "text-slate-400 hover:bg-slate-100 hover:text-brand-ink"
+            : "text-slate-500 hover:bg-slate-100 hover:text-brand-ink"
       } ${className}`}
     >
       {state === "done" ? (

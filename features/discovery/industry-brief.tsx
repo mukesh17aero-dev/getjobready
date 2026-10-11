@@ -63,7 +63,7 @@ export function IndustryBriefPanel({
             {brief.starting}
           </Section>
           {brief.sources && brief.sources.length > 0 && (
-            <p className="text-[0.74rem] leading-relaxed text-slate-400">
+            <p className="text-[0.75rem] leading-relaxed text-slate-500">
               Sources: {brief.sources.join("; ")}.
             </p>
           )}

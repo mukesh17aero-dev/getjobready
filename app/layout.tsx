@@ -6,6 +6,8 @@ import { AppHeader } from "@/features/shell";
 import { FootprintTracker } from "@/features/shell";
 import { THEME_BOOTSTRAP } from "@/lib/theme";
 import "./globals.css";
+import "./product-design.css";
+import "./signature-design.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -62,8 +64,8 @@ export const viewport: Viewport = {
   // Colours the browser's own address bar to match the page, which is most of
   // what makes a browser tab stop looking like a browser tab on a phone.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fbfaf7" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a121a" },
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#151B22" },
   ],
 };
 

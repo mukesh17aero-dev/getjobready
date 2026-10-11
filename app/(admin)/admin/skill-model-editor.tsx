@@ -11,7 +11,7 @@ const LEVELS = [0, 1, 2, 3] as const;
 const LEVEL_WORD = ["Not used", "Weak", "Medium", "Strong"] as const;
 
 const CHIP_STYLE = [
-  "border-slate-200 bg-surface text-slate-400 hover:border-slate-300",
+  "border-slate-200 bg-surface text-slate-500 hover:border-slate-300",
   "border-violet-200 bg-violet-50 text-violet-800",
   "border-violet-300 bg-violet-100 text-violet-900",
   "border-brand-violet bg-brand-violet text-white",
@@ -200,7 +200,7 @@ export function SkillModelEditor({
                 />
                 <span
                   className={`hidden shrink-0 text-[0.75rem] tabular-nums sm:block ${
-                    roles === 0 ? "text-amber-700" : "text-slate-400"
+                    roles === 0 ? "text-amber-700" : "text-slate-500"
                   }`}
                   title={
                     roles === 0
@@ -226,7 +226,7 @@ export function SkillModelEditor({
           })}
         </div>
         {checking && (
-          <p className="mt-1.5 text-[0.75rem] text-slate-400">Checking…</p>
+          <p className="mt-1.5 text-[0.75rem] text-slate-500">Checking…</p>
         )}
       </div>
 
@@ -240,7 +240,7 @@ export function SkillModelEditor({
 
         <div className="mt-3 rounded-xl border border-slate-200 bg-surface p-4">
           <div className="flex items-center gap-1.5">
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-slate-400">
+            <p className="text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-slate-500">
               How much behaviour may move a score
             </p>
             <HelpButton
@@ -337,7 +337,7 @@ export function SkillModelEditor({
           if (rows.length === 0) return null;
           return (
             <div key={group.source} className="mt-3">
-              <p className="mb-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-slate-400">
+              <p className="mb-1.5 text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-slate-500">
                 {group.label}
               </p>
               <div className="overflow-hidden rounded-xl border border-slate-200 bg-surface">
@@ -351,7 +351,7 @@ export function SkillModelEditor({
                   {signal.label}
                 </p>
                 {!signal.usedInScoring && (
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-wide text-slate-500">
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[0.75rem] font-bold uppercase tracking-wide text-slate-500">
                     recorded only
                   </span>
                 )}

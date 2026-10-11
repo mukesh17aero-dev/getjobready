@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
@@ -11,12 +10,14 @@ import { supabaseBrowser } from "@/lib/supabase-browser";
 import { SignUpPrompt, type GatedAction } from "@/components/auth/signup-gate";
 import { flushFootprints, track } from "@/lib/footprints";
 import { RememberHub } from "@/features/journey";
-import { payRange } from "@/features/discovery";
+import { payRange, type ExploreIntro } from "@/features/discovery";
 import {
   ItineraryPicker,
   RoleList,
   TOUR_ROLES,
 } from "@/features/discovery";
+import { TourReflection } from "@/features/discovery";
+import {useTourMemory} from "@/features/discovery";
 import type { TourNote } from "@/features/discovery";
 import { RoleTourStage } from "@/features/discovery";
 import { RolePage } from "@/features/discovery";
@@ -24,7 +25,7 @@ import { RoleCompare } from "@/features/discovery";
 import { Dialog } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IndustryBriefPanel } from "@/features/discovery";
-import { Check, ChevronRight } from "@/components/ui/icons";
+import { InterestSelection } from "@/features/discovery";
 
 // The 3–5 minute Discovery flow (MVP deliverable 4). The server chooses each
 // question from the published bank based on what has been answered so far, so
@@ -62,14 +63,14 @@ async function token(): Promise<string | null> {
 // hesitation, which the server cannot see. Kept as a ref: it must never cause
 // a re-render, and it is read only when a payload is built.
 export function DiscoveryFlow({
-  initial,
+  initial, intro,
   signedOut = false,
   /** A role id from the address bar. Opens straight onto it. */
   initialRole = null,
   /** Back out of Discovery, to the walkthrough this was started from. */
   onLeave,
 }: {
-  initial: DiscoveryState | null;
+  initial: DiscoveryState | null; intro: ExploreIntro;
   /** Nobody is signed in: the questions were never fetched, so say so. */
   signedOut?: boolean;
   initialRole?: string | null;
@@ -193,11 +194,7 @@ export function DiscoveryFlow({
     }
   }, [chosenWorlds]);
   // The roles they want walked through, and the planned tour once it starts.
-  const [tourPicks, setTourPicks] = useState<string[]>([]);
-  const [itinerary, setItinerary] = useState<string[] | null>(null);
-  // Where the tour has got to, and what it has been told at each stop.
-  const [tourAt, setTourAt] = useState(0);
-  const [tourNotes, setTourNotes] = useState<TourNote[]>([]);
+  const {tourPicks,setTourPicks,itinerary,setItinerary,tourAt,setTourAt,tourNotes,setTourNotes}=useTourMemory(stage,setStage,initialRole);
   // The role open over the browsing screens.
   // A role is a page, never a dialog: which role, and the screen to return to.
   // A quick look inside one industry, from the Discover page. Not the picking
@@ -225,7 +222,7 @@ export function DiscoveryFlow({
   // that is not a failure and must not be dressed as one.
   if (!content && signedOut) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+      <main className="mx-auto max-w-(--page-max-width) px-4 py-10 sm:px-6">
         <p className="text-xs font-bold uppercase tracking-wide text-brand-violet-deep">
           Discovery
         </p>
@@ -274,7 +271,7 @@ export function DiscoveryFlow({
 
   if (!content) {
     return (
-      <main className="mx-auto max-w-5xl px-4 py-16 text-center">
+      <main className="mx-auto max-w-(--page-max-width) px-4 py-16 text-center">
         <h1 className="text-2xl font-semibold text-slate-900">
           Discovery couldn&apos;t load
         </h1>
@@ -351,7 +348,7 @@ export function DiscoveryFlow({
   const matchNoteFor = (id: string) => {
     const m = matches.find((x) => x.roleId === id);
     return m
-      ? `${m.band} fit · ${m.score}% match with your choices`
+      ? "A role to explore"
       : undefined;
   };
 
@@ -373,7 +370,7 @@ export function DiscoveryFlow({
       .map((c) => {
         const detail = detailOf(c.id);
         return {
-          id: c.id,
+          id: c.id, experienceLevels: detail?.experienceLevels,
           title: c.title,
           summary: c.summary,
           pay: detail ? `${payRange(detail.payMonthly)} to start` : "",
@@ -540,119 +537,6 @@ export function DiscoveryFlow({
   const industryDialogs = (
     <>
       {gateEl}
-      {industriesOpen && (
-        <Dialog
-          title="Which of these interest you?"
-          subtitle="Pick as many as you like - you can change them whenever"
-          onClose={() => setIndustriesOpen(false)}
-          wide
-          footer={
-            <div className="flex flex-1 flex-wrap items-center justify-between gap-3">
-              <span className="text-[0.82rem] text-slate-500">
-                {chosenWorlds.length === 0
-                  ? "Pick at least one."
-                  : `${chosenWorlds.length} picked.`}
-              </span>
-              <button
-                type="button"
-                disabled={chosenWorlds.length === 0}
-                onClick={() => {
-                  setIndustriesOpen(false);
-                  setStage("roles");
-                  for (const id of chosenWorlds) {
-                    track({
-                      family: "interest",
-                      event: "industry_selected",
-                      module: "discovery",
-                      target: id,
-                      meta: { rank: chosenWorlds.indexOf(id) + 1 },
-                    });
-                  }
-                }}
-                className="rounded-lg bg-brand-violet px-5 py-2 text-sm font-bold text-white disabled:opacity-40"
-              >
-                Show me all roles
-              </button>
-            </div>
-          }
-        >
-          <p className="text-[0.88rem] leading-relaxed text-slate-600">
-            Nobody can have a preference about work they have never seen
-            described. Not sure what is in one? Open it and look before you
-            pick.
-          </p>
-          <ul className="mt-3.5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-            {content.worlds.map((w, i) => {
-              const count = rolesIn(w.id).length;
-              const picked = chosenWorlds.includes(w.id);
-              const look = LOOKS[i % LOOKS.length]!;
-              return (
-                <li key={w.id}>
-                  <div
-                    role="checkbox"
-                    aria-checked={picked}
-                    aria-disabled={count === 0}
-                    tabIndex={count === 0 ? -1 : 0}
-                    onClick={(e) => {
-                      if ((e.target as HTMLElement).closest("button")) return;
-                      if (count === 0) return;
-                      setChosenWorlds((all) =>
-                        all.includes(w.id)
-                          ? all.filter((x) => x !== w.id)
-                          : [...all, w.id],
-                      );
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key !== "Enter" && e.key !== " ") return;
-                      e.preventDefault();
-                      if (count === 0) return;
-                      setChosenWorlds((all) =>
-                        all.includes(w.id)
-                          ? all.filter((x) => x !== w.id)
-                          : [...all, w.id],
-                      );
-                    }}
-                    className={`flex h-full items-center gap-3 rounded-xl border px-3.5 py-3 transition-colors ${
-                      count === 0
-                        ? "cursor-not-allowed border-slate-200 opacity-40"
-                        : picked
-                          ? "cursor-pointer border-brand-teal bg-teal-50/60"
-                          : "cursor-pointer border-slate-200 bg-surface hover:border-slate-300"
-                    }`}
-                  >
-                    <span
-                      aria-hidden
-                      className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-xl"
-                      style={{ background: `rgb(${look.tint} / 0.14)` }}
-                    >
-                      {look.glyph}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[0.88rem] font-bold leading-tight text-brand-ink">
-                        {w.title}
-                      </span>
-                      <span className="block text-[0.74rem] leading-snug text-slate-500">
-                        {w.caption}
-                      </span>
-                    </span>
-                    <span
-                      aria-hidden
-                      className={`grid h-6 w-6 shrink-0 place-items-center rounded-md border ${
-                        picked
-                          ? "border-brand-teal bg-brand-teal text-white"
-                          : "border-slate-300 text-transparent"
-                      }`}
-                    >
-                      <Check size={13} />
-                    </span>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </Dialog>
-      )}
-
       {peekWorld &&
         (() => {
           const w = content.worlds.find((x) => x.id === peekWorld);
@@ -689,13 +573,23 @@ export function DiscoveryFlow({
     </>
   );
 
+  if (industriesOpen) return <InterestSelection
+    options={content.worlds.map(w => ({id:w.id,title:w.title,caption:w.caption,disabled:rolesIn(w.id).length===0}))}
+    selected={chosenWorlds}
+    onToggle={id=>setChosenWorlds(all=>all.includes(id)?all.filter(x=>x!==id):[...all,id])}
+    onContinue={()=>{
+      setIndustriesOpen(false);setStage("roles");
+      try { localStorage.setItem(INDUSTRY_KEY,JSON.stringify(chosenWorlds)); } catch { /* Optional storage. */ }
+      for (const id of chosenWorlds) track({family:"interest",event:"industry_selected",module:"discovery",target:id,meta:{rank:chosenWorlds.indexOf(id)+1}});
+    }} />;
+
   // ---------- the browsing road: industries, roles, itinerary ----------
 
   // One role opened over any of the three screens below. The assistant comes
   // with it, because this is where somebody is deciding.
   if (stage === "role" && rolePage) {
     if (signedOut && rolePage.id !== previewRoleId) {
-      return <main className="mx-auto max-w-xl px-4 py-10">
+      return <main className="mx-auto max-w-(--page-max-width) px-4 py-10">
         <button type="button" className="mb-6 min-h-11 text-sm font-semibold text-slate-600" onClick={() => { window.history.pushState(null, "", "/discover"); setStage("roles"); }}>← Back to the roles</button>
         <section className="rounded-2xl border border-slate-300 bg-surface p-6">
           <h1 className="text-xl font-bold text-brand-ink">Sign in to explore this role</h1>
@@ -770,7 +664,7 @@ export function DiscoveryFlow({
       // that gains from width rather than just stretching.
       <main className="w-full px-4 pb-12 pt-6 sm:px-6 lg:px-10">
         <RememberHub path="/discover" />
-        <RoleList
+        <RoleList intro={intro}
           signedOut={signedOut}
           previewRoleId={previewRoleId}
           onPickIndustries={() => setIndustriesOpen(true)}
@@ -805,7 +699,7 @@ export function DiscoveryFlow({
             <button
               type="button"
               onClick={() => setCompareIds([])}
-              className="min-h-10 text-[0.8rem] text-slate-400 hover:text-slate-700"
+              className="min-h-10 text-[0.8rem] text-slate-500 hover:text-slate-700"
             >
               Clear
             </button>
@@ -832,6 +726,7 @@ export function DiscoveryFlow({
 
         {comparing && compareIds.length >= 2 && (
           <RoleCompare
+            interests={content.worlds.filter(world => chosenWorlds.includes(world.id)).map(world => world.title)}
             roles={compareIds
               .map(detailOf)
               .filter((r): r is NonNullable<typeof r> => Boolean(r))}
@@ -870,7 +765,7 @@ export function DiscoveryFlow({
       });
     };
     return (
-      <main className="mx-auto max-w-5xl px-4 pb-12 pt-6">
+      <main className="mx-auto max-w-(--page-max-width) px-4 pb-12 pt-6">
         <RememberHub path="/discover" />
         <ItineraryPicker
           options={tourOptions}
@@ -914,6 +809,8 @@ export function DiscoveryFlow({
           chosenRoleId={selectedRole}
           choosing={busy}
           onChoose={(roleId) => void choose(roleId)}
+          initialNote={tourNotes.find(note=>note.roleId===stops[Math.min(tourAt,stops.length-1)].roleId)}
+          onDraftNote={note=>setTourNotes(notes=>[...notes.filter(item=>item.roleId!==note.roleId),note])}
           onNote={(note) => {
             setTourNotes((n) => [
               ...n.filter((x) => x.roleId !== note.roleId),
@@ -935,85 +832,8 @@ export function DiscoveryFlow({
   }
 
   if (stage === "tour-done") {
-    // The end of a tour is not a report card - it is a shortlist. These are
-    // the roles they have just been walked through, in their own words, with
-    // the one decision the whole thing was for.
-    return (
-      <main className="mx-auto max-w-3xl px-4 pb-16 pt-6 sm:px-6">
-        <RememberHub path="/discover" />
-        {gateEl}
-        <p className="text-[0.72rem] font-bold uppercase tracking-[0.08em] text-brand-violet-deep">
-          Where you have been
-        </p>
-        <h1 className="mt-1 font-display text-[1.8rem] font-bold leading-tight tracking-tight text-brand-ink sm:text-[2.1rem]">
-          Did you find your dream role?
-        </h1>
-
-        <ul className="mt-5 grid gap-3">
-          {tourNotes.map((n) => {
-            const chosen = selectedRole === n.roleId;
-            return (
-              <li
-                key={n.roleId}
-                className="rounded-xl border border-slate-200 bg-surface px-4 py-3.5"
-              >
-                <p className="text-[0.95rem] font-bold text-brand-ink">
-                  {n.title}
-                </p>
-                {n.thoughts && (
-                  <p className="mt-1 text-[0.85rem] leading-relaxed text-slate-600">
-                    &ldquo;{n.thoughts}&rdquo;
-                  </p>
-                )}
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    disabled={busy || chosen}
-                    onClick={() => void choose(n.roleId)}
-                    className={`inline-flex min-h-11 items-center gap-1.5 rounded-xl px-5 text-[0.85rem] font-bold transition-colors disabled:opacity-80 ${
-                      chosen
-                        ? "bg-brand-teal text-white"
-                        : "border border-slate-300 text-brand-ink hover:border-brand-violet/60"
-                    }`}
-                  >
-                    {chosen ? (
-                      <>
-                        <Check size={14} /> Your selected role
-                      </>
-                    ) : (
-                      "Choose this role"
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openRole(n.roleId, "tour-done", "Back to the tour")
-                    }
-                    className="min-h-11 text-[0.84rem] font-semibold text-brand-violet-deep"
-                  >
-                    Open it again
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-
-        <div className="mt-6 border-t border-slate-200 pt-5">
-          <button
-            type="button"
-            onClick={() => setStage("roles")}
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-violet px-6 text-[0.88rem] font-bold text-white transition-colors hover:bg-brand-violet-deep"
-          >
-            Explore other roles
-            <ChevronRight size={15} />
-          </button>
-        </div>
-      </main>
-    );
+    return <main className="mx-auto max-w-(--page-max-width) px-4 pb-16 pt-6 sm:px-6"><RememberHub path="/discover" />{gateEl}<TourReflection notes={tourNotes} roles={content.roles} selectedRole={selectedRole} busy={busy} onChoose={id=>void choose(id)} onOpen={id=>openRole(id,"tour-done","Back to the tour")} onBrowse={()=>setStage("roles")} /></main>;
   }
 
-  // Every stage above returns. Discovery ends on a chosen role now, not on a
-  // results page: there is no survey to produce one.
   return null;
 }

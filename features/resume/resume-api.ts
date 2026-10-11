@@ -25,6 +25,7 @@ async function call<T>(
     const res = await fetch(`${API_URL}${path}`, {
       method: init?.method ?? "GET",
       cache: "no-store",
+      signal: AbortSignal.timeout(init?.method && init.method !== "GET" ? 90_000 : 15_000),
       headers: headers(token, init?.body !== undefined),
       ...(init?.body !== undefined ? { body: JSON.stringify(init.body) } : {}),
     });
@@ -40,6 +41,12 @@ async function call<T>(
 export type ResumeTarget = {
   role: { id: string; title: string } | null;
   keywords: string[];
+  /**
+   * Skills to offer as one-tap choices: the role's own, or without a role the
+   * ones most of the catalogue's roles ask for. Optional so an older backend
+   * still works; the builder then falls back to the keywords.
+   */
+  suggestedSkills?: string[];
 };
 
 // The three ATS-safe looks the backend can render. All single column, no
@@ -49,16 +56,6 @@ export type ResumeTemplate = "classic" | "compact" | "sidebar" | "minimal" | "gr
 export type ExportTemplate = "classic" | "compact" | "sidebar";
 export const exportTemplate = (template: ResumeTemplate): ExportTemplate =>
   template === "compact" || template === "minimal" ? "compact" : template === "sidebar" ? "sidebar" : "classic";
-
-/** One thing that would make the draft stronger, and where the answer goes. */
-export type GapQuestion = { field: string; question: string; about: string };
-
-export type GapCheckResult = {
-  targetRole: string;
-  keywords: string[];
-  missing: GapQuestion[];
-  ready: boolean;
-};
 
 export type ResumeData = {
   header: {
@@ -170,12 +167,6 @@ type TargetBody = {
 export const getResumeTarget = (token: string) =>
   call<ResumeTarget>(token, "/v1/resume/context");
 
-export const resumeGapCheck = (token: string, body: TargetBody) =>
-  call<GapCheckResult>(token, "/v1/resume/gap-check", {
-    method: "POST",
-    body,
-  });
-
 /** One gap in the record that a resume cannot be written without. */
 export type ReadinessGap = { item: "name" | "phone" | "city" | "education" | "experience" | "skills"; label: string };
 
@@ -204,7 +195,7 @@ export async function generateResume(
 /** The draft as it stands, saved as they work on it - and marked when downloaded. */
 export const saveResumeDraft = (
   token: string,
-  body: { resume: ResumeData; targetRole: string; template?: ExportTemplate; downloaded?: boolean; review?: ResumeReview },
+  body: { resume: ResumeData; targetRole: string; jobDescription?: string; template?: ExportTemplate; displayTemplate?: ResumeTemplate; downloaded?: boolean; review?: ResumeReview },
 ) => call<{ saved: true }>(token, "/v1/resume/draft", { method: "PUT", body });
 
 /**
@@ -336,7 +327,7 @@ export function resumeCompleteness(resume: ResumeData): {
       section: "Skills",
       fix: "Name at least three things you can do and could show someone.",
     });
-  if (!resume.experience.some((job) => said(job.title) && job.bullets.some(said)))
+  if (!resume.experience.some((job) => said(job.title) && job.bullets.some(said)) && !resume.projects?.some(project => said(project.title) && said(project.detail)))
     missing.push({
       section: "What you have done",
       fix: "One job, internship, project or volunteering role - with a line or two on what you actually did.",
@@ -351,9 +342,20 @@ export function resumeCompleteness(resume: ResumeData): {
 
 // ---- The second read, and the revision loop ----
 
+/** The one step after the AI Recruiter Review, decided from what they have done. */
+export type ReviewNext =
+  | { kind: "explore" }
+  | { kind: "readiness" | "simulation" | "interview"; roleId: string; roleTitle: string };
+
 export type ResumeReview = {
+  /** What would make a recruiter keep reading. */
   strengths: string[];
+  /** What would make a recruiter pass on it or hesitate. Absent on reviews saved before it existed. */
+  redFlags?: string[];
+  /** What would get it shortlisted, and how to change it truthfully. */
   gaps: Array<{ what: string; how: string }>;
+  /** What a recruiter for the role expects to see, and whether it is shown. Absent on older saved reviews. */
+  expectations?: Array<{ what: string; shown: boolean }>;
   standing: { level: "early" | "competitive" | "strong"; why: string };
   nextStep: {
     route: "readiness" | "practice" | "interview" | "profile";
@@ -363,31 +365,11 @@ export type ResumeReview = {
    * Only on a resume aimed at no role: directions their own record points
    * at, from our catalogue. Doors, never verdicts.
    */
-  roleIdeas?: Array<{ role: string; why: string }>;
+  roleIdeas?: Array<{ role: string; why: string; roleId?: string }>;
   coverage: { covered: string[]; missing: string[] };
   /** True when the model was unavailable and the read came from the text. */
   fromRules: boolean;
 };
-
-/**
- * The screener-and-recruiter read of a resume, counted from its own words.
- * No model call, so the draft screen can ask for it whenever it has a resume
- * and no checklist - after a reload, or on a version opened from the shelf.
- */
-export const resumeChecklistFor = (
-  token: string,
-  body: {
-    resume: ResumeData;
-    targetRole?: string;
-    jobDescription?: string;
-    general?: boolean;
-  },
-) =>
-  call<{ checklist: ResumeChecklist; targetRole: string; keywords: string[] }>(
-    token,
-    "/v1/resume/checklist",
-    { method: "POST", body },
-  );
 
 /** An honest read of the built resume against the bar for its role. */
 export const reviewResume = (
@@ -397,9 +379,11 @@ export const reviewResume = (
     targetRole?: string;
     jobDescription?: string;
     general?: boolean;
+    /** Student or working: the standard it is written and read to. */
+    track?: "student" | "early_career";
   },
 ) =>
-  call<{ review: ResumeReview; targetRole: string; keywords: string[]; checklist?: ResumeChecklist }>(
+  call<{ review: ResumeReview; next?: ReviewNext; targetRole: string; keywords: string[]; checklist?: ResumeChecklist }>(
     token,
     "/v1/resume/review",
     { method: "POST", body },
@@ -418,6 +402,8 @@ export const refineResume = (
     targetRole?: string;
     jobDescription?: string;
     general?: boolean;
+    /** Student or working: the standard it is written and read to. */
+    track?: "student" | "early_career";
     /** The conversation so far, oldest first. */
     history?: Array<{ ask: string; reply: string }>;
   },
@@ -438,3 +424,105 @@ export const refineResume = (
     ats?: AtsCheck;
     checklist?: ResumeChecklist;
   }>(token, "/v1/resume/refine", { method: "POST", body });
+
+// ---- One-field polish and the review's line fixes ----
+
+/** The fields the ✦ can rewrite: the ones a person explains in their own words. */
+export type PolishField = "summary" | "experience.bullets" | "projects.detail" | "education.detail" | "achievements" | "activities";
+
+/** A rewrite to show, never to apply unasked - or why there is none. */
+export type PolishResult = { ok: true; text: string; note: string } | { ok: false; reason: string };
+
+/** Their notes for one field, shaped into resume wording by the backend. */
+export const polishResumeField = (
+  token: string,
+  body: {
+    field: PolishField;
+    text: string;
+    context?: { title?: string; organisation?: string; period?: string };
+    resume: ResumeData;
+    targetRole?: string;
+    track?: "student" | "early_career";
+  },
+) => call<PolishResult>(token, "/v1/resume/polish", { method: "POST", body });
+
+/** Where a suggested fix applies. */
+export type ResumeFixPlace =
+  | { section: "summary" }
+  | { section: "experience"; entry: number; line: number }
+  | { section: "projects"; entry: number }
+  | { section: "education"; entry: number }
+  | { section: "achievements" | "activities"; line: number }
+  | { section: "jobTitle" | "qualification"; entry: number }
+  | { section: "skills"; entry: number; line: number };
+
+/** One exact replacement for one exact line, with why. */
+export type ResumeFix = ResumeFixPlace & { before: string; after: string; why: string };
+
+const sameText = (a: string, b: string) => a.replace(/\s+/g, " ").trim() === b.replace(/\s+/g, " ").trim();
+
+/**
+ * The resume with one accepted fix in it, or null when that line has changed
+ * since the fix was suggested - an edit made afterwards is never overwritten.
+ */
+export function applyResumeFix(resume: ResumeData, fix: ResumeFix): ResumeData | null {
+  const swap = (list: string[] | undefined, at: number) =>
+    list && list[at] !== undefined && sameText(list[at], fix.before) ? list.map((line, i) => (i === at ? fix.after : line)) : null;
+  switch (fix.section) {
+    case "summary":
+      return sameText(resume.summary, fix.before) ? { ...resume, summary: fix.after } : null;
+    case "experience": {
+      const job = resume.experience[fix.entry];
+      const bullets = swap(job?.bullets, fix.line);
+      return job && bullets ? { ...resume, experience: resume.experience.map((row, i) => (i === fix.entry ? { ...row, bullets } : row)) } : null;
+    }
+    case "projects": {
+      const project = resume.projects?.[fix.entry];
+      return project && sameText(project.detail, fix.before) ? { ...resume, projects: resume.projects!.map((row, i) => (i === fix.entry ? { ...row, detail: fix.after } : row)) } : null;
+    }
+    case "education": {
+      const row = resume.education[fix.entry];
+      return row && sameText(row.detail, fix.before) ? { ...resume, education: resume.education.map((item, i) => (i === fix.entry ? { ...item, detail: fix.after } : item)) } : null;
+    }
+    case "achievements": {
+      const achievements = swap(resume.achievements, fix.line);
+      return achievements ? { ...resume, achievements } : null;
+    }
+    case "activities": {
+      const activities = swap(resume.activities, fix.line);
+      return activities ? { ...resume, activities } : null;
+    }
+    case "jobTitle": {
+      const job = resume.experience[fix.entry];
+      return job && sameText(job.title, fix.before) ? { ...resume, experience: resume.experience.map((row, i) => (i === fix.entry ? { ...row, title: fix.after } : row)) } : null;
+    }
+    case "qualification": {
+      const row = resume.education[fix.entry];
+      return row && sameText(row.qualification, fix.before) ? { ...resume, education: resume.education.map((item, i) => (i === fix.entry ? { ...item, qualification: fix.after } : item)) } : null;
+    }
+    case "skills": {
+      const group = resume.skills[fix.entry];
+      const items = swap(group?.items, fix.line);
+      return group && items ? { ...resume, skills: resume.skills.map((row, i) => (i === fix.entry ? { ...row, items } : row)) } : null;
+    }
+  }
+}
+
+/** Typos, grammar and slips of logic: each one an edit to accept. */
+export type ResumeCorrection = ResumeFix & { kind: "typo" | "grammar" | "logic" };
+
+/** The check a person runs on a draft before they trust it. */
+export type ResumeValidation = {
+  missing: ResumeGap[];
+  /** `ask` is there when closing it needs a fact only the person has: the question to put to them. */
+  ats: Array<{ label: string; detail: string; ask?: string }>;
+  /** A fact that cannot be right, the section it sits in, and whether only the person can say what is true. */
+  logic: Array<{ section: "header" | "summary" | "experience" | "education" | "projects" | "achievements" | "activities"; where: string; detail: string; needsFact?: boolean }>;
+  corrections: ResumeCorrection[];
+  stronger: Array<{ what: string; how: string }>;
+  /** True when only the counted checks ran - the proofreading model was unavailable. */
+  fromRules: boolean;
+};
+
+export const validateResumeDraft = (token: string, body: { resume: ResumeData; template: ExportTemplate; targetRole?: string; track?: "student" | "early_career"; jobDescription?: string; general?: boolean }) =>
+  call<ResumeValidation>(token, "/v1/resume/validate", { method: "POST", body });

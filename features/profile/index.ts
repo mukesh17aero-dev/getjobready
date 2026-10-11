@@ -8,3 +8,4 @@ export * from "./photo-picker";
 export * from "./profile";
 export * from "./profile-save";
 export * from "./samples";
+export {AccountSettings} from './account-settings';

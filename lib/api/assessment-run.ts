@@ -186,21 +186,6 @@ export const askSceneAssistant = (
     body,
   );
 
-/**
- * The assistant on the preview's first situation, for a visitor with no
- * account. Same three-question limit as a sitting, plus a small allowance
- * per address on the server.
- */
-export const askPreviewAssistant = (
-  roleId: string,
-  body: { sceneId: string; question: string; conversation: AssistTurn[] },
-) =>
-  generateCall<{ ok: true; reply: string }>(
-    "",
-    `/v1/assessment/preview/${roleId}/assist`,
-    body,
-  );
-
 /** A recording, transcribed server-side. Spoken scenes measure what was said. */
 export async function transcribeSceneAnswer(
   token: string,
@@ -261,6 +246,8 @@ export type PastRun = {
   startedAt: string;
   finishedAt: string;
   scenesAttempted: number;
+  /** This sitting's own size. Null for sittings from before it was recorded. */
+  scenesInSitting: number | null;
   readiness: number | null;
   confidence: "low" | "medium" | null;
 };
@@ -287,6 +274,13 @@ export type AssessableRole = {
   hasAssessment: boolean;
   sittings: number;
   lastReadiness: number | null;
+  /**
+   * Questions in the sitting a start would enter: a new one's size, or an
+   * open older sitting's own. Optional: signed-out previews do not have one.
+   */
+  sittingSize?: number;
+  /** Answers already given in that open sitting; null when starting fresh. */
+  inProgress?: { answered: number } | null;
 };
 
 export const listAssessableRoles = (token: string) =>

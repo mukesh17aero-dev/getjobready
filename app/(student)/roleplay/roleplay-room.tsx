@@ -221,14 +221,14 @@ export function RoleplayRoom({
         {turns.map((turn) => (
           <li key={turn.index} className="space-y-2">
             <div className="max-w-[85%] rounded-2xl rounded-tl-sm border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm leading-relaxed text-slate-800">
-              <p className="mb-0.5 text-[0.68rem] font-bold uppercase tracking-wide text-violet-600">
+              <p className="mb-0.5 text-[0.75rem] font-bold uppercase tracking-wide text-violet-600">
                 {session.personaName}
               </p>
               {turn.personaLine}
             </div>
             {turn.reply !== null && (
               <div className="ml-auto max-w-[85%] rounded-2xl rounded-tr-sm border border-teal-200 bg-teal-50 px-4 py-2.5 text-right text-sm leading-relaxed text-slate-800">
-                <p className="mb-0.5 text-[0.68rem] font-bold uppercase tracking-wide text-teal-700">You</p>
+                <p className="mb-0.5 text-[0.75rem] font-bold uppercase tracking-wide text-teal-700">You</p>
                 {turn.reply}
               </div>
             )}

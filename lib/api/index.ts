@@ -21,3 +21,6 @@ export * from "./commerce";
 export * from "./institution";
 export * from "./institution-link";
 export * from "./application-review";
+export * from "./simulation-journey";
+export * from "./account-settings";
+export * from "./learning-studio";

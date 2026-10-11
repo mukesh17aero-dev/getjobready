@@ -68,6 +68,7 @@ function Simulation({value}: {value: Row}) {
   const [view, setView] = useState('Curriculum');
   const p = value as unknown as RolePackage;
   return <><h2>{p.roleTitle}</h2><p className={s.previewText}>{p.context}</p><p>{p.reviewerNotes}</p>
+    {p.learningJourney&&<section><h3>Learning journey · {p.learningJourney.title}</h3><p>{p.learningJourney.description}</p><Records items={p.learningJourney.activities} noun="learning activities" render={activity=><><h3>{text(activity.title)}</h3><Fields value={activity}/></>}/></section>}
     <details><summary>Role skills & assessment policy</summary><Fields value={value} omit={['modules', 'roleTitle', 'context', 'reviewerNotes']}/></details>
     <nav className={s.tabs} aria-label="Material preview">{['Curriculum', 'Assessment', 'Simulations'].map(tab => <button className={view === tab ? s.active : ''} aria-pressed={view === tab} key={tab} onClick={() => setView(tab)}>{tab}</button>)}</nav>
     {view==='Curriculum'&&p.introduction&&<IntroductionPreview intro={p.introduction}/>}

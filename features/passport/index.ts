@@ -4,3 +4,6 @@
 
 export * from "./passport-overview";
 export { ApplicationReviewCard } from "./application-review-card";
+export { shareConsequence } from "./passport-share";
+export {RecipientShares} from './recipient-shares';
+export {RecipientOutcome} from './recipient-outcome';

@@ -31,7 +31,7 @@ export function RichText({
             <ul key={i} className={`grid gap-1 ${gap}`}>
               {block.items.map((item, j) => (
                 <li key={j} className="flex gap-2">
-                  <span aria-hidden className="text-slate-300">
+                  <span aria-hidden className="text-slate-500">
                     &#8226;
                   </span>
                   <span className="min-w-0">{item}</span>

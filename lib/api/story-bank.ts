@@ -35,11 +35,28 @@ export type Story = {
   updatedAt: string;
 };
 
-export type StoryStrength = "proven" | "usable" | "draft";
+export type StoryStrength = "proven" | "usable" | "practice" | "draft";
+
+/**
+ * A story built on an Ascend simulation: the work was real, the situation was
+ * a practice case. Mirrors isPracticeCase() in the backend module.
+ */
+export const isPracticeStory = (s: Pick<Story, "evidence">): boolean =>
+  s.evidence.kind === "simulation";
 
 /** Mirrors strength() in the backend module - one rule, stated in both places. */
 export const storyStrength = (s: Story): StoryStrength =>
-  !s.spokenAt ? "draft" : s.evidence.proof ? "proven" : "usable";
+  !s.spokenAt ? "draft" : isPracticeStory(s) ? "practice" : s.evidence.proof ? "proven" : "usable";
+
+/** Mirrors the backend's coverage ranking: real experience above a practice case. */
+const STRENGTH_RANK: Record<StoryStrength, number> = { proven: 4, usable: 3, practice: 2, draft: 1 };
+
+/** The strongest of these stories, or null when there are none. */
+export const bestStrength = (stories: Story[]): StoryStrength | null =>
+  stories.reduce<StoryStrength | null>((best, s) => {
+    const here = storyStrength(s);
+    return best === null || STRENGTH_RANK[here] > STRENGTH_RANK[best] ? here : best;
+  }, null);
 
 export type PracticeQuestion = {
   id: string;

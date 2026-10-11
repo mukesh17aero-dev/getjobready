@@ -126,7 +126,7 @@ export function EssentialsModal({
           type="button"
           onClick={onClose}
           aria-label="Close dialog"
-          className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+          className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
         >
           ✕
         </button>
@@ -161,7 +161,7 @@ export function EssentialsModal({
                 {field.required && <RequiredMark />}
               </span>
               {field.hint && (
-                <span className="block text-[0.72rem] text-slate-400">
+                <span className="block text-[0.75rem] text-slate-500">
                   {field.hint}
                 </span>
               )}
@@ -211,7 +211,7 @@ export function EssentialsModal({
             type="button"
             disabled={busy}
             onClick={attempt}
-            className="rounded-lg bg-brand-teal-deep px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-teal disabled:opacity-50"
+            className="rounded-full bg-brand-teal-deep px-5 py-2.5 text-sm font-medium text-[var(--m3-on-primary)] transition-colors hover:bg-brand-teal disabled:opacity-50"
           >
             {busy ? "Saving…" : "Save and keep going"}
           </button>

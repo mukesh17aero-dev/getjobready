@@ -37,7 +37,7 @@ export default async function InterviewPage({ searchParams }: { searchParams: Pr
   const home = await getInterviewHome(session.access_token);
   if (!home) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-12 text-center sm:px-6">
+      <main className="mx-auto max-w-(--page-max-width) px-4 py-12 text-center sm:px-6">
         <h1 className="text-xl font-bold text-brand-ink">
           The interview room is not answering
         </h1>

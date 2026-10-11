@@ -56,12 +56,31 @@ describe("Story Bank initial render", () => {
 
   it("labels a spoken, unproven story distinctly from a spoken, proven one", () => {
     const usable = story({ id: "usable", spokenAt: "2026-09-02T00:00:00Z", evidence: { kind: "told", label: "Said in practice", proof: false } });
-    const proven = story({ id: "proven", spokenAt: "2026-09-02T00:00:00Z", evidence: { kind: "simulation", label: "Escalation call simulation", proof: true } });
+    const proven = story({ id: "proven", spokenAt: "2026-09-02T00:00:00Z", evidence: { kind: "interview", label: "HR round answer", proof: true } });
     const html = render(bank({ stories: [usable, proven] }));
     expect(html).toContain("Yours, unproven");
     expect(html).toContain("Proven");
     // Once spoken, the "say it out loud" prompt no longer applies.
     expect(html).not.toContain("I have said this out loud");
+  });
+
+  it("shelves a simulation story as a practice case, never as proven experience", () => {
+    const real = story({ id: "real", spokenAt: "2026-09-02T00:00:00Z", evidence: { kind: "told", label: "Said in practice", proof: false } });
+    const practice = story({ id: "practice", spokenAt: "2026-09-02T00:00:00Z", evidence: { kind: "simulation", label: "Escalation call simulation", proof: true } });
+    const html = render(bank({ stories: [real, practice] }));
+    expect(html).toContain("From your own experience");
+    expect(html).toContain("From Ascend practice cases");
+    expect(html).toContain("Practice case");
+    expect(html).toContain("In a practice case on Ascend, I");
+    expect(html).not.toContain(">Proven<");
+    // The practice shelf comes after the real one.
+    expect(html.indexOf("From your own experience")).toBeLessThan(html.indexOf("From Ascend practice cases"));
+  });
+
+  it("shows no shelf headings for an empty shelf", () => {
+    const html = render(bank({ stories: [story({ evidence: { kind: "told", label: "x", proof: false } })] }));
+    expect(html).toContain("From your own experience");
+    expect(html).not.toContain("From Ascend practice cases");
   });
 
   it("names a blank STAR part rather than filling it in", () => {

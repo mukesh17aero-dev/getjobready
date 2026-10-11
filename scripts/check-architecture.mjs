@@ -142,11 +142,12 @@ for (const f of files) {
 //   - Never add a new file here. Split it instead.
 const LIMIT = 800;
 const SIZE_ALLOWANCE = new Map([
-  ["app/(admin)/admin/admin-console.tsx", 1415],
+  // +11: the Learning Studio tab (its own feature; this is the tab wiring only).
+  ["app/(admin)/admin/admin-console.tsx", 1426],
   // +10: required-field markers and the error summary above the form.
-  ["app/(student)/interview/practice/interview-flow.tsx", 1244],
-  ["app/(student)/discover/discovery-flow.tsx", 1022],
-  ["app/(student)/profile/profile-form.tsx", 909],
+  ["app/(student)/interview/practice/interview-flow.tsx", 1240],
+  ["app/(student)/discover/discovery-flow.tsx", 942],
+  ["app/(student)/profile/profile-form.tsx", 908],
 ]);
 // One generated HTML string, not hand-edited code.
 const EXEMPT = new Set(["features/welcome/network-welcome-markup.ts"]);

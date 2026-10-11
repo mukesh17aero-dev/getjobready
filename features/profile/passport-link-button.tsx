@@ -42,7 +42,7 @@ export function PassportLinkButton({ onFound }: { onFound: (url: string) => void
         {state === "checking" ? "Checking…" : "Use my Career Passport link instead"}
       </button>
       {state === "none" && (
-        <p className="mt-1 text-[0.72rem] text-slate-500">
+        <p className="mt-1 text-[0.75rem] text-slate-500">
           You don&apos;t have a shareable Passport yet.{" "}
           <Link href="/passport" className="underline">
             Open your Passport

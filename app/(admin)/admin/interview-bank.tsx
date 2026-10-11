@@ -137,7 +137,7 @@ export function InterviewBankEditor({
       </div>
 
       {showPrompt && (
-        <pre className="mt-2 max-h-72 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-[0.7rem] leading-relaxed text-slate-600">
+        <pre className="mt-2 max-h-72 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-[0.75rem] leading-relaxed text-slate-600">
           {builtIn ?? "Loading…"}
         </pre>
       )}
@@ -154,7 +154,7 @@ export function InterviewBankEditor({
       </div>
 
       {roles.length === 0 && (
-        <p className="mt-4 text-[0.85rem] text-slate-400">
+        <p className="mt-4 text-[0.85rem] text-slate-500">
           No roles yet. Add a role first — the questions come from what the job
           needs.
         </p>
@@ -261,7 +261,7 @@ function RoleQuestions({
           <span className="text-[0.9rem] font-semibold text-slate-900">
             {role.title}
           </span>
-          <span className="text-[0.75rem] text-slate-400">
+          <span className="text-[0.75rem] text-slate-500">
             {questions.length === 0
               ? "No questions yet"
               : `${questions.length} question${questions.length === 1 ? "" : "s"}`}
@@ -271,10 +271,10 @@ function RoleQuestions({
     >
       <div className="grid gap-3">
         <label className="block">
-          <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+          <span className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-slate-500">
             Notes from a real employer, if you have them
           </span>
-          <span className="mt-0.5 block text-[0.75rem] leading-snug text-slate-400">
+          <span className="mt-0.5 block text-[0.75rem] leading-snug text-slate-500">
             What an employer told you they look for, or questions they told you
             they actually ask. This overrides the drafter.
           </span>
@@ -308,19 +308,19 @@ function RoleQuestions({
             + Add one by hand
           </button>
           {role.skills.length === 0 && (
-            <span className="text-[0.75rem] text-slate-400">
+            <span className="text-[0.75rem] text-slate-500">
               This role has no skills yet — nothing to build questions from.
             </span>
           )}
           {!aiConfigured && role.skills.length > 0 && (
-            <span className="text-[0.75rem] text-slate-400">
+            <span className="text-[0.75rem] text-slate-500">
               No AI key configured — add them by hand.
             </span>
           )}
         </div>
 
         {questions.length > 0 && (
-          <p className="text-[0.75rem] text-slate-400">
+          <p className="text-[0.75rem] text-slate-500">
             Rewriting replaces every question below, including ones you edited.
           </p>
         )}
@@ -385,7 +385,7 @@ function RoleQuestions({
                 type="button"
                 onClick={() => remove(i)}
                 aria-label={`Remove question ${i + 1}`}
-                className="shrink-0 rounded-lg px-2 py-1 text-[0.75rem] font-semibold text-slate-400 hover:bg-surface hover:text-rose-600"
+                className="shrink-0 rounded-lg px-2 py-1 text-[0.75rem] font-semibold text-slate-500 hover:bg-surface hover:text-rose-600"
               >
                 Remove
               </button>

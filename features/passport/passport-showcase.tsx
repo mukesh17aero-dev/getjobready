@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import {CaseEvidence} from "./case-evidence";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { setPassportShowcase, type PassportAchievement, type PassportShowcaseItem, type ShowcaseAction } from "@/lib/api";
@@ -26,6 +27,7 @@ function formatDate(iso: string): string {
 
 /** Where the full report for an achievement lives. */
 function reportHref(a: PassportAchievement): string {
+  if(a.verification)return `/practice/missions?role=${encodeURIComponent(a.verification.roleId)}&run=${encodeURIComponent(a.verification.runId)}&activity=${encodeURIComponent(a.verification.activityId)}`;
   const id = a.id.slice(a.id.indexOf(":") + 1);
   if (a.kind === "assessment") return `/practice/readiness/results/${id}`;
   if (a.kind === "interview") return `/interview/report/${id}`;
@@ -40,7 +42,7 @@ function ScoreBadge({ a, large = false }: { a: PassportAchievement; large?: bool
       {a.score !== null ? (
         <span className="text-center leading-none">
           <span className={`block font-bold tabular-nums ${large ? "text-[1.35rem]" : "text-[1.05rem]"}`}>{a.score}</span>
-          <span className="text-[0.55rem] font-semibold">/ 100</span>
+          <span className="text-[0.75rem] font-semibold">/ 100</span>
         </span>
       ) : (
         <span aria-hidden className="text-[1.2rem] font-bold">✓</span>
@@ -64,7 +66,7 @@ export function PassportShowcase({ showcase, editable, roleTitle }: Props) {
           <h2 id="showcase" className="text-[1.05rem] font-bold tracking-tight text-brand-ink">
             {editable ? "Your showcase" : "Showcase"}
           </h2>
-          <span className="text-[0.72rem] text-slate-500">
+          <span className="text-[0.75rem] text-slate-500">
             {editable ? "Your best marked work leads. Pin a different one below, or hide any." : `Best marked work${roleTitle ? ` toward ${roleTitle}` : ""}.`}
           </span>
         </div>
@@ -78,9 +80,9 @@ export function PassportShowcase({ showcase, editable, roleTitle }: Props) {
             {showcase.map(({ kind, pinned, item }) => (
               <li key={kind} className="flex flex-col gap-2 rounded-2xl border border-teal-200 bg-white p-4 shadow-[0_12px_28px_-22px_rgba(15,95,88,0.6)]">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[0.66rem] font-bold uppercase tracking-[0.12em] text-teal-800">{SHOWCASE_LABEL[kind]}</span>
+                  <span className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-teal-800">{SHOWCASE_LABEL[kind]}</span>
                   {editable && (
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[0.62rem] font-semibold text-slate-600">
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[0.75rem] font-semibold text-slate-600">
                       {pinned ? "Your pick" : "Suggested"}
                     </span>
                   )}
@@ -89,8 +91,8 @@ export function PassportShowcase({ showcase, editable, roleTitle }: Props) {
                   <ScoreBadge a={item} large />
                   <div className="min-w-0">
                     <h3 className="text-[0.92rem] font-semibold leading-snug text-brand-ink">{item.title}</h3>
-                    <p className="mt-0.5 text-[0.78rem] leading-relaxed text-slate-600">{item.detail}</p>
-                    <p className="mt-0.5 text-[0.68rem] text-slate-500">{formatDate(item.at)}</p>
+                    <p className="mt-0.5 text-[0.78rem] leading-relaxed text-slate-600">{item.detail}</p><CaseEvidence achievement={item}/>
+                    <p className="mt-0.5 text-[0.75rem] text-slate-500">{formatDate(item.at)}</p>
                   </div>
                 </div>
                 {editable && (
@@ -130,7 +132,7 @@ export function PassportAchievements({ showcase, achievements, editable, roleTit
           <h2 id="achievements" className="text-[1.05rem] font-bold tracking-tight text-brand-ink">
             {editable ? "Everything you have achieved" : "Achievements"}
           </h2>
-          {roleTitle && <span className="rounded-full bg-brand-mist px-2.5 py-0.5 text-[0.65rem] font-semibold text-brand-teal-deep">Toward {roleTitle}</span>}
+          {roleTitle && <span className="rounded-full bg-brand-mist px-2.5 py-0.5 text-[0.75rem] font-semibold text-brand-teal-deep">Toward {roleTitle}</span>}
         </div>
         {shown.length === 0 ? (
           <p className="text-[0.8rem] text-slate-600">Marked work toward this role appears here as you complete it.</p>
@@ -140,13 +142,13 @@ export function PassportAchievements({ showcase, achievements, editable, roleTit
               <li key={a.id} className={`flex flex-wrap items-start gap-3 rounded-xl border bg-white p-3 ${a.hidden ? "border-dashed border-slate-300 opacity-70" : "border-slate-200"}`}>
                 <ScoreBadge a={a} />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[0.62rem] font-semibold uppercase tracking-wide text-slate-500">
+                  <p className="text-[0.75rem] font-semibold uppercase tracking-wide text-slate-500">
                     {KIND_LABEL[a.kind]} · {formatDate(a.at)}
                     {a.hidden && " · Hidden from employers"}
                     {leading.has(a.id) && " · In your showcase"}
                   </p>
                   <h3 className="text-[0.86rem] font-semibold text-brand-ink">{a.title}</h3>
-                  <p className="text-[0.78rem] leading-relaxed text-slate-600">{a.detail}</p>
+                  <p className="text-[0.78rem] leading-relaxed text-slate-600">{a.detail}</p><CaseEvidence achievement={a}/>
                   {editable && (
                     <div className="mt-1 flex flex-wrap gap-x-4">
                       <Link href={reportHref(a)} className="inline-flex min-h-11 items-center text-[0.78rem] font-semibold text-teal-700 hover:underline">

@@ -1,0 +1,56 @@
+.root{display:flex;flex-direction:column;gap:20px;min-width:0;color:var(--color-brand-ink);font-size:16px;line-height:1.5}
+.root h1{font-size:clamp(32px,4vw,42px);line-height:1.15;max-width:920px;letter-spacing:-.7px}
+.switch{display:flex;flex-wrap:wrap;gap:12px;border:0;padding:0;margin:0}
+.switch legend{font-size:14px;color:var(--color-slate-600);margin-bottom:8px}
+.switch label{display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 14px;border:1px solid var(--color-brand-border);border-radius:12px;cursor:pointer;background:var(--color-surface)}
+.switch label[data-selected=true]{border-color:var(--color-brand-violet);font-weight:600}
+.switch input{width:18px;height:18px;accent-color:var(--color-brand-violet)}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.card{display:flex;flex-direction:column;gap:12px;padding:24px;border:1px solid var(--color-brand-border);border-top:4px solid var(--color-brand-accent);border-radius:16px;background:var(--color-surface);text-decoration:none;color:inherit;min-width:0;overflow-wrap:anywhere}
+.card:hover{border-color:var(--color-brand-violet)}
+.card h3{font-size:18px;line-height:1.4;display:flex;justify-content:space-between;gap:12px}
+.card small{font-size:14px;color:var(--color-slate-600)}
+.more{display:flex;flex-wrap:wrap;gap:12px 24px}
+.more a{display:inline-flex;align-items:center;min-height:44px;color:var(--color-brand-violet-deep);font-weight:600;text-underline-offset:4px}
+.root :is(a,input):focus-visible{outline:3px solid var(--color-brand-ink);outline-offset:4px}
+@media(max-width:760px){.cards{grid-template-columns:minmax(0,1fr)}}
+.root>h2{font-size:24px;line-height:1.3;letter-spacing:-.5px}.card{border-top:1px solid var(--color-brand-border);border-radius:var(--radius-card);background:linear-gradient(140deg,var(--color-teal-50),var(--color-surface))}.card:nth-child(2){background:linear-gradient(140deg,var(--color-violet-50),var(--color-surface))}.card h3{font-size:20px}.card p{font-size:14px;line-height:1.6}.switch{margin-top:4px}
+
+/* Calm tool choices beneath Home's primary next step. */
+.root{gap:14px}
+.root>h2{font-size:22px;font-weight:500;letter-spacing:-.5px}
+.root>p{font-size:14px;color:var(--color-slate-600)}
+.switch{gap:8px;margin:0 0 8px}
+.switch legend{font-size:12px;margin-bottom:8px}
+.switch label{font-size:12px;min-height:44px;border-radius:7px;padding:8px 12px}
+.card,.card:nth-child(2){background:var(--color-surface);border-radius:12px;padding:22px;gap:10px}
+.card h3{font-size:18px;font-weight:500;line-height:1.4}
+.card p{font-size:13px}.card p b{font-weight:500}
+.card small{font-size:12px}
+.more{gap:8px 22px}.more a{font-size:13px;font-weight:500}
+.cards{gap:20px}
+.card,.card:nth-child(2){padding:24px;border-radius:16px;background:var(--color-surface)}
+.card:first-child{background:var(--color-brand-success)}
+.card:nth-child(2){background:var(--color-brand-attention)}
+.card h3{font-size:18px;font-weight:650}
+.card p,.card small{font-size:14px;line-height:1.55}
+.switch legend,.switch label{font-size:14px}
+.more a{font-size:14px}
+.root>p{font-size:16px;line-height:1.6}
+.root>h2{font-weight:650;font-size:24px}
+.card h3{display:flex;justify-content:space-between;gap:12px;line-height:1.4}
+.card p{font-size:16px;line-height:1.6}
+
+
+/* Visible Home guidance follows the Architect card and selection treatment. */
+.root>h2{font-size:24px;font-weight:600;margin:0 0 4px}
+.switch{gap:10px;margin-bottom:0}
+.switch legend{font-size:14px;color:var(--color-brand-muted);margin-bottom:12px}
+.switch label{border-radius:var(--radius-card);padding:10px 16px;transition:background .15s,border-color .15s}
+.switch label[data-selected=true]{background:var(--color-brand-violet-soft);border-color:var(--color-brand-violet-deep);color:var(--color-brand-violet-deep)}
+.switch label:has(input:disabled){cursor:wait}
+.card,.card:first-child,.card:nth-child(2){background:var(--surface-default);border-radius:var(--radius-card);border:1px solid var(--color-brand-border);border-top:3px solid var(--color-brand-violet);box-shadow:none}
+.card:hover{background:var(--surface-hovered)}
+.card h3{font-size:20px;font-weight:600}
+.card p,.card small{font-size:14px}
+@media(max-width:480px){.switch label{width:100%}}

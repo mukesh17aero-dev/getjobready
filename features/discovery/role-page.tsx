@@ -20,13 +20,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { RoleAlignment } from "./role-alignment";
+import { useSavedRoles } from "./use-saved-roles";
 import { RoleBody, type RolePart } from "./role-preview";
 import type { RoleDetail } from "@/lib/api";
 import ws from "./discovery-workspace.module.css";
 
 // The shortlist the roles list keeps in this browser - the same key, so a
 // heart pressed here shows on the list and the other way round.
-const SHORTLIST_KEY = "ascend:discovery-shortlist";
 // A reaction and a note, kept in this browser. They are for the person
 // deciding, not for the record: nothing here is read by anything else.
 const REACTIONS_KEY = "ascend:discovery-reactions";
@@ -54,7 +55,6 @@ export function RolePage({
   title,
   /** Where this sits in the person's results, when it sits anywhere. */
   note: listNote,
-  why,
   backLabel,
   onBack,
   chosen,
@@ -143,7 +143,8 @@ export function RolePage({
     leaveSection(tab);
     setTab(next);
   };
-  const [kept, setKept] = useState(false);
+  const {saved, toggleSaved, busy: savingRole, error: saveError} = useSavedRoles(signedOut);
+  const kept = saved.includes(role.roleId);
   const [reaction, setReaction] = useState<Reaction | null>(null);
   const [note, setNote] = useState("");
   useEffect(() => {
@@ -151,19 +152,12 @@ export function RolePage({
     // agree on what they showed first.
     const id = setTimeout(() => {
       setTab("work");
-      setKept(readStore<string[]>(SHORTLIST_KEY, []).includes(role.roleId));
       const mine = readStore<Record<string, { reaction?: Reaction; note?: string }>>(REACTIONS_KEY, {})[role.roleId];
       setReaction(mine?.reaction ?? null);
       setNote(mine?.note ?? "");
     }, 0);
     return () => clearTimeout(id);
   }, [role.roleId]);
-  function toggleKept() {
-    const list = readStore<string[]>(SHORTLIST_KEY, []);
-    const next = list.includes(role.roleId) ? list.filter((x) => x !== role.roleId) : [...list, role.roleId];
-    writeStore(SHORTLIST_KEY, next);
-    setKept(next.includes(role.roleId));
-  }
   function remember(next: { reaction?: Reaction | null; note?: string }) {
     const all = readStore<Record<string, { reaction?: Reaction; note?: string }>>(REACTIONS_KEY, {});
     const current = all[role.roleId] ?? {};
@@ -182,7 +176,7 @@ export function RolePage({
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-4 sm:px-6">
+    <main className="mx-auto w-full max-w-(--page-max-width) px-4 pb-16 pt-4 sm:px-6">
       <div className={ws.frame}>
         <div ref={body as React.RefObject<HTMLDivElement>}>
           <button type="button" onClick={onBack} className={ws.back}>← {backLabel}</button>
@@ -196,12 +190,14 @@ export function RolePage({
               type="button"
               className={ws.textButton}
               aria-pressed={kept}
-              onClick={toggleKept}
+              disabled={savingRole}
+              onClick={() => void toggleSaved(role.roleId)}
             >
-              {kept ? "♥ Shortlisted" : "♡ Shortlist"}
+              {kept ? "Remove from saved roles" : "Save for later"}
             </button>
           </header>
 
+          {(saveError || kept) && <p className={ws.note} role="status">{saveError || (signedOut ? "Saved in this browser. Sign in to keep it across devices." : "Saved to your Ascend profile.")}</p>}
           <div className={ws.twoCol}>
             <section className={ws.panel}>
               <div className={ws.sectionTabs} role="tablist" aria-label="Role details">
@@ -232,15 +228,6 @@ export function RolePage({
                 {tab === "work" && (
                   <p className="mb-4 text-[0.88rem] leading-relaxed text-slate-600">{role.description}</p>
                 )}
-                {tab === "work" && why && why.why.length > 0 && (
-                  <div className={ws.soft}>
-                    <strong>Why this one is on your list</strong>
-                    <ul>{why.why.map((line) => <li key={line}>{line}</li>)}</ul>
-                    {/* Said before somebody finds out the hard way. A recommendation
-                        that never admits doubt is the one nobody should trust. */}
-                    {why.uncertainty && <p style={{ marginTop: 8 }}>{why.uncertainty}</p>}
-                  </div>
-                )}
                 <RoleBody role={role} signedOut={signedOut} part={tab} />
               </div>
             </section>
@@ -250,11 +237,11 @@ export function RolePage({
               // answered nothing and left no way forward. What comes next is
               // finding out where they stand on this role's own work.
               <aside className={`${ws.panel} ${ws.decision}`} aria-label="Your next step">
-                <p className={ws.eyebrow}>✓ YOUR CHOSEN DIRECTION</p>
-                <h2>Now find out where you stand</h2>
-                <p>You picked {title}. A short assessment on this job&rsquo;s own work shows what you can already do and what is worth practising.</p>
-                <Link href={`/practice/readiness?role=${encodeURIComponent(role.roleId)}`} className={ws.primary}>
-                  Check your role readiness →
+                <p className={ws.eyebrow}>YOUR CURRENT DIRECTION</p>
+                <h2>Curious is enough.</h2>
+                <p>Explore the role before deciding what to practise next.</p>
+                <Link href={`/practice?role=${encodeURIComponent(role.roleId)}`} className={ws.primary}>
+                  See practice options →
                 </Link>
                 <p className={ws.quiet} style={{ marginTop: 16 }}>Also for {title}:</p>
                 <p style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 4 }}>
@@ -269,8 +256,10 @@ export function RolePage({
               </aside>
             ) : (
             <aside className={`${ws.panel} ${ws.decision}`} aria-label="Make it your own">
-              <p className={ws.eyebrow}>MAKE IT YOUR OWN</p>
-              <h2>Could this be your kind of work?</h2>
+              <p className={ws.eyebrow}>EXPLORE YOUR DIRECTION</p>
+              <h2>Curious is enough.</h2>
+              <p>Explore the role before deciding what to practise next.</p>
+              <details className={ws.roleReflection}><summary>What do you think of this role?</summary>
               {role.suitsYouIf[0] && <p>{role.suitsYouIf[0].replace(/[.?]$/, "")}?</p>}
               <div className={ws.feelings} role="group" aria-label="Your reaction to this role">
                 {REACTIONS.map((item) => (
@@ -300,6 +289,7 @@ export function RolePage({
                   onBlur={() => onNote?.(note.trim())}
                 />
               </label>
+              </details>
               <button
                 type="button"
                 className={ws.primary}
@@ -312,6 +302,7 @@ export function RolePage({
             </aside>
             )}
           </div>
+          <RoleAlignment key={role.roleId} roleId={role.roleId} signedOut={signedOut} />
         </div>
       </div>
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { RoleAlignment } from "@/features/discovery";
+
 // What a finished sitting shows: a readiness score for the role, a score per
 // skill, and the work behind both - as a set of tabs rather than one long
 // scroll, so the default view stays small and visual and the dense analysis
@@ -75,7 +77,7 @@ export function AssessmentReadout({
 
   return (
     <section>
-      <p className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+      <p className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-slate-500">
         Role readiness · {roleTitle}
       </p>
       <h1 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">
@@ -89,6 +91,7 @@ export function AssessmentReadout({
           and becomes practice - so the read-out ends by pointing at it. It
           waits for the same reason the tabs' content does: arithmetic is
           instant, but this sits below the score on purpose regardless. */}
+      {!reading && !example && <RoleAlignment roleId={readout.roleId} />}
       {!reading && (
         <>
           <div className="mt-8 rounded-2xl border border-brand-violet/25 bg-brand-violet/[0.04] p-4 sm:p-5">
@@ -188,7 +191,7 @@ function ReadingProgress() {
               </span>
               <span
                 className={`text-[0.85rem] leading-relaxed ${
-                  now ? "font-semibold text-brand-ink" : "text-slate-400"
+                  now ? "font-semibold text-brand-ink" : "text-slate-500"
                 }`}
               >
                 {label}

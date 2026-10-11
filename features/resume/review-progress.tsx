@@ -43,10 +43,10 @@ export function ReviewProgress() {
               <span
                 className={`text-[0.85rem] leading-relaxed ${
                   done
-                    ? "text-slate-400"
+                    ? "text-slate-500"
                     : now
                       ? "font-semibold text-brand-ink"
-                      : "text-slate-400"
+                      : "text-slate-500"
                 }`}
               >
                 {label}

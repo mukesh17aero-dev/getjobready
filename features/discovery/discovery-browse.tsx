@@ -21,12 +21,17 @@
 //
 // Presentational only: props in, JSX out. Every decision is the caller's.
 
+import { exploreIntro, type ExploreIntro } from "./explore-intro";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import Link from "next/link";
 import "./discovery-modern.css";
 import ws from "./discovery-workspace.module.css";
 import { ArrowRight } from "@/components/ui/icons";
-import { RoleArt } from "./role-art";
+import { useBrowseFilters } from "./use-browse-filters";
+import { useSavedRoles } from "./use-saved-roles";
+import { RoleAlignment } from "./role-alignment";
+import { BrowseRoleCard } from "./browse-role-card";
+import { Picker } from "@/components/ui/picker";
 
 export type World = {
   id: string;
@@ -38,6 +43,7 @@ export type World = {
 };
 export type RoleCard = {
   id: string;
+  experienceLevels?: Array<"student" | "early_career">;
   title: string;
   summary: string;
   /** Already formatted by the caller - this file does no arithmetic. */
@@ -55,7 +61,7 @@ export type RoleCard = {
 export const MINUTES_PER_ROLE = 2;
 /** The two lengths offered. Everything else is derived from these. */
 export const TOUR_LENGTHS = [
-  { minutes: 5, roles: 3, label: "A quick look" },
+  { minutes: 6, roles: 3, label: "A quick look" },
   { minutes: 10, roles: 5, label: "The full tour" },
 ] as const;
 /** The most a tour ever runs to. */
@@ -63,15 +69,10 @@ export const TOUR_ROLES = 5;
 
 /* ----------------------------------------------------------------- roles -- */
 
-// The shortlist lives in this browser. Nothing on the record holds one yet:
-// choosing a direction is the decision that is kept, and a shortlist is a
-// different, lighter thing - roles worth coming back to. It is said as much
-// on the tab so nobody mistakes it for something saved to their account.
-const SHORTLIST_KEY = "ascend:discovery-shortlist";
 type Tab = "explore" | "saved" | "tour";
-const BAND = { strong: "STRONG FIT", adjacent: "CLOSE FIT", stretch: "A STRETCH" } as const;
 
 export function RoleList({
+  intro = exploreIntro(),
   roles,
   signedOut = false,
   previewRoleId = null,
@@ -88,6 +89,7 @@ export function RoleList({
   onPickIndustries,
   industriesPicked = 0,
 }: {
+  intro?: ExploreIntro;
   /** Guests can explore one fixed sample from the published catalogue. */
   signedOut?: boolean;
   previewRoleId?: string | null;
@@ -124,32 +126,10 @@ export function RoleList({
   industriesPicked?: number;
 }) {
   const [tab, setTab] = useState<Tab>("explore");
-  const [search, setSearch] = useState("");
-  const [industry, setIndustry] = useState("all");
-  const [saved, setSaved] = useState<string[]>([]);
+  useEffect(() => { if (new URLSearchParams(window.location.search).get("saved") !== "1") return; const timer = setTimeout(() => setTab("saved"), 0); return () => clearTimeout(timer); }, []);
+  const {search,setSearch,industry,setIndustry,experience,setExperience} = useBrowseFilters();
+  const { saved, toggleSaved, busy: savingRoles, error: saveError, browserSaved, moveBrowserRoles } = useSavedRoles(signedOut);
   const tabs = useRef<Array<HTMLButtonElement | null>>([]);
-
-  // After the first paint, so the server-rendered list and the browser agree
-  // on what they showed first.
-  useEffect(() => {
-    const id = setTimeout(() => {
-      try {
-        const raw = localStorage.getItem(SHORTLIST_KEY);
-        const list: unknown = raw ? JSON.parse(raw) : [];
-        if (Array.isArray(list)) setSaved(list.filter((x): x is string => typeof x === "string"));
-      } catch {
-        // Storage unavailable: the shortlist simply does not persist.
-      }
-    }, 0);
-    return () => clearTimeout(id);
-  }, []);
-  function toggleSaved(id: string) {
-    setSaved((list) => {
-      const next = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
-      try { localStorage.setItem(SHORTLIST_KEY, JSON.stringify(next)); } catch { /* fine */ }
-      return next;
-    });
-  }
 
   const byId = new Map(roles.map((r) => [r.id, r]));
   const worlds = roles
@@ -175,13 +155,14 @@ export function RoleList({
     (r) =>
       (tab !== "saved" || saved.includes(r.id)) &&
       (industry === "all" || r.world.id === industry) &&
+      (experience === "all" || r.experienceLevels?.includes(experience as "student" | "early_career")) &&
       (!q || `${r.title} ${r.summary} ${r.world.title}`.toLowerCase().includes(q)),
   );
   // Every role at once: paging hid half the catalogue behind a button.
   const shown = list;
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: "explore", label: "Explore roles" },
-    { id: "saved", label: `Shortlist (${saved.length})` },
+    { id: "saved", label: `Saved roles (${saved.length})` },
     { id: "tour", label: "My tour" },
   ];
   function switchTab(next: Tab) { setTab(next); }
@@ -192,16 +173,16 @@ export function RoleList({
     switchTab(TABS[next]!.id);
     tabs.current[next]?.focus();
   }
-  function clearFilters() { setSearch(""); setIndustry("all"); switchTab("explore"); }
+  function clearFilters() { setSearch(""); setIndustry("all"); setExperience("all"); switchTab("explore"); }
 
   return (
     <div className={ws.frame}>
-      <button type="button" onClick={onBack} className={ws.back}>← Back to home</button>
+      <button type="button" onClick={onBack} className={ws.browseBack}>← Back to home</button>
       <header className={ws.heading}>
         <div>
           {/* One line. The label above it named the page somebody had just
               opened, and the line below described the tabs directly under it. */}
-          <h1>Find work you can see yourself doing.</h1>
+          <p className={ws.eyebrow}>{intro.eyebrow}</p><h1>{intro.title}</h1><p>{intro.description}</p>
         </div>
         {onPickIndustries && (
           <button type="button" className={ws.textButton} onClick={onPickIndustries}>
@@ -209,86 +190,6 @@ export function RoleList({
           </button>
         )}
       </header>
-
-      {direction ? (
-        <section className={ws.recommendation} aria-label="Your direction">
-          <div>
-            <span className={ws.chip}>
-              {direction.kind === "chosen" ? "YOUR CHOSEN DIRECTION" : `${BAND[direction.match!.band]} · RECOMMENDED FROM WHAT YOU DID HERE`}
-            </span>
-            <h2>{direction.role.title}</h2>
-            <p>
-              {direction.kind === "chosen"
-                ? direction.match
-                  ? `You chose this direction yourself. From what you read, toured, compared and asked here, it also ranks as a ${direction.match.band === "strong" ? "strong" : direction.match.band === "adjacent" ? "close" : "stretch"} fit.`
-                  : "You chose this direction yourself. The next step is to find out where you stand on the job's own work."
-                : direction.role.summary}
-            </p>
-            {/* The engine's own reasons, where a sentence saying "this is not
-                an assessment result" used to be. Naming what the
-                recommendation was actually built from says the same thing and
-                is worth reading: the reasons are all "you toured this twice",
-                never a claim about ability. Only the engine's words - nothing
-                here is written for the occasion. */}
-            {/* What this was built from, in terms of what they gave us.
-                The engine's own reasons are not shown: every one of them is
-                an observation about behaviour - how long a page was open,
-                how often they came back, what they compared. We rank with
-                those and we do not read them back to the person. What is
-                theirs to see is what they chose and what they told us. */}
-            {direction.match ? (
-              <details className={ws.whySuits}>
-                <summary>
-                  Why this role suits you
-                  <span aria-hidden="true">{"\u2304"}</span>
-                </summary>
-                <p>
-                  Based on what you have told us: the{" "}
-                  {industriesPicked > 0 ? `${industriesPicked} ` : ""}industries you chose, the
-                  roles you picked out to look at, and the skills and aims on your profile.
-                </p>
-                {direction.match.uncertainty ? <small>{direction.match.uncertainty}</small> : null}
-              </details>
-            ) : (
-              <small>
-                {direction.kind === "chosen"
-                  ? "Nothing is recorded yet to rank this by. Reading, touring and comparing roles here builds that up."
-                  : "Built from what you read, toured, compared and asked here."}
-              </small>
-            )}
-          </div>
-          <div className={ws.directionActions}>
-            <Link href={`/practice/readiness?role=${encodeURIComponent(direction.role.id)}`} className={ws.primary}>
-              Check your role readiness →
-            </Link>
-            {/* Going to the role page is an action like the one above it, so
-                it looks like one. */}
-            <button type="button" className={ws.secondary} onClick={() => onOpen(direction.role.id)}>
-              {direction.kind === "chosen" ? "Open the role →" : "See why this role fits →"}
-            </button>
-            {direction.kind === "chosen" && onUnchoose && (
-              <button type="button" className={ws.unselect} disabled={choosing} onClick={onUnchoose}>
-                Unselect this direction
-              </button>
-            )}
-          </div>
-        </section>
-      ) : null}
-      {!direction && (
-        <section className={ws.guide} aria-label="Not sure where to start">
-          <div>
-            <span className={ws.compass} aria-hidden="true">✧</span>
-            <div>
-              <h2>Not sure where to start?</h2>
-              <p>A short tour through a few roles, two minutes each, can narrow your direction. What you read, tour, compare and ask here is what the recommendation is built from.</p>
-            </div>
-          </div>
-          <div className={ws.guideAction}>
-            <button type="button" className={ws.primary} onClick={onTour}>Start a workplace tour →</button>
-            <small>Up to five roles · no test</small>
-          </div>
-        </section>
-      )}
 
       <div className={ws.sectionTabs} role="tablist" aria-label="Discovery views">
         {TABS.map((item, index) => (
@@ -309,6 +210,8 @@ export function RoleList({
         ))}
       </div>
 
+      {(saveError || savingRoles || tab === "saved") && <p className={ws.note} role="status">{saveError || (savingRoles ? "Loading or saving your roles…" : signedOut ? "Saved in this browser. Sign in to keep it across devices." : "Saved to your Ascend profile.")}</p>}
+      {!signedOut && browserSaved.length > 0 && <section className={ws.soft}><p>{browserSaved.length} roles were saved only in this browser. Move them to the account you are currently signed into to keep them across devices.</p><button type="button" className={ws.textButton} disabled={savingRoles} onClick={() => void moveBrowserRoles()}>Move to saved roles</button></section>}
       <section id="discovery-panel" role="tabpanel" aria-labelledby={`discovery-tab-${tab}`}>
         {tab === "tour" ? (
           <div className={ws.empty}>
@@ -325,16 +228,23 @@ export function RoleList({
                 <span className={ws.srOnly}>Search roles</span>
                 <input type="search" value={search} placeholder="Search roles or the work you enjoy" onChange={(e) => setSearch(e.target.value)} />
               </label>
-              <label>
-                <span className={ws.srOnly}>Filter industry</span>
-                <select value={industry} onChange={(e) => setIndustry(e.target.value)}>
-                  <option value="all">All industries</option>
-                  {worlds.map((w) => <option key={w.id} value={w.id}>{w.title}</option>)}
-                </select>
-              </label>
-              <small>{list.length} {list.length === 1 ? "role" : "roles"}</small>
+              {/* Dropdowns that open below their button: on a Mac a built-in
+                  select draws its menu over the control instead. */}
+              <div className={ws.filterField}>
+                <span aria-hidden="true">Industry</span>
+                <Picker label="Industry" value={industry} onChange={setIndustry} options={[{ id: "all", label: "All industries" }, ...worlds.map((w) => ({ id: w.id, label: w.title }))]} />
+              </div>
+              <div className={ws.filterField}>
+                <span aria-hidden="true">Experience level</span>
+                <Picker label="Experience level" value={experience} onChange={setExperience} options={[{ id: "all", label: "All experience levels" }, { id: "student", label: "Student / first job" }, { id: "early_career", label: "Early professional" }]} />
+              </div>
+              
             </div>
+            {/* Its own line: in the filter row, the count growing with each letter
+                typed and the clear button appearing squeezed the search box. */}
+            <div className={ws.resultLine}><small>{list.length} {list.length === 1 ? "role" : "roles"}{q ? <> for “<span className={ws.query}>{search}</span>”</> : ""}</small>{(search || industry !== "all" || experience !== "all") && <button type="button" className={ws.textButton} onClick={clearFilters}>Clear all filters</button>}</div>
 
+            {experience !== "all" && <p className={ws.note}>Showing roles with matching published entry requirements. Roles with unspecified experience remain under All experience levels.</p>}
             {shown.length > 0 ? (
               <>
                 {signedOut && <p className="mb-4 text-sm text-slate-600">Explore one role for free. Sign in to unlock every role.</p>}
@@ -345,64 +255,8 @@ export function RoleList({
                     const locked = signedOut && role.id !== previewRoleId;
                     return (
                       <li key={role.id} className="relative overflow-hidden rounded-2xl">
-                        {/* The tile as it was before the workspace: the industry's
-                            tinted ground and its tilted card on top, the day's mix
-                            as a bar, pay, and the decision on the tile. What the
-                            workspace added sits with it: the glimpse line, the
-                            explore button and the shortlist heart. */}
-                        <div
-                          inert={locked || undefined}
-                          aria-hidden={locked || undefined}
-                          style={locked ? { filter: "blur(7px)", pointerEvents: "none", userSelect: "none" } : undefined}
-                          className={`discovery-role-card relative flex h-full min-h-[20rem] flex-col justify-end overflow-hidden rounded-2xl border transition-transform hover:-translate-y-0.5 motion-reduce:transition-none ${chosen ? "border-brand-teal" : "border-slate-200"}`}
-                          data-chosen={chosen}
-                        >
-                          <label className="absolute left-4 top-1 z-10 flex min-h-11 cursor-pointer items-center gap-1.5 text-[0.74rem] font-semibold text-slate-600">
-                            <input type="checkbox" className="h-4 w-4 accent-teal-700" checked={compareIds.includes(role.id)} onChange={() => onToggleCompare(role.id)} />
-                            Compare
-                          </label>
-                          <button
-                            type="button"
-                            aria-pressed={kept}
-                            aria-label={`${kept ? "Remove" : "Add"} ${role.title} ${kept ? "from" : "to"} shortlist`}
-                            onClick={() => toggleSaved(role.id)}
-                            className={`absolute right-3 top-2 z-10 grid h-11 w-11 place-items-center rounded-lg border text-[1.1rem] transition-colors motion-reduce:transition-none ${kept ? "border-teal-700 bg-teal-50 text-teal-700" : "border-slate-300 bg-surface text-teal-700"}`}
-                          >
-                            {kept ? "♥" : "♡"}
-                          </button>
-                          <RoleArt roleId={role.id} glyph={role.world.glyph} />
-                          {role.mix[0] && (
-                            <span className="discovery-glimpse absolute inset-x-6 top-[6.6rem] truncate text-center text-[0.7rem] text-slate-500">
-                              <span className="text-[0.62rem] font-bold uppercase tracking-[0.12em]">A glimpse of the work</span> · {role.mix[0].label}
-                            </span>
-                          )}
-                          <div className="relative">
-                            <h2 className="text-[1.15rem] font-bold leading-snug text-brand-ink">{role.title}</h2>
-                            {role.mix.length > 0 && (
-                              <span className="mt-3 block">
-                                <span className="flex h-1.5 overflow-hidden rounded-full bg-slate-200">
-                                  {role.mix.map((m, i) => (
-                                    <span key={m.label} style={{ width: `${m.share}%`, background: `rgb(${role.world.tint} / ${Math.max(0.25, 1 - i * 0.22)})` }} />
-                                  ))}
-                                </span>
-                                <span className="mt-1.5 block truncate text-[0.72rem] text-slate-500">{role.mix[0]!.share}% {role.mix[0]!.label.toLowerCase()}</span>
-                              </span>
-                            )}
-                            <span className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                              <span className="text-[0.82rem] font-semibold text-slate-500">{role.pay || "Pay not listed yet"}</span>
-                              <button
-                                type="button"
-                                disabled={choosing || chosen}
-                                onClick={() => onChoose(role.id)}
-                                className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3.5 text-[0.74rem] font-bold transition-colors disabled:opacity-80 motion-reduce:transition-none ${chosen ? "border-brand-teal bg-brand-teal text-white" : "border-slate-400/60 text-brand-ink hover:border-teal-700"}`}
-                              >
-                                {chosen ? "Chosen" : "Choose this role"}
-                              </button>
-                            </span>
-                            <button type="button" onClick={() => onOpen(role.id)} className="mt-3 flex min-h-11 w-full items-center justify-center rounded-lg border border-slate-300 bg-surface text-[0.8rem] font-bold text-teal-700 transition-colors hover:border-teal-700 motion-reduce:transition-none">
-                              Explore the role ↗
-                            </button>
-                          </div>
+                        <div className="h-full" inert={locked || undefined} aria-hidden={locked || undefined} style={locked ? { filter: "blur(7px)", pointerEvents: "none", userSelect: "none" } : undefined}>
+                          <BrowseRoleCard role={role} chosen={chosen} saved={kept} comparing={compareIds.includes(role.id)} choosing={choosing} saving={savingRoles} onSave={() => void toggleSaved(role.id)} onCompare={() => onToggleCompare(role.id)} onOpen={() => onOpen(role.id)} onChoose={() => onChoose(role.id)} />
                         </div>
                         {locked && <div className="absolute inset-0 flex items-center justify-center bg-surface/40 p-5">
                           <div className="w-full rounded-xl border border-slate-300 bg-surface p-5 text-center shadow-sm">
@@ -419,17 +273,48 @@ export function RoleList({
             ) : (
               <div className={ws.empty}>
                 <div className={ws.emptyIcon} aria-hidden="true">◇</div>
-                <h2>{tab === "saved" && saved.length === 0 ? "Keep the roles you want to revisit." : "No roles match these filters."}</h2>
-                <p>{tab === "saved" && saved.length === 0 ? "Tap the heart on a role to put it here. A shortlist is different from choosing a direction." : "Try another industry or a shorter search."}</p>
+                <h2>{tab === "saved" && saved.length === 0 ? "Save roles here while you explore." : "No roles match that search."}</h2>
+                <p>{tab === "saved" && saved.length === 0 ? "Use the save button on a role to keep it here. You can choose a direction later." : "Try another phrase or browse all roles."}</p>
                 <button type="button" className={ws.secondary} onClick={clearFilters}>Browse all roles</button>
               </div>
             )}
             {tab === "saved" && saved.length > 0 && (
-              <p className={ws.note}>Your shortlist is kept in this browser{signedOut ? "" : ", not on your record"}. Choosing a direction is what goes on your record.</p>
+              <p className={ws.note}>{signedOut ? "Saved in this browser. Sign in to keep it across devices." : "Saved to your Ascend profile."}</p>
             )}
           </>
         )}
       </section>
+      {direction ? (
+        <section className={ws.recommendation} aria-label="Your direction">
+          <div>
+            <span className={ws.chip}>
+              {direction.kind === "chosen" ? "YOUR CHOSEN DIRECTION" : "A ROLE TO EXPLORE"}
+            </span>
+            <h2>{direction.role.title}</h2>
+            <p>
+              {direction.kind === "chosen"
+                ? "Explore the role before deciding what to practise next."
+                : direction.role.summary}
+            </p>
+            <RoleAlignment key={direction.role.id} roleId={direction.role.id} signedOut={signedOut} />
+          </div>
+          <div className={ws.directionActions}>
+            <Link href={`/practice?role=${encodeURIComponent(direction.role.id)}`} className={ws.primary}>
+              See practice options →
+            </Link>
+            {/* Going to the role page is an action like the one above it, so
+                it looks like one. */}
+            <button type="button" className={ws.secondary} onClick={() => onOpen(direction.role.id)}>
+              Open the role →
+            </button>
+            {direction.kind === "chosen" && onUnchoose && (
+              <button type="button" className={ws.unselect} disabled={choosing} onClick={onUnchoose}>
+                Unselect this direction
+              </button>
+            )}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }
@@ -496,7 +381,7 @@ export function ItineraryPicker({
               }`}
             >
               <span className="block text-[0.86rem] font-bold text-brand-ink">
-                {len.label} · {len.minutes} min
+                {len.label} · about {fits * MINUTES_PER_ROLE} min
               </span>
               <span className="block text-[0.75rem] text-slate-500">
                 {fits} role{fits === 1 ? "" : "s"}, about two minutes each
@@ -511,7 +396,7 @@ export function ItineraryPicker({
           <div className="overflow-hidden rounded-2xl border border-brand-violet/30 bg-brand-violet/[0.05]">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-violet/20 px-4 py-3">
               <div>
-                <p className="text-[0.7rem] font-bold uppercase tracking-[0.08em] text-brand-violet-deep">
+                <p className="text-[0.75rem] font-bold uppercase tracking-[0.08em] text-brand-violet-deep">
                   The plan
                 </p>
                 <p className="text-[1.05rem] font-bold text-brand-ink">
@@ -552,7 +437,7 @@ export function ItineraryPicker({
                       <button
                         type="button"
                         onClick={() => onRemove(id)}
-                        className="min-h-10 shrink-0 px-2 text-[0.78rem] font-semibold text-slate-400 hover:text-slate-700"
+                        className="min-h-10 shrink-0 px-2 text-[0.78rem] font-semibold text-slate-500 hover:text-slate-700"
                       >
                         Remove
                       </button>
@@ -562,7 +447,7 @@ export function ItineraryPicker({
               </ol>
             )}
           </div>
-          <p className="mt-2 text-[0.78rem] text-slate-400">
+          <p className="mt-2 text-[0.78rem] text-slate-500">
             After every one I will ask what you made of it, in your own words.
           </p>
         </section>
@@ -592,7 +477,7 @@ export function ItineraryPicker({
                     <span className="block text-[0.85rem] font-bold leading-tight text-brand-ink">
                       {o.title}
                     </span>
-                    <span className="block text-[0.74rem] text-slate-500">
+                    <span className="block text-[0.75rem] text-slate-500">
                       {o.world.title}
                     </span>
                   </span>

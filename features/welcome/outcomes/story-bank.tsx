@@ -13,10 +13,10 @@ export function StoryQuestions() {
   return (
     <div className="rounded-xl border border-slate-200 bg-surface p-3">
       <div className="flex gap-1 border-b border-slate-200 pb-1.5">
-        <span className="rounded-t px-2 py-1 text-[0.65rem] font-bold text-slate-400">
+        <span className="rounded-t px-2 py-1 text-[0.75rem] font-bold text-slate-500">
           My stories (2)
         </span>
-        <span className="border-b-2 border-brand-teal-deep px-2 py-1 text-[0.65rem] font-bold text-brand-ink">
+        <span className="border-b-2 border-brand-teal-deep px-2 py-1 text-[0.75rem] font-bold text-brand-ink">
           What they will ask (14)
         </span>
       </div>
@@ -55,23 +55,23 @@ export function StoryQuestions() {
             className="flex items-center gap-2 rounded-lg border border-slate-200 px-2.5 py-2"
           >
             <span className="min-w-0 flex-1">
-              <span className="block text-[0.58rem] font-bold uppercase tracking-wide text-slate-400">
+              <span className="block text-[0.75rem] font-bold uppercase tracking-wide text-slate-500">
                 {r.meta}
               </span>
               <span className="block text-[0.76rem] font-semibold leading-snug text-brand-ink">
                 {r.q}
               </span>
-              <span className="block text-[0.68rem] leading-snug text-slate-500">
+              <span className="block text-[0.75rem] leading-snug text-slate-500">
                 {r.have}
               </span>
             </span>
             <span
-              className={`shrink-0 rounded-full px-1.5 py-0.5 text-[0.55rem] font-bold uppercase tracking-wide ${r.tone}`}
+              className={`shrink-0 rounded-full px-1.5 py-0.5 text-[0.75rem] font-bold uppercase tracking-wide ${r.tone}`}
             >
               {r.chip}
             </span>
             <span
-              className={`shrink-0 rounded-md px-2 py-1 text-[0.65rem] font-bold ${
+              className={`shrink-0 rounded-md px-2 py-1 text-[0.75rem] font-bold ${
                 r.solid
                   ? "bg-brand-teal-deep text-white"
                   : "border border-slate-300 text-brand-ink"
@@ -90,7 +90,7 @@ export function StoryQuestions() {
 export function StoryDrafter() {
   return (
     <div className="rounded-xl border border-slate-200 bg-surface p-3">
-      <p className="text-[0.58rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+      <p className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">
         Building a story for
       </p>
       <p className="text-[0.8rem] font-bold leading-snug text-brand-ink">
@@ -128,11 +128,11 @@ export function StoryDrafter() {
               key={label as string}
               className="border-l-2 border-brand-violet/35 pl-2"
             >
-              <dt className="text-[0.55rem] font-bold uppercase tracking-[0.1em] text-slate-400">
+              <dt className="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-slate-500">
                 {label}
               </dt>
               <dd
-                className={`mt-0.5 text-[0.72rem] leading-snug ${
+                className={`mt-0.5 text-[0.75rem] leading-snug ${
                   filled ? "text-slate-700" : "italic text-amber-800"
                 }`}
               >
@@ -141,16 +141,16 @@ export function StoryDrafter() {
             </div>
           ))}
         </dl>
-        <p className="mt-1.5 text-[0.64rem] text-slate-400">
+        <p className="mt-1.5 text-[0.75rem] text-slate-500">
           Drawn from: Busy shift simulation
         </p>
       </div>
 
-      <p className="mt-2 rounded-lg bg-brand-mist px-2.5 py-2 text-[0.7rem] leading-snug text-slate-600">
+      <p className="mt-2 rounded-lg bg-brand-mist px-2.5 py-2 text-[0.75rem] leading-snug text-slate-600">
         Read it, then say it out loud once in your own words. A story you have
         only read is a script.
       </p>
-      <span className="mt-2 inline-flex min-h-8 items-center gap-1.5 rounded-lg bg-brand-teal-deep px-3 text-[0.7rem] font-bold text-white">
+      <span className="mt-2 inline-flex min-h-8 items-center gap-1.5 rounded-lg bg-brand-teal-deep px-3 text-[0.75rem] font-bold text-white">
         <Check size={11} />I have said it — keep it
       </span>
     </div>
@@ -162,7 +162,7 @@ export function StoryGrid() {
   return (
     <div className="grid gap-2">
       <div className="rounded-xl border-2 border-brand-violet/50 bg-surface p-3">
-        <p className="text-[0.58rem] font-bold uppercase tracking-wide text-brand-violet-deep">
+        <p className="text-[0.75rem] font-bold uppercase tracking-wide text-brand-violet-deep">
           Handling conflict
         </p>
         <p className="mt-0.5 text-[0.82rem] font-bold leading-snug text-brand-ink">
@@ -185,20 +185,20 @@ export function StoryGrid() {
             ["Result", "She took the credit note and stayed."],
           ].map(([label, text]) => (
             <div key={label} className="rounded-lg bg-brand-mist p-2">
-              <p className="text-[0.55rem] font-bold uppercase tracking-[0.1em] text-slate-400">
+              <p className="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-slate-500">
                 {label}
               </p>
-              <p className="mt-0.5 text-[0.7rem] leading-snug text-slate-700">
+              <p className="mt-0.5 text-[0.75rem] leading-snug text-slate-700">
                 {text}
               </p>
             </div>
           ))}
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          <span className="rounded-full bg-teal-50 px-1.5 py-0.5 text-[0.55rem] font-bold uppercase tracking-wide text-teal-800 ring-1 ring-inset ring-teal-600/25">
+          <span className="rounded-full bg-teal-50 px-1.5 py-0.5 text-[0.75rem] font-bold uppercase tracking-wide text-teal-800 ring-1 ring-inset ring-teal-600/25">
             Proven
           </span>
-          <span className="text-[0.65rem] text-slate-500">
+          <span className="text-[0.75rem] text-slate-500">
             Customer Success interview · HR round
           </span>
         </div>
@@ -226,26 +226,26 @@ export function StoryGrid() {
           key={c.title}
           className="rounded-xl border border-slate-200 bg-surface p-2.5"
         >
-          <p className="text-[0.58rem] font-bold uppercase tracking-wide text-brand-violet-deep">
+          <p className="text-[0.75rem] font-bold uppercase tracking-wide text-brand-violet-deep">
             {c.comp}
           </p>
           <p className="mt-0.5 text-[0.78rem] font-bold leading-snug text-brand-ink">
             {c.title}
           </p>
-          <p className="mt-0.5 text-[0.7rem] leading-snug text-slate-500">
+          <p className="mt-0.5 text-[0.75rem] leading-snug text-slate-500">
             {c.line}
           </p>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             <span
-              className={`rounded-full px-1.5 py-0.5 text-[0.55rem] font-bold uppercase tracking-wide ring-1 ring-inset ${c.tone}`}
+              className={`rounded-full px-1.5 py-0.5 text-[0.75rem] font-bold uppercase tracking-wide ring-1 ring-inset ${c.tone}`}
             >
               {c.chip}
             </span>
-            <span className="text-[0.65rem] text-slate-500">{c.from}</span>
+            <span className="text-[0.75rem] text-slate-500">{c.from}</span>
           </div>
         </div>
       ))}
-      <p className="text-[0.66rem] text-slate-400">
+      <p className="text-[0.75rem] text-slate-500">
         Example — yours would be written from your own record.
       </p>
     </div>

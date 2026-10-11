@@ -3,7 +3,7 @@
 // The line between looking and making.
 //
 // Everything that only reads is open to anyone: the roles, what the work is
-// like, what it pays, the discovery assistant answering questions. Nobody should
+// like and what it pays. AI-assisted answers require sign-in. Nobody should
 // have to hand over an email to find out what a job is.
 //
 // The account is asked for at the first moment we would MAKE something for
@@ -72,7 +72,7 @@ export function SignUpPrompt({
         {action.why}
       </p>
       <p className="mt-2 text-[0.86rem] leading-relaxed text-slate-500">
-        It takes about thirty seconds, and you come straight back to this page.
+        After signing in, you’ll return to this page.
       </p>
 
       <div className="mt-5 grid gap-2.5">

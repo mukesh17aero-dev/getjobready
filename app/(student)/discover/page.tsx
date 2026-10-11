@@ -1,5 +1,6 @@
 import { getServerSession } from "@/lib/supabase-server";
 import { getDiscovery, getJourneyState } from "@/lib/api";
+import { exploreIntro } from "@/features/discovery";
 import { DiscoverEntry } from "./discover-entry";
 
 // One address for Discovery. The page reads the catalogue and the person's own
@@ -9,15 +10,15 @@ import { DiscoverEntry } from "./discover-entry";
 // Signed out the catalogue still loads, but Explore roles shows one sample.
 // The other cards and their detail pages ask for a free account.
 
-export const metadata = { title: "Discovery" };
+export const metadata = { title: "Explore" };
 export const dynamic = "force-dynamic";
 
 export default async function DiscoverPage({
   searchParams,
 }: {
-  searchParams: Promise<{ role?: string }>;
+  searchParams: Promise<{ role?: string; profileType?: string }>;
 }) {
-  const [session, { role }] = await Promise.all([
+  const [session, { role, profileType }] = await Promise.all([
     getServerSession(),
     searchParams,
   ]);
@@ -28,6 +29,7 @@ export default async function DiscoverPage({
 
   return (
     <DiscoverEntry
+      intro={exploreIntro(profileType, journey?.progress?.track)}
       initial={state}
       signedOut={!session}
       targetRole={journey?.progress?.role?.title ?? null}

@@ -23,7 +23,7 @@ const base: PassportOverviewData = {
   interviews: [],
   evidence: [],
   summary: { completedModules: 1, totalModules: 6, assessedSkills: 0, evidenceCount: 0 },
-  sharing: { enabled: false, active: null, reason: "Nothing here yet is backed by real evidence - add a completed assessment, training task or interview before this can be shared." },
+  sharing: { enabled: false, lifetimeDays: 30, active: null, reason: "Nothing here yet is backed by real evidence - add a completed assessment, training task or interview before this can be shared." },
   limitations: ["Module completion is not proof of proficiency.", "Missing results mean not available, not a score of zero."],
 };
 
@@ -79,11 +79,11 @@ describe("Passport overview page", () => {
     expect(html).toContain("Share this passport");
     expect(html).toContain('disabled=""');
     expect(html).not.toContain("Live link");
-    expect(html).toContain("Private · Not shared with employers");
+    expect(html).toContain("No public link · Recipient links managed below");
   });
 
   it("lets the share button be pressed once evidence exists", () => {
-    const html = render({ ...base, sharing: { enabled: true, active: null, reason: "Shared only when you choose." } });
+    const html = render({ ...base, sharing: { enabled: true, lifetimeDays: 30, active: null, reason: "Shared only when you choose." } });
     expect(html).toContain("Share this passport");
     expect(html).not.toContain('disabled=""');
   });
@@ -93,18 +93,18 @@ describe("Passport overview page", () => {
     // hydration - not observable from this static, effect-free render. What
     // is observable here is that the link section replaces the create
     // button, and the expiry (which needs no browser APIs) is correct.
-    const html = render({ ...base, sharing: { enabled: true, active: { token: "abc123", expiresAt: "2026-10-20T00:00:00Z" }, reason: "Shared only when you choose." } });
+    const html = render({ ...base, sharing: { enabled: true, lifetimeDays: 30, active: { token: "abc123", expiresAt: "2026-10-20T00:00:00Z" }, reason: "Shared only when you choose." } });
     expect(html).toContain("Live link");
     expect(html).toContain("Revoke link");
     expect(html).toContain("Expires 20 Oct 2026");
-    expect(html).toContain("Shared · Link is live");
+    expect(html).toContain("Public share link active");
     expect(html).not.toContain(">Share this passport<");
   });
 
   it("shows a public visitor a frozen, non-interactive notice instead of any share controls", () => {
     const html = renderToStaticMarkup(
       createElement(PassportOverview, {
-        overview: { ...base, sharing: { enabled: true, active: { token: "abc123", expiresAt: "2026-10-20T00:00:00Z" }, reason: "x" } },
+        overview: { ...base, sharing: { enabled: true, lifetimeDays: 30, active: { token: "abc123", expiresAt: "2026-10-20T00:00:00Z" }, reason: "x" } },
         name: "Aarav Mehta",
         photo: null,
         shareControls: false,

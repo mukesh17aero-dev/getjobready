@@ -1,0 +1,91 @@
+.block{display:grid;gap:10px;padding:20px;border:1px solid var(--color-slate-200);border-radius:16px;background:var(--color-surface)}
+.block h2{font-size:18px;line-height:1.35;font-weight:650;color:var(--color-brand-ink);text-wrap:balance}
+.label{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--color-slate-600)}
+.quiet{font-size:14px;line-height:1.6;color:var(--color-slate-600)}
+.done{font-size:14px;line-height:1.6;color:var(--color-brand-ink);font-weight:600}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.actions button{min-height:44px;padding:0 20px;border-radius:999px;font-size:14px;font-weight:600}
+.quietButton{background:transparent;border:1px solid var(--color-slate-300);color:var(--color-slate-700)}
+.actions button:disabled{opacity:.55;cursor:not-allowed}
+.actions button:focus-visible,.link:focus-visible{outline:2px solid var(--color-brand-violet-deep);outline-offset:2px}
+.group{display:grid;gap:10px;padding-top:14px;border-top:1px solid var(--color-slate-200)}
+.group h3{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:650;color:var(--color-brand-ink)}
+.items{display:grid;gap:10px;list-style:none;margin:0;padding:0}
+.items li{display:grid;gap:4px;padding:12px 14px;border:1px solid var(--color-slate-200);border-radius:12px}
+.items strong{font-size:14px;color:var(--color-brand-ink)}
+.items p{font-size:14px;line-height:1.55;color:var(--color-slate-600)}
+.link{justify-self:start;min-height:44px;padding:0;border:0;background:none;color:var(--color-brand-violet-deep);font-size:14px;font-weight:600}
+@media(max-width:480px){.block{padding:16px}}
+.primary{background:var(--color-brand-violet);border:0;color:#fff}
+.link:disabled{color:var(--color-slate-500);cursor:not-allowed}
+/* The read in progress: a spinner, what is being read, and the step it is on. */
+.checking{display:grid;gap:12px;padding:16px;border:1px solid var(--color-slate-200);border-radius:12px;background:var(--color-slate-50)}
+.checkingHead{display:flex;align-items:center;gap:12px}
+.checkingHead strong{font-size:15px;color:var(--color-brand-ink)}
+.spinner{flex-shrink:0;width:22px;height:22px;border-radius:50%;border:3px solid var(--color-slate-200);border-top-color:var(--color-brand-violet);animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.steps{display:grid;gap:6px;list-style:none;margin:0;padding:0}
+.steps li{position:relative;padding-left:22px;font-size:14px;color:var(--color-slate-600)}
+.steps li::before{content:"";position:absolute;left:4px;top:.5em;width:8px;height:8px;border-radius:50%;background:var(--color-slate-300)}
+.steps li[data-now]{color:var(--color-brand-ink);font-weight:600}
+.steps li[data-now]::before{background:var(--color-brand-violet);box-shadow:0 0 0 4px color-mix(in srgb,var(--color-brand-violet) 20%,transparent)}
+@media (prefers-reduced-motion:reduce){.spinner{animation:none;border-top-color:var(--color-brand-violet)}}
+/* One finding: a checkbox, what it is, the change or the box for a fact, and Ignore. */
+.items .item{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start}
+.item[data-on]{border-color:var(--color-slate-400);background:var(--color-slate-50)}
+.item>input[type=checkbox]{width:20px;height:20px;margin-top:2px;accent-color:var(--color-brand-violet)}
+.itemBody{display:grid;gap:6px;min-width:0}
+.itemBody label{cursor:pointer}
+.before{font-size:14px;line-height:1.55;color:var(--color-slate-600);text-decoration:line-through;text-decoration-color:var(--color-slate-400)}
+.after{font-size:15px;line-height:1.55;color:var(--color-brand-ink)}
+.answer{display:grid;gap:4px;margin-top:2px}
+.answer span{font-size:13px;font-weight:600;color:var(--color-slate-700)}
+.answer input{width:100%;min-width:0;min-height:44px;padding:10px 12px;border:1px solid var(--color-slate-400);border-radius:8px;background:var(--color-surface);color:var(--color-brand-ink);font:inherit;font-size:16px}
+.answer input:focus{outline:2px solid var(--color-brand-violet);outline-offset:1px;border-color:var(--color-brand-violet)}
+.itemActions{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px}
+.ignore{min-height:44px;padding:0;border:0;background:none;color:var(--color-slate-600);font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.ignored{display:flex!important;align-items:center;justify-content:space-between;gap:12px}
+.said{display:grid;gap:8px;padding:12px 14px;border-radius:12px;border-left:3px solid var(--color-brand-violet);background:var(--color-slate-50)}
+.said p{font-size:14px;line-height:1.55;color:var(--color-brand-ink)}
+.said button{justify-self:start;min-height:44px;padding:0 18px;border-radius:999px;font-size:14px;font-weight:600}
+/* Apply stays in reach while the list scrolls. */
+/* Pinned to the panel's real bottom edge, not inside its padding - a sticky
+   element stops short of a scroll container's padding, which left a strip of
+   the list showing (and scrolling) under the bar. --controls-pad-bottom is
+   the panel's bottom padding; the bar reaches over it and fills it. */
+.applyBar{position:sticky;bottom:calc(-1 * var(--controls-pad-bottom,0px));z-index:2;display:flex;margin-bottom:calc(-1 * var(--controls-pad-bottom,0px));padding:12px 0 calc(12px + var(--controls-pad-bottom,0px));background:var(--color-surface);border-top:1px solid var(--color-slate-200)}
+.applyBar button{min-height:44px;padding:0 22px;border-radius:999px;font-size:14px;font-weight:600}
+.applyBar button:disabled{opacity:.55;cursor:not-allowed}
+/* Groups as collapsed headings: the heading row is the button that opens one. */
+details.group{padding-top:0;gap:0}
+details.group summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:4px 2px;list-style:none;cursor:pointer}
+details.group summary::-webkit-details-marker{display:none}
+details.group summary h3{margin:0}
+details.group summary:focus-visible{outline:2px solid var(--color-brand-violet-deep);outline-offset:2px;border-radius:8px}
+details.group[open] summary{margin-bottom:10px}
+.chevron{flex-shrink:0;width:10px;height:10px;margin-right:6px;border-right:2px solid var(--color-slate-600);border-bottom:2px solid var(--color-slate-600);transform:rotate(45deg);transition:transform .15s}
+details.group[open] .chevron{transform:rotate(-135deg)}
+@media (prefers-reduced-motion:reduce){.chevron{transition:none}}
+.applyOne{min-height:44px;padding:0 18px;border:1px solid var(--color-brand-violet);border-radius:999px;background:var(--color-surface);color:var(--color-brand-violet-deep);font-size:14px;font-weight:600}
+.applyOne:disabled{border-color:var(--color-slate-300);color:var(--color-slate-500);cursor:not-allowed}
+.applyOne:focus-visible{outline:2px solid var(--color-brand-violet-deep);outline-offset:2px}
+.answer input::placeholder{color:var(--color-slate-500)}
+.items .item[data-plain]{grid-template-columns:minmax(0,1fr)}
+/* After the suggestions: on to the Recruiter Review. */
+.next{display:grid;gap:8px;padding-top:14px;border-top:1px solid var(--color-slate-200)}
+.next h3{font-size:15px;font-weight:650;color:var(--color-brand-ink)}
+.next .actions{align-items:center}
+.next .actions button{min-height:44px;padding:0 20px;border-radius:999px;font-size:14px;font-weight:600}
+.secondaryButton{background:var(--color-surface);border:1px solid var(--color-brand-violet);color:var(--color-brand-violet-deep)}
+/* A rewrite shown before it goes in. */
+.proposal{display:grid;gap:8px;padding:12px 14px;border-left:3px solid var(--color-brand-violet);border-radius:8px;background:var(--color-surface)}
+.proposal p{font-size:14px;line-height:1.55;color:var(--color-slate-700)}
+.proposal ul{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.proposal li{display:grid;gap:4px}
+.proposalHead{font-weight:650;color:var(--color-brand-ink)!important}
+.where{font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--color-slate-600)}
+.added,.removed{font-size:13px;font-weight:600;color:var(--color-slate-600)}
+.optional{font-style:normal;font-weight:400;color:var(--color-slate-600)}
+.working{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--color-brand-ink)!important}
+.spinnerSmall{flex-shrink:0;width:16px;height:16px;border-radius:50%;border:3px solid var(--color-slate-200);border-top-color:var(--color-brand-violet);animation:spin .9s linear infinite}
+@media (prefers-reduced-motion:reduce){.spinnerSmall{animation:none}}

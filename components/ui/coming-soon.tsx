@@ -16,7 +16,7 @@ export function ComingSoon({
   backLabel?: string;
 }) {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10">
+    <main className="mx-auto max-w-(--page-max-width) px-4 py-10">
       <BackLink fallbackHref={backHref} fallbackLabel={backLabel} />
 
       <p className="mt-7 text-xs font-semibold uppercase tracking-[0.14em] text-brand-violet-deep">

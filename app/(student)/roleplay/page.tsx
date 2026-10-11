@@ -11,7 +11,7 @@ export default async function RoleplayPage() {
 
   if (!home) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-12 text-center sm:px-6">
+      <main className="mx-auto max-w-(--page-max-width) px-4 py-12 text-center sm:px-6">
         <h1 className="text-xl font-bold text-brand-ink">Roleplay is not answering</h1>
         <p className="mt-2 text-sm text-slate-600">
           Nothing is lost — give it a moment and refresh this page.

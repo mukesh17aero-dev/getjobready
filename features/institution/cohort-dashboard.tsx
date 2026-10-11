@@ -125,9 +125,10 @@ export function CohortDashboard({
   const dataUnavailable = overview === null || roster === null;
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 pb-16 pt-8 sm:px-6">
+    <main className="mx-auto w-full max-w-(--page-max-width) px-4 pb-16 pt-8 sm:px-6">
+
       <header className="mb-8">
-        <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-brand-violet-deep">
+        <p className="text-[0.75rem] font-bold uppercase tracking-[0.14em] text-brand-violet-deep">
           College cohort portal
         </p>
         <h1 className="mt-2 text-2xl font-bold text-brand-ink sm:text-3xl">
@@ -138,6 +139,8 @@ export function CohortDashboard({
           have started, assessed themselves, trained and practiced an interview.
         </p>
       </header>
+      {overview?.verificationFunnel&&<section className="my-6 rounded-xl border border-slate-200 bg-surface p-5"><h2 className="text-lg font-semibold">From independent evidence to recipient use</h2><p className="my-2 text-sm">For students currently consenting to this college: a passed unseen case, candidate-approved sharing, and a recipient who identifies that exact finding in a follow-up. Counts are distinct candidates, not attempts. General follow-ups and disputed results are excluded. These actions are recipient-reported, not independently verified hiring.</p><dl className="grid gap-3 sm:grid-cols-2">{Object.entries(overview.verificationFunnel.counts).map(([key,count])=><div key={key}><dt>{{started:'Started a journey with verification',finished:'Finished an unseen verification case',verified:'Passed an unseen case',shared:'Shared verified case evidence',used:'Recipient recorded use of that evidence'}[key]??key}</dt><dd className="font-semibold">{count===null?'Hidden — small group':count}</dd></div>)}</dl><p className="mt-3">Share of verified candidates with recorded use: {overview.verificationFunnel.useRate===null?'Not available at this group size':`${overview.verificationFunnel.useRate}%`}. Groups smaller than {overview.verificationFunnel.minimum} are hidden.</p></section>}
+      {overview?.recipientOutcomes&&<section className="my-6 rounded-xl border border-slate-200 bg-surface p-5"><h2 className="text-lg font-semibold">Recipient-reported follow-up</h2><p className="my-2 text-sm">Historical actions reported by Passport recipients, for students currently consenting to this college. These are not independently verified placements. Groups smaller than {overview.recipientOutcomes.minimum} are hidden; individual notes are not shared here.</p><dl className="grid gap-3 sm:grid-cols-2">{Object.entries(overview.recipientOutcomes.counts).map(([key,count])=><div key={key}><dt>{{shared:"Shared with a specific recipient",shortlisted:"Shortlisted",interview:"Invited to interview",onboarding:"Onboarding focus recorded"}[key]??key}</dt><dd className="font-semibold">{count===null?'Hidden — small group':count}</dd></div>)}</dl></section>}
 
       {dataUnavailable && (
         <div

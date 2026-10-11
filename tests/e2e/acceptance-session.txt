@@ -1,0 +1,31 @@
+ASCEND — release acceptance session
+Prepared 4 October 2026. Status: NOT SIGNED OFF.
+
+Participants
+Run separately with a student/first-job seeker and a person with 1–3 years of work experience. Use dedicated test accounts and fictional application data. Obtain consent before recording. Do not record passwords, private documents or identifying details in this sheet.
+
+For each task record: participant alias, audience, device/browser, assistive technology, start/end time, completed without help (yes/no), assistance given, error, expected result, observed result, confidence before/after (1–5), and participant explanation of the next action. Leave unanswered fields blank; never infer a successful test from a screenshot or automated result.
+
+Tasks (read the goal; do not explain which button to press)
+1. Home: find a service that helps you today. Explain what you will provide and what you expect to receive. Enter it without completing the full plan.
+2. Explore: search, filter, inspect a role's trade-offs, compare two roles, save one, reload and find it again. Dismiss the interests dialog; confirm it stays dismissed. Explain saving versus choosing a direction.
+3. Resume: create a complete fictional resume. Switch student/experienced guidance and confirm no words disappear. Correct a missing required field using its error link. Reload. Export PDF and Word where available. Re-open both files and check names, email, dates, headings, bullet order and page breaks.
+4. LinkedIn: import a fictional resume or use saved facts, review and keep a section, reload and copy it. Confirm nothing was published to LinkedIn.
+5. Job Fit: paste a fictional posting, obtain feedback, follow one gap action and explain evidence match versus hiring probability.
+6. Interview: choose role and round, identify the rubric/time/readiness impact, answer in text, submit, read feedback and find the next practice. Resume the saved session after reload.
+7. Simulation: enter the chosen role; if unavailable, verify the explanation appears before starting. On an available role, save a draft, reload, submit, review feedback and finish. Try a stale second-tab save and verify newer work is preserved.
+8. Full plan: return Home through Explore, Practice, Apply and Jobs. Confirm the target role does not silently change. Explain the score's denominator, evidence coverage, confidence, source and date; ask whether it predicts getting hired.
+9. Recovery: on a disposable draft, disconnect the network, attempt save, restore connection and retry. Confirm the text survives and Copy remains available. Test delayed loading, session expiry and back navigation without exposing another account's data.
+10. Return visit: repeat on another device; repeat after seven days. Do not label this passed before the real return visit happens.
+
+Keyboard and screen-reader pass (VoiceOver + Safari, NVDA + supported browser)
+Record actual reader/browser versions. Traverse landmarks, headings, links and forms. Check labels, required/optional status and errors. Open each dialog: background must be unavailable, focus stays inside in both directions, Escape closes and restores focus. Use arrow keys on tabs/radios. Confirm selected state and panel names are spoken. Listen for save/error/loading announcements without repeated interruption. Complete Resume and one practice using the reader alone. Accessibility-tree inspection alone does not establish this pass.
+
+Responsive pass
+320px and 390px widths; 200% zoom; reduced motion; keyboard focus; light/dark theme. No horizontal page scroll or covered primary action. Important text and controls remain readable. Check exported documents separately.
+
+Release decision
+PASS only when both audiences complete essential tasks without facilitator rescue, critical/high issues are fixed and retested, real exported files retain source facts, and reader tests and live external handoff succeed. Record every blocked/not-tested item explicitly. Research/release owner enters name/date and links to evidence. Automated suites and agent walkthroughs are supporting evidence, not participant results.
+
+Known prerequisites
+Approved NewEra feed URL for a real application handoff. Supported role availability and experience labels. Test accounts with required export entitlements. Two real participants and a scheduled seven-day return visit.

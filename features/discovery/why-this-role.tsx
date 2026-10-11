@@ -32,7 +32,7 @@ function signUpHref(): string {
 export function WhyThisRole() {
   return (
     <section className="mt-8 rounded-2xl border border-brand-teal/40 bg-brand-teal-deep/[0.05] p-5">
-      <h2 className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-teal-800">
+      <h2 className="text-[0.75rem] font-bold uppercase tracking-[0.14em] text-teal-800">
         Why this role fits you
       </h2>
 

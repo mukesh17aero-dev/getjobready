@@ -18,13 +18,14 @@ const QUESTION_KIND_LABELS: Record<string, { label: string; Icon: typeof Eye }> 
   artefact: { label: "Produce the deliverable", Icon: Pencil },
 };
 
-export function AssessmentQuestion({ brief, responseText = "", kind, clues = false }: { brief: string; responseText?: string; kind?: string; clues?: boolean }) {
+export function AssessmentQuestion({ brief, responseText = "", kind, clues = false, part = "all" }: { brief: string; responseText?: string; kind?: string; clues?: boolean; part?: "all" | "context" | "prompt" }) {
   const { question, cards } = assessmentQuestionCards(brief);
   const terms = assessmentTerms(`${brief}\n${responseText}`);
   const badge = kind ? QUESTION_KIND_LABELS[kind] : undefined;
   return <div className="assessment-question">
-    {badge && <p className="assessment-question-kind"><badge.Icon size={14} />{badge.label}</p>}
-    <RichText text={question} className="assessment-question-prompt" />
+    {part !== "context" && badge && <p className="assessment-question-kind"><badge.Icon size={14} />{badge.label}</p>}
+    {part !== "context" && <RichText text={question} className="assessment-question-prompt" />}
+    {part !== "prompt" && <>
     {terms.length > 0 && <details className="assessment-word-help"><summary>Words in this question <span>{terms.slice(0, 3).map(item => item.term).join(" · ")}{terms.length > 3 ? ` +${terms.length - 3}` : ""}</span></summary><dl>{terms.map(item => <div key={item.term}><dt>{item.term}</dt><dd>{item.definition}</dd></div>)}</dl></details>}
     {clues
       ? <div className="assessment-clues">{cards.map((card, index) => <details key={index} className="assessment-clue">
@@ -34,6 +35,7 @@ export function AssessmentQuestion({ brief, responseText = "", kind, clues = fal
       : <div className="assessment-fact-cards">{cards.map((card, index) => <section key={index}>
           <h3>{card.title}</h3><RichText text={card.body} />
         </section>)}</div>}
-    <p className="assessment-think">{clues ? "Open each clue - everything you need is inside." : "Read the cards, think it through, then answer in your own words."}</p>
+    {part === "all" && <p className="assessment-think">{clues ? "Open each clue - everything you need is inside." : "Read the cards, think it through, then answer in your own words."}</p>}
+    </>}
   </div>;
 }

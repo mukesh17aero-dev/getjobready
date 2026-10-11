@@ -35,7 +35,7 @@ export function PayProgression({ growth }: { growth: RoleDetail["growth"] }) {
           const tone = TONES[i % TONES.length]!;
           return (
             <div key={step.title} className="flex flex-1 flex-col items-center">
-              <span className="mb-1 text-[0.7rem] font-semibold tabular-nums text-slate-600">
+              <span className="mb-1 text-[0.75rem] font-semibold tabular-nums text-slate-600">
                 {money(step.pay.min)}–{money(step.pay.max)}
               </span>
               <div
@@ -59,12 +59,12 @@ export function PayProgression({ growth }: { growth: RoleDetail["growth"] }) {
       <div className="mt-1 flex gap-3 border-t border-slate-200 pt-2">
         {growth.map((step, i) => (
           <div key={step.title} className="flex-1 text-center">
-            <p className="text-[0.72rem] font-semibold leading-tight text-slate-900">
+            <p className="text-[0.75rem] font-semibold leading-tight text-slate-900">
               {step.title}
             </p>
-            <p className="text-[0.66rem] text-slate-400">{step.when}</p>
+            <p className="text-[0.75rem] text-slate-500">{step.when}</p>
             {i === 0 && (
-              <p className="mt-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-brand-violet">
+              <p className="mt-0.5 text-[0.75rem] font-bold uppercase tracking-wide text-brand-violet">
                 you start here
               </p>
             )}

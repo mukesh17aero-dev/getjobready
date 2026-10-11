@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getServerSession } from "@/lib/supabase-server";
 import {
+  bestStrength,
   getPracticeQuestions,
   getStoryBank,
   type StoryBank as Bank,
@@ -44,7 +45,7 @@ function sampleBank(
       const mine = stories.filter((s) => s.competency === competency);
       return {
         competency,
-        best: mine.length > 0 ? ("proven" as const) : null,
+        best: bestStrength(mine),
         storyIds: mine.map((s) => s.id),
         questions: questions.questions.filter(
           (q) => q.competency === competency,
@@ -66,7 +67,7 @@ export default async function StoriesPage() {
     return (
       <Frame>
         <div className="rounded-2xl border border-slate-200 bg-brand-mist px-5 py-6">
-          <p className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-brand-violet-deep">
+          <p className="text-[0.75rem] font-bold uppercase tracking-[0.14em] text-brand-violet-deep">
             In development
           </p>
           <h1 className="mt-1.5 font-display text-[1.4rem] font-bold text-brand-ink">
@@ -116,7 +117,7 @@ export default async function StoriesPage() {
 
 function Frame({ children }: { children: React.ReactNode }) {
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 pb-16 pt-4 sm:px-6">
+    <main className="mx-auto w-full max-w-(--page-max-width) px-4 pb-16 pt-4 sm:px-6">
       <BackLink fallbackHref="/interview" fallbackLabel="Back to Interview" />
       <div className="mt-4">{children}</div>
     </main>
@@ -125,7 +126,7 @@ function Frame({ children }: { children: React.ReactNode }) {
 
 function Unavailable() {
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-16 text-center sm:px-6">
+    <main className="mx-auto w-full max-w-(--page-max-width) px-4 py-16 text-center sm:px-6">
       <h1 className="font-display text-[1.5rem] font-bold text-brand-ink">
         Your stories could not load
       </h1>

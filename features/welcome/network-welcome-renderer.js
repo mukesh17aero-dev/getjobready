@@ -24,7 +24,6 @@ export function mountNetworkWelcome(root, initial = 'student', cinematic = true)
     const d = copy[audience];
     $('eyebrow').textContent = d[0]; $('headline').innerHTML = d[1]; $('body').textContent = d[2];
     $('cta').innerHTML = d[3] + ' <span>↗</span>'; $('cta').href = d[4];
-    $('room-label').textContent = d[5]; $('room-detail').innerHTML = d[6]; $('scene-note').textContent = d[7];
     root.querySelectorAll('[data-connection]').forEach(el => { el.dataset.active=String(Number(el.dataset.connection)===audience); });
     const url=new URL(location.href);url.searchParams.set('for',['student','college','employer'][audience]);history.replaceState(null,'',url);
     
@@ -59,7 +58,7 @@ export function mountNetworkWelcome(root, initial = 'student', cinematic = true)
     canvas.style.display = 'none';
     let disposed = false, visible = true;
     let activeAudience = audience, slideIndex = 0, requestId = 0;
-    let rotationTimer, fadeTimer, activeImage, activeSlide;
+    let rotationTimer, fadeTimer, activeImage;
     const images = new Map();
     const file = slide => '/welcome/stills/' + slide.id + '.' + slide.extension;
     const mayRotate = () => !disposed && !paused && !document.hidden && visible;
@@ -108,10 +107,8 @@ export function mountNetworkWelcome(root, initial = 'student', cinematic = true)
         // Paint the fully decoded image before starting its opacity transition.
         img.getBoundingClientRect();
         img.classList.add('is-visible');
-        activeImage = img; activeSlide = slide; slideIndex = index;
+        activeImage = img; slideIndex = index;
         scene.dataset.currentSlide = slide.id;
-        $('room-label').textContent = slide.label;
-        $('room-detail').textContent = slide.detail;
         clearTimeout(fadeTimer);
         fadeTimer = setTimeout(() => {
           scene.querySelectorAll('.welcome-slide').forEach(old => { if (old !== activeImage) old.remove(); });

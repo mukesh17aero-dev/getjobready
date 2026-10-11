@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FeatureGrid } from "@/features/welcome";
 import { RequestAccess } from "@/features/welcome";
 import { COLLEGE } from "@/features/welcome";
@@ -14,11 +15,17 @@ export const metadata = {
 
 export default function CollegesPage() {
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-6 sm:px-6">
+    <main className="mx-auto w-full max-w-(--page-max-width) px-4 pb-16 pt-6 sm:px-6">
       <FeatureGrid category={COLLEGE} />
       {/* The way in. Everything above is not released yet, so the one
           thing this page can actually do for somebody is take their
           details and get a human back to them. */}
+      <p className="mx-auto mt-8 max-w-3xl text-center text-sm text-slate-600">
+        Already a partner?{" "}
+        <Link href="/college" className="font-semibold text-brand-violet-deep underline">
+          Open your cohort portal
+        </Link>
+      </p>
       <RequestAccess kind="college" />
     </main>
   );

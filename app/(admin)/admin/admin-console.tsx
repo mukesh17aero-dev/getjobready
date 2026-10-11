@@ -1,5 +1,4 @@
 "use client";
-
 // The admin console itself.
 
 import { adminDiscardDraft, adminImportCatalogue, adminReviewSkillModel, adminRoleTemplate, adminGenerateRoleContext, adminGenerateRoleDetail, adminSaveDraft, adminSaveDraftDetailed, adminSuggestSkills, type AdminContent, type CatalogueImportResult, type SkillModel, type SkillModelReview } from "@/lib/api";
@@ -14,6 +13,7 @@ import { Collapsible } from "@/components/ui/collapsible";
 import { AssessmentTab } from "./simple-assessment";
 import { InterviewBankEditor } from "./interview-bank";
 import { VideoUploadsEditor } from "./videos";
+import { LearningStudio } from "@/features/learning-studio";
 import { SkillModelEditor } from "./skill-model-editor";
 import { BLANK_ROLE_BODY, Field, type RoleDetail, type RoleSummary, TrashIcon, mergeRoleDraft } from "./role-draft";
 import { RowList, SMALL_INPUT, blankDetail } from "./row-list";
@@ -51,6 +51,7 @@ export function AdminConsole({
     | "assessment"
     | "interview"
     | "videos"
+    | "learning"
   >(initialTab ?? "roles");
   const [advanced, setAdvanced] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -537,6 +538,9 @@ export function AdminConsole({
               : tab === "videos"
                 ? "video_uploads"
                 : "discovery_content";
+  // The Learning Studio saves and publishes each journey itself, so the
+  // console's shared draft bar does not apply to it.
+  const ownsDocument = tab !== "learning";
   const doc =
     tab === "roles"
       ? roles
@@ -573,8 +577,8 @@ export function AdminConsole({
                 : hasDraft.discovery;
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 pb-16 sm:px-6">
-      <nav aria-label="Breadcrumb" className="pt-4 text-xs text-slate-400">
+    <main className="mx-auto w-full max-w-(--page-max-width) px-4 pb-16 sm:px-6">
+      <nav aria-label="Breadcrumb" className="pt-4 text-xs text-slate-500">
         <Link href="/" className="hover:underline">
           Home
         </Link>
@@ -591,8 +595,8 @@ export function AdminConsole({
             Saved as a draft; live publication requires two admin approvals.
           </p>
         </div>
-        <p className="text-xs text-slate-400">
-          <span className="mb-3 flex flex-wrap gap-4"><Link href="/admin/studio">Role studio →</Link><AdminReviewLink /></span>
+        <p className="text-xs text-slate-500">
+          <span className="mb-3 flex flex-wrap gap-4"><Link href="/admin/studio">Role studio →</Link><Link href="/admin/institutions">Colleges →</Link><AdminReviewLink /></span>
           Published v{doc?.published?.version ?? "—"}
           {doc?.published?.publishedAt
             ? ` · ${new Date(doc.published.publishedAt).toLocaleDateString()}`
@@ -621,6 +625,7 @@ export function AdminConsole({
           { id: "assessment" as const, label: "Assessment" },
           { id: "interview" as const, label: "Interview questions" },
           { id: "videos" as const, label: "Video uploads" },
+          { id: "learning" as const, label: "Learning Studio" },
         ].map((t) => (
           <button
             key={t.id}
@@ -749,7 +754,7 @@ export function AdminConsole({
 
               <div className="my-4 flex items-center gap-3">
                 <span className="h-px flex-1 bg-slate-200" />
-                <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+                <span className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-slate-500">
                   or
                 </span>
                 <span className="h-px flex-1 bg-slate-200" />
@@ -770,7 +775,7 @@ export function AdminConsole({
               >
                 Download the template
               </button>
-              <p className="mt-2 text-[0.78rem] text-slate-400">
+              <p className="mt-2 text-[0.78rem] text-slate-500">
                 The template covers the basics. Career progression and
                 testimonials are added on the role itself, below.
               </p>
@@ -838,7 +843,7 @@ export function AdminConsole({
                     <span className="text-[0.92rem] font-semibold text-slate-900">
                       {role.title || "Untitled role"}
                     </span>
-                    <span className="text-[0.75rem] text-slate-400">
+                    <span className="text-[0.75rem] text-slate-500">
                       {
                         model.skills.filter(
                           (sk) => (model.skillRole[sk.id]?.[role.id] ?? 0) > 0,
@@ -891,7 +896,7 @@ export function AdminConsole({
 
                 <div className="mt-3.5 border-t border-slate-100 pt-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+                    <p className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-slate-500">
                       Skills this role needs
                     </p>
                     <div className="flex items-center gap-1.5">
@@ -1050,7 +1055,7 @@ export function AdminConsole({
                       value={detail.payNote}
                       onChange={(v) => patchDetail(role.id, { payNote: v })}
                     />
-
+                    <fieldset className="rounded-xl border border-slate-200 p-4"><legend>Experience levels · select only when supported by the role’s entry requirements</legend>{([ ["student", "Student / first job"], ["early_career", "1–3 years"] ] as const).map(([level, label]) => <label key={level} className="flex min-h-11 items-center gap-2"><input type="checkbox" checked={detail.experienceLevels?.includes(level) ?? false} onChange={event => patchDetail(role.id, {experienceLevels:event.target.checked ? [...(detail.experienceLevels ?? []),level] : (detail.experienceLevels ?? []).filter(value => value !== level)})} />{label}</label>)}</fieldset>
                     <RowList
                       label="Career progression"
                       hint="What comes next, and the pay that goes with it."
@@ -1278,10 +1283,10 @@ export function AdminConsole({
                     </div>
 
                     <label className="block rounded-xl border border-slate-200 p-3.5">
-                      <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+                      <span className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-slate-500">
                         Anything else we know about this role
                       </span>
-                      <span className="mt-0.5 block text-[0.75rem] leading-snug text-slate-400">
+                      <span className="mt-0.5 block text-[0.75rem] leading-snug text-slate-500">
                         Not shown on the role page. This is what the discovery
                         assistant draws on when a student asks something the
                         fields above do not answer — what an employer told you,
@@ -1347,6 +1352,12 @@ export function AdminConsole({
         />
       )}
 
+      {tab === "learning" && (
+        <section className="mt-5">
+          <LearningStudio />
+        </section>
+      )}
+
       {tab === "videos" && (
         <VideoUploadsEditor
           refreshKey={publishedAt}
@@ -1364,7 +1375,7 @@ export function AdminConsole({
         />
       )}
 
-      {(tab !== "assessment" || advanced) && <div className="sticky bottom-0 mt-6 -mx-4 flex flex-wrap items-center gap-3 border-t border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+      {ownsDocument && (tab !== "assessment" || advanced) && <div className="sticky bottom-0 mt-6 -mx-4 flex flex-wrap items-center gap-3 border-t border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
         <p className="flex-1 text-xs text-slate-500">
           {draftPending
             ? "You have unpublished changes — students still see the published version."
@@ -1373,7 +1384,7 @@ export function AdminConsole({
         {/* What this tab is actually operating on. Publish being disabled is
             a correct consequence of there being no draft, so the screen has to
             show whether there is one rather than leaving it to be deduced. */}
-        <span className="w-full text-[0.72rem] text-slate-400">
+        <span className="w-full text-[0.75rem] text-slate-500">
           Editing <code>{kind}</code> · published:{" "}
           {doc?.published ? `v${doc.published.version}` : "none"} · draft:{" "}
           {draftPending ? "yes" : "none"}

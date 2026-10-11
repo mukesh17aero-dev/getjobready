@@ -68,6 +68,9 @@ export async function generateCall<T extends { ok: boolean }>(
   body: unknown,
   timeoutMs: number = GENERATE_TIMEOUT_MS,
 ): Promise<T | { ok: false; reason: string }> {
+  // No model request leaves this client without a session. The server also authenticates.
+  if (!token.trim()) return { ok: false, reason: "Sign in to use AI assistance and create your own results." };
+
   // A deadline, like every other read in this file.
   //
   // This was the one fetch with none, and it is the one behind the longest

@@ -17,3 +17,12 @@ export * from "./role-tour";
 export * from "./role-tour-stage";
 export * from "./samples";
 export * from "./work-rail";
+
+export {TourReflection} from "./tour-reflection";
+export {useTourMemory} from './use-tour-memory';
+
+export { exploreIntro, type ExploreIntro } from "./explore-intro";
+
+export { RoleAlignment } from "./role-alignment";
+
+export { InterestSelection } from "./interest-selection";

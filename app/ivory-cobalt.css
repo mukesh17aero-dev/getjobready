@@ -1,0 +1,55 @@
+/* First rollout: welcome and career Home only. The marker arrives with the
+   page HTML; navigation to any other screen restores its existing palette. */
+body:has([data-palette="ivory-cobalt"]) {
+  --color-brand-mist: light-dark(#faf8f5, #171819);
+  --color-surface: light-dark(#ffffff, #222428);
+  --color-brand-ink: light-dark(#24262b, #f4f2ee);
+  --color-brand-muted: light-dark(#605e59, #bcbab5);
+  --color-brand-border: light-dark(#e4dfd8, #41444a);
+  --color-brand-violet: #2457d6;
+  --color-brand-violet-deep: light-dark(#2457d6, #a2bdff);
+  --color-brand-violet-soft: light-dark(#dce6ff, #a2bdff);
+  --color-brand-accent: light-dark(#2457d6, #a2bdff);
+  --color-violet-50: light-dark(#f0f4ff, #252e41);
+  --color-violet-100: light-dark(#e4ecff, #2e3d5c);
+  --color-violet-700: light-dark(#2457d6, #a2bdff);
+  --color-violet-900: light-dark(#193d96, #d4e0ff);
+  --color-indigo-400: light-dark(#2457d6, #a2bdff);
+  --color-indigo-500: light-dark(#2457d6, #a2bdff);
+  --color-teal-50: light-dark(#f7f4ef, #282725);
+  --color-slate-50: light-dark(#faf8f5, #171819);
+  --color-slate-100: light-dark(#f2efea, #2b2c30);
+  --color-slate-200: light-dark(#e4dfd8, #41444a);
+  --color-slate-300: light-dark(#c9c3ba, #62656c);
+  --color-slate-400: light-dark(#817c74, #979aA1);
+  --color-slate-500: light-dark(#68635c, #b0ada7);
+  --color-slate-600: light-dark(#605e59, #bcbab5);
+  --color-slate-700: light-dark(#494742, #d4d1cc);
+  --color-slate-800: light-dark(#333333, #e7e4df);
+  --color-slate-900: light-dark(#24262b, #f4f2ee);
+  --ambience-violet: transparent;
+  --ambience-teal: transparent;
+  --ivory-accent-ink: light-dark(#2457d6, #a2bdff);
+  background: var(--color-brand-mist);
+  color: var(--color-brand-ink);
+}
+
+body:has([data-palette="ivory-cobalt"]) .text-brand-violet-deep {
+  color: var(--color-brand-violet-deep);
+}
+
+body:has([data-palette="ivory-cobalt"]) > header {
+  background: var(--color-surface);
+  border-color: var(--color-brand-border);
+}
+
+/* Keep the existing logo geometry, using the same blue as page actions. */
+body:has([data-palette="ivory-cobalt"]) :is(header, .network-welcome) svg stop {
+  stop-color: var(--ivory-accent-ink);
+}
+
+body:has([data-palette="ivory-cobalt"]) header button[aria-label^="Account menu"] {
+  background: var(--color-violet-100);
+  color: var(--ivory-accent-ink);
+  border-color: var(--color-brand-border);
+}

@@ -63,12 +63,12 @@ export function homePlan(state: JourneyState, now: number): HomePlan {
   const awaiting = state.evidence?.readinessAwaiting ?? null;
   const all: Array<Omit<MapStop, "inFocus">> = [
     { id: "explore", title: "Explore the role", payoff: "Know what the job is really like before you spend months aiming at it.", tools: [
-      { label: "Discovery", href: "/discover", blurb: "See a role's real working day, then choose one to aim at", status: role ? "done" : undefined },
+      { label: "Explore roles", href: "/discover", blurb: "See a role's real working day, then choose one to aim at", status: role ? "done" : undefined },
     ] },
     { id: "readiness", title: "Build role readiness", payoff: "Find out what you can already do, practise the rest on real tasks, and keep the proof.", tools: [
-      { label: "The Readiness Sitting", href: awaiting ? `/practice/readiness/results/${awaiting.runId}` : "/practice/readiness", blurb: awaiting ? "Your answers are saved. Open your report to get your score" : "Five questions on the job's own work, scored skill by skill", status: m.readiness },
-      { label: "Simulation Missions", href: "/practice/missions", blurb: "Real tasks from the role, marked the way the job would", isNew: fresh },
-      { label: "Career Passport", href: "/passport", blurb: "The skills you have proved, in one record you can share", isNew: fresh },
+      { label: "The Readiness Sitting", href: awaiting ? `/practice/readiness/results/${awaiting.runId}` : "/practice/readiness", blurb: awaiting ? "Your answers are saved. Open your report to get your score" : "Questions on the job's own work, scored skill by skill", status: m.readiness },
+      { label: "Simulation Missions", href: "/practice/missions", blurb: state.practiceRoles?.includes(state.progress?.role?.id ?? "") ? "Published practice for your role, with feedback" : "See published practice roles and availability", isNew: fresh },
+      { label: "Skills Passport", href: "/passport", blurb: "The skills you have proved, in one record you can share", isNew: fresh },
     ] },
     { id: "presence", title: "Show it on paper", payoff: "Turn what you have done into a resume and profile that get read.", tools: [
       { label: "Resume Builder", href: "/resume/build", blurb: "A one-page resume written from what you have done", status: m.resume, note: m.resume === "in_progress" ? "draft" : undefined },
@@ -101,11 +101,11 @@ function railAndNext(state: JourneyState, focus: HomeFocus): Omit<HomePlan, "sta
     eyebrow: "YOUR NEXT STEP",
     title: "Try the real work",
     why: weakest
-      ? `Your readiness sitting found ${weakest} is where you have the most to gain. Missions put you through a ${role ?? "role"}'s real tasks, marked the way the job would mark them.`
-      : `Missions put you through a ${role ?? "role"}'s real tasks, marked the way the job would mark them.`,
-    cta: "Start a mission",
+      ? `Your readiness sitting found ${weakest} is where you have the most to gain. Explore published workplace practice, with feedback on the work you submit.`
+      : `Explore published workplace practice, with feedback on the work you submit.`,
+    cta: "See available practice",
     href: "/practice/missions",
-    meta: ["About 20 minutes", "Marked against the role", "Counts toward your Passport"],
+    meta: ["Availability varies by role", "Saved progress", "Practice is separate from verified readiness"],
   };
   const explore: NextStepPanel = {
     eyebrow: "YOUR FIRST STEP",
@@ -170,11 +170,11 @@ function railAndNext(state: JourneyState, focus: HomeFocus): Omit<HomePlan, "sta
   const readinessDone = m.readiness === "done";
   const readinessPanel: NextStepPanel = {
     eyebrow: "YOUR NEXT STEP",
-    title: m.readiness === "in_progress" ? "Finish your readiness sitting" : "Check where you stand",
-    why: m.readiness === "in_progress" ? "Your sitting is still open. Your answers so far are saved." : `Five short questions on a ${role}'s own work show what you can already do and what is worth practising first.`,
-    cta: m.readiness === "in_progress" ? "Continue your sitting" : "Take the readiness sitting",
+    title: m.readiness === "in_progress" ? "Finish your role readiness assessment" : "Check where you stand",
+    why: m.readiness === "in_progress" ? "Let’s assess your strengths and growth areas to help you excel in the role. Your answers so far are saved." : `Five short questions on a ${role}'s own work show what you can already do and what is worth practising first.`,
+    cta: m.readiness === "in_progress" ? "Continue your assessment" : "Take the role readiness assessment",
     href: "/practice/readiness",
-    meta: ["5 questions", "No time limit", "Scored against the role"],
+    meta: ["No time limit", "Scored against the role"],
   };
 
   if (focus === "practice") {
@@ -186,7 +186,7 @@ function railAndNext(state: JourneyState, focus: HomeFocus): Omit<HomePlan, "sta
         step("done", "Pick the role", role),
         status(m.readiness, "Sitting finished", "Sitting open") ? step(readinessDone ? "done" : "started", "Check where you stand", readinessDone ? readinessNote : "Optional · open") : step("ahead", "Check where you stand", "Optional"),
         step("current", "Try the real work", "You are here"),
-        step("ahead", "Prove it", "Opens after two marked missions"),
+        step("ahead", "Prove it", "Based on measured evidence"),
       ],
       next: missions,
     };
@@ -202,7 +202,7 @@ function railAndNext(state: JourneyState, focus: HomeFocus): Omit<HomePlan, "sta
       readinessDone ? step("done", "Check your readiness", readinessNote) : step(m.readiness === "in_progress" ? "started" : "current", "Check your readiness", m.readiness === "in_progress" ? "Sitting open" : "You are here"),
       step(readinessDone ? "current" : "ahead", "Try the real work", readinessDone ? "You are here" : "Marked like the job"),
       interviewStep ? step(interviewStep.state, "Practise the interview", interviewStep.note) : step("ahead", "Practise the interview", "Out loud, with feedback"),
-      step("ahead", "Prove it", "Opens after two marked missions"),
+      step("ahead", "Prove it", "Based on measured evidence"),
     ],
     next: readinessDone ? missions : readinessPanel,
   };

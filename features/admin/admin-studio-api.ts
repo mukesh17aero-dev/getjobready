@@ -1,3 +1,4 @@
+import type {LearningJourney} from '@/lib/api/simulation-journey';
 import { API_URL, requestHeaders } from '@/lib/api';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 export type WorkTask = {
@@ -81,6 +82,7 @@ export type RolePackage = {
         importance: number;
     }[];
     modules: SkillModule[];
+    learningJourney?: LearningJourney;
     policy: {
         questionCount: 12;
         timeLimit: null;

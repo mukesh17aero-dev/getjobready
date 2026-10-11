@@ -30,7 +30,7 @@ function Section({
         <span aria-hidden className="h-3.5 w-1 rounded-full bg-brand-violet" />
         {title}
         {hint && (
-          <span className="text-[0.72rem] font-normal text-slate-400">
+          <span className="text-[0.75rem] font-normal text-slate-500">
             {hint}
           </span>
         )}
@@ -184,7 +184,7 @@ export function RoleBody({
         <ul className="grid gap-1.5 text-[0.85rem] text-slate-600">
           {role.responsibilities.map((item) => (
             <li key={item} className="flex gap-2">
-              <span aria-hidden className="text-slate-300">
+              <span aria-hidden className="text-slate-500">
                 ▪
               </span>
               {item}
@@ -210,7 +210,7 @@ export function RoleBody({
       )}
 
       {show("growth") && (
-      <Section locked={signedOut} title="Skills you'll be judged on">
+      <Section locked={signedOut} title="Required Skills">
         <ul className="grid gap-2 sm:grid-cols-2">
           {role.skills.map((skill) => (
             <li
@@ -236,7 +236,7 @@ export function RoleBody({
         hint="monthly, indicative"
       >
         <PayProgression growth={role.growth} />
-        <p className="mt-2 text-[0.7rem] leading-snug text-slate-400">
+        <p className="mt-2 text-[0.75rem] leading-snug text-slate-500">
           {role.payNote}
         </p>
       </Section>
@@ -252,7 +252,7 @@ export function RoleBody({
             ["Team", role.workContext.team],
           ].map(([label, value]) => (
             <div key={label}>
-              <dt className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+              <dt className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-slate-500">
                 {label}
               </dt>
               <dd className="mt-0.5 text-slate-600">{value}</dd>
@@ -285,7 +285,7 @@ export function RoleBody({
       {show("reality") && role.voices.length > 0 && (
         <Section locked={signedOut} title="People doing this job">
           {role.voicesIllustrative && (
-            <p className="mb-2.5 rounded-lg bg-slate-100 px-3 py-2 text-[0.72rem] leading-snug text-slate-600">
+            <p className="mb-2.5 rounded-lg bg-slate-100 px-3 py-2 text-[0.75rem] leading-snug text-slate-600">
               <strong className="font-semibold">Illustrative:</strong> these are
               composite stories written from the pay and progression data above,
               not real individuals. Real, named and consented quotes replace
@@ -304,7 +304,7 @@ export function RoleBody({
                     {voice.title}
                   </span>
                 </p>
-                <p className="text-[0.72rem] text-slate-400">{voice.journey}</p>
+                <p className="text-[0.75rem] text-slate-500">{voice.journey}</p>
               </li>
             ))}
           </ul>

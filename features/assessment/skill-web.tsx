@@ -182,7 +182,7 @@ export function SkillWeb({
               y={y}
               textAnchor={anchor}
               dominantBaseline="middle"
-              className="fill-slate-500 text-[9px]"
+              className="fill-slate-500 text-[12px]"
             >
               {a.skill.length > 22 ? `${a.skill.slice(0, 21)}…` : a.skill}
             </text>
@@ -203,7 +203,7 @@ export function SkillWeb({
               {band.label}
               {band.cohort !== undefined ? ` (${band.cohort})` : ""}
               {band.source === "illustrative" && (
-                <span className="rounded-full bg-amber-50 px-1.5 text-[0.66rem] font-bold uppercase tracking-wide text-amber-700">
+                <span className="rounded-full bg-amber-50 px-1.5 text-[0.75rem] font-bold uppercase tracking-wide text-amber-700">
                   illustrative
                 </span>
               )}

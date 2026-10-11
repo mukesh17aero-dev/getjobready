@@ -1,5 +1,4 @@
 "use client";
-
 // The profile form itself.
 
 import {
@@ -647,12 +646,12 @@ export function ProfileForm({
           <Avatar src={currentPhoto} name={fields.fullName || "You"} className="h-12 w-12 shrink-0 rounded-full ring-1 ring-slate-200" fallbackClassName="grid place-items-center bg-brand-mist text-lg font-bold text-brand-teal-deep" />
           <span>{photoBusy ? "Uploading…" : currentPhoto ? "Change photo" : "Add photo"}</span>
         </button>
-        <div className={styles.heading}><h1>{isWelcome ? "Tell us enough to guide you" : "Your profile"}</h1><p>A few useful details. Build the rest as you go.</p>{photoSaved && <small role="status">Profile photo updated.</small>}{photoError && !photoOpen && <small role="alert">{photoError}</small>}</div>
+        <div className={styles.heading}><h1>{isWelcome ? "Tell us enough to guide you" : "Your story can start small."}</h1><p>Add a few details now. Reuse them in your resume and applications.</p>{photoSaved && <small role="status">Profile photo updated.</small>}{photoError && !photoOpen && <small role="alert">{photoError}</small>}</div>
       </header>
       <div className={styles.workspace}>
       <div className={styles.editor}>
         <nav aria-label="Profile sections" className={styles.tabs}>
-          {sections.map(item => <button type="button" key={item} aria-pressed={section === item} aria-controls="profile-section" onClick={() => setSection(item)} className={`min-h-11 rounded-lg px-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-violet ${section === item ? "bg-brand-violet text-white" : "text-slate-600 hover:bg-slate-100"}`}>{item}</button>)}
+          {sections.map(item => <button type="button" key={item} aria-pressed={section === item} aria-controls="profile-section" onClick={() => setSection(item)} className={`min-h-11 rounded-lg px-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-violet ${section === item ? "bg-brand-violet text-white" : "text-slate-600 hover:bg-slate-100"}`}>{item === "Basics" ? "About you" : item === "Experience" ? "Projects & work" : item === "Interests" ? "Skills & interests" : item}</button>)}
         </nav>
         <div id="profile-section" aria-label={section}>
       {(
@@ -700,7 +699,7 @@ export function ProfileForm({
               placeholder="linkedin.com/in/priyasharma"
             />
             <PassportLinkButton onFound={set("link")} />
-            <label className="block"><span className="text-[0.8rem] font-semibold text-slate-800">Where are you now?</span><span className="block text-[0.72rem] text-slate-500">Choose what describes you today.</span>
+            <label className="block"><span className="text-[0.8rem] font-semibold text-slate-800">Where are you now?</span><span className="block text-[0.75rem] text-slate-500">Choose what describes you today.</span>
               <select className={styles.select} value={fields.track} onChange={event => chooseTrack(event.target.value as Track)} aria-invalid={trackError ? true : undefined}>
                 <option value="">Choose your situation</option>{TRACKS.map(option => <option key={option.id} value={option.id}>{option.title}</option>)}
               </select>{(trackError || trackNote) && <small className="text-xs text-slate-600">{trackError ?? trackNote}</small>}
@@ -716,7 +715,7 @@ export function ProfileForm({
               <span className="text-[0.8rem] font-semibold text-slate-800">
                 Anything else you do (optional)
               </span>
-              <span className="block text-[0.72rem] text-slate-400">
+              <span className="block text-[0.75rem] text-slate-500">
                 One per line - volunteering, a club, a sport, a certificate, a
                 side project. Employers read these as evidence too.
               </span>
@@ -797,7 +796,7 @@ export function ProfileForm({
       <aside className={styles.side} aria-label="Ways to move faster">
         <section className={styles.sideCard}>
           <h2>You can explore now</h2>
-          <p>A phone number or a favourite subject is not a reason to wait. Look at real roles and come back to fill in the rest.</p>
+          <p>An incomplete profile won’t stop you browsing careers or jobs.</p>
           <Link href="/discover" className={styles.sideLink}>Explore roles ↗</Link>
         </section>
         <section className={styles.sideCard}>
@@ -890,7 +889,7 @@ export function ProfileForm({
                 in Education and Experience — check each one and correct anything we misread.
               </p>
             )}
-            <p className="mt-1.5 text-[0.72rem] text-teal-700">
+            <p className="mt-1.5 text-[0.75rem] text-teal-700">
               We only filled boxes that were empty.
             </p>
           </div>

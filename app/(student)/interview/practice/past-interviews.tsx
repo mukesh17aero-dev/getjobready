@@ -28,7 +28,7 @@ export function PastInterviews({
       <h2 className="flex flex-wrap items-center gap-2 text-[0.8rem] font-bold uppercase tracking-wide text-brand-ink">
         {example ? "What you get afterwards" : "Your past interviews"}
         {example && (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-amber-800">
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[0.75rem] font-bold uppercase tracking-wide text-amber-800">
             Example
           </span>
         )}
@@ -57,11 +57,11 @@ export function PastInterviews({
                   {past.roleTitle}
                 </span>
                 <span className="mt-1.5 block">
-                  <span className="rounded-full bg-brand-teal-deep/10 px-2 py-0.5 text-[0.7rem] font-semibold text-teal-700">
+                  <span className="rounded-full bg-brand-teal-deep/10 px-2 py-0.5 text-[0.75rem] font-semibold text-teal-700">
                     {past.round === "managerial" ? "Managerial" : "HR"} round
                   </span>
                 </span>
-                <span className="mt-1.5 block text-[0.72rem] text-slate-400">
+                <span className="mt-1.5 block text-[0.75rem] text-slate-500">
                   {whenLabel(past.completedAt)}
                 </span>
               </span>

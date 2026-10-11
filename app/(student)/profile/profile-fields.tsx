@@ -50,7 +50,7 @@ export function Text({
         {label}
       </span>
       {hint && (
-        <span className="block text-[0.72rem] text-slate-400">{hint}</span>
+        <span className="block text-[0.75rem] text-slate-500">{hint}</span>
       )}
       <input
         value={value}
@@ -65,7 +65,7 @@ export function Text({
         }`}
       />
       {error && (
-        <span role="alert" className="mt-1 block text-[0.72rem] text-rose-600">
+        <span role="alert" className="mt-1 block text-[0.75rem] text-rose-600">
           {error}
         </span>
       )}

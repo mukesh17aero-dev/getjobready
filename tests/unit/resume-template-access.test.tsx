@@ -2,7 +2,7 @@ import {describe,it,expect} from "vitest";
 import {createElement} from "react";
 import {renderToStaticMarkup} from "react-dom/server";
 import {previewTemplate,previewTemplates} from "@/features/resume";
-import {ResumeStudio} from "@/app/(student)/resume/build/resume-studio";
+import {ResumeStudio} from "@/features/resume";
 import type {PlanId} from "@/features/resume";
 
 function render(plan:PlanId|null,signedOut=false){
@@ -25,10 +25,10 @@ describe("selected-plan template preview",()=>{
   expect(previewTemplate("professional",previewTemplates("plus",false))).toBe("professional");
  });
  // While payments are off the studio has no plan step and locks nothing.
- it("offers every layout in the studio, signed in or not",()=>{
+ it("defers layout selection until the draft, without a payment gate",()=>{
   for(const html of [render(null,true),render(null),render("starter")]){
    expect(html).not.toContain("data-locked");expect(html).not.toContain('inert=""');
-   expect(html.match(/aria-label="Preview /g)).toHaveLength(6);expect(html).toContain("Preview · Basic");
+   expect(html).not.toContain('aria-label="Template selection"');expect(html).not.toContain("Your preview");
   }
  });
 });

@@ -75,7 +75,7 @@ export function Locked({
           </p>
           <Link
             href={signUpHref()}
-            className="mt-2.5 inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-brand-teal-deep px-3 py-1.5 text-[0.74rem] font-bold text-white transition-colors hover:bg-brand-teal"
+            className="mt-2.5 inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-brand-teal-deep px-3 py-1.5 text-[0.75rem] font-bold text-white transition-colors hover:bg-brand-teal"
           >
             {cta}
             <ArrowRight size={12} />

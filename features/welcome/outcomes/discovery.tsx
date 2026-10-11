@@ -16,7 +16,7 @@ export function DiscoveryIndustries() {
       <p className="text-[0.8rem] font-bold text-brand-ink">
         Which of these interest you?
       </p>
-      <p className="mt-0.5 text-[0.68rem] text-slate-500">
+      <p className="mt-0.5 text-[0.75rem] text-slate-500">
         Tap as many as you like.
       </p>
       <ul className="mt-2 grid gap-1.5">
@@ -60,7 +60,7 @@ export function DiscoveryIndustries() {
               <span className="block text-[0.75rem] font-bold leading-tight text-brand-ink">
                 {w.t}
               </span>
-              <span className="block text-[0.65rem] leading-snug text-slate-500">
+              <span className="block text-[0.75rem] leading-snug text-slate-500">
                 {w.c}
               </span>
             </span>
@@ -87,7 +87,7 @@ export function DiscoveryIndustries() {
           </li>
         ))}
       </ul>
-      <span className="mt-2.5 flex min-h-8 w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-teal-700 to-emerald-700 px-4 text-[0.74rem] font-bold text-white">
+      <span className="mt-2.5 flex min-h-8 w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-teal-700 to-emerald-700 px-4 text-[0.75rem] font-bold text-white">
         Show me all roles <span aria-hidden>{"\u2192"}</span>
       </span>
     </div>
@@ -97,7 +97,7 @@ export function DiscoveryIndustries() {
 export function DiscoveryShortlist() {
   return (
     <div>
-      <p className="text-[0.6rem] font-bold uppercase tracking-[0.08em] text-brand-violet-deep">
+      <p className="text-[0.75rem] font-bold uppercase tracking-[0.08em] text-brand-violet-deep">
         Where you have been
       </p>
       <p className="mt-0.5 font-display text-[1rem] font-bold leading-tight text-brand-ink">
@@ -124,11 +124,11 @@ export function DiscoveryShortlist() {
             className="rounded-xl border border-slate-200 bg-surface px-3 py-2.5"
           >
             <p className="text-[0.78rem] font-bold text-brand-ink">{r.t}</p>
-            <p className="mt-0.5 text-[0.72rem] leading-snug text-slate-600">
+            <p className="mt-0.5 text-[0.75rem] leading-snug text-slate-600">
               &ldquo;{r.note}&rdquo;
             </p>
             <span
-              className={`mt-1.5 inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[0.68rem] font-bold ${
+              className={`mt-1.5 inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[0.75rem] font-bold ${
                 r.chosen
                   ? "bg-brand-teal text-white"
                   : "border border-slate-300 text-brand-ink"
@@ -139,7 +139,7 @@ export function DiscoveryShortlist() {
           </li>
         ))}
       </ul>
-      <p className="mt-1.5 text-[0.66rem] text-slate-400">
+      <p className="mt-1.5 text-[0.75rem] text-slate-500">
         Example — the words would be your own.
       </p>
 
@@ -147,7 +147,7 @@ export function DiscoveryShortlist() {
           component again, so the panel cannot promise a shape the app does not
           produce. */}
       <div className="mt-3 rounded-xl border border-slate-200 bg-surface p-3">
-        <p className="text-[0.6rem] font-bold uppercase tracking-[0.12em] text-teal-800">
+        <p className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-teal-800">
           Why this role fits you
         </p>
         <div className="mt-1.5">
@@ -163,7 +163,7 @@ export function DiscoveryTour() {
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-surface">
       <div className="border-b border-slate-200 bg-brand-mist px-3 py-2">
-        <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+        <p className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">
           Stop 2 of 3
         </p>
         <p className="text-[0.85rem] font-bold leading-snug text-brand-ink">
@@ -173,10 +173,10 @@ export function DiscoveryTour() {
 
       <div className="space-y-2 p-3">
         <div className="rounded-lg bg-brand-mist px-2.5 py-2">
-          <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+          <p className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">
             Discovery assistant
           </p>
-          <p className="mt-1 text-[0.72rem] leading-snug text-slate-500">
+          <p className="mt-1 text-[0.75rem] leading-snug text-slate-500">
             Ask me whenever you want.
           </p>
           <div className="mt-1.5 flex flex-wrap gap-1">
@@ -184,7 +184,7 @@ export function DiscoveryTour() {
               (q) => (
                 <span
                   key={q}
-                  className="rounded-full bg-surface px-2 py-0.5 text-[0.65rem] font-semibold text-brand-teal-deep ring-1 ring-inset ring-slate-200"
+                  className="rounded-full bg-surface px-2 py-0.5 text-[0.75rem] font-semibold text-brand-teal-deep ring-1 ring-inset ring-slate-200"
                 >
                   {q}
                 </span>
@@ -194,19 +194,19 @@ export function DiscoveryTour() {
         </div>
 
         <div>
-          <p className="text-[0.72rem] font-semibold text-brand-ink">
+          <p className="text-[0.75rem] font-semibold text-brand-ink">
             What do you make of this role?
           </p>
-          <p className="mt-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[0.72rem] italic text-slate-400">
+          <p className="mt-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[0.75rem] italic text-slate-500">
             Honestly, what stood out was…
           </p>
         </div>
 
         <div className="flex gap-1.5">
-          <span className="rounded-lg bg-brand-teal-deep px-2.5 py-1.5 text-[0.7rem] font-bold text-white">
+          <span className="rounded-lg bg-brand-teal-deep px-2.5 py-1.5 text-[0.75rem] font-bold text-white">
             On to the next one
           </span>
-          <span className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-[0.7rem] font-bold text-slate-500">
+          <span className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-[0.75rem] font-bold text-slate-500">
             Choose this role
           </span>
         </div>
@@ -226,41 +226,41 @@ export function DiscoveryRole() {
       <p className="text-[0.82rem] font-bold leading-snug text-brand-ink">
         Customer Success Associate
       </p>
-      <p className="text-[0.66rem] text-slate-400">Customer Operations</p>
+      <p className="text-[0.75rem] text-slate-500">Customer Operations</p>
 
-      <p className="mt-2.5 text-[0.6rem] font-bold uppercase tracking-[0.1em] text-slate-400">
+      <p className="mt-2.5 text-[0.75rem] font-bold uppercase tracking-[0.1em] text-slate-500">
         Pay and career growth{" "}
-        <span className="font-medium normal-case tracking-normal text-slate-400">
+        <span className="font-medium normal-case tracking-normal text-slate-500">
           · monthly, indicative
         </span>
       </p>
       <div className="mt-1.5">
         <PayProgression growth={SAMPLE_GROWTH} />
       </div>
-      <p className="mt-1.5 text-[0.64rem] leading-snug text-slate-400">
+      <p className="mt-1.5 text-[0.75rem] leading-snug text-slate-500">
         {SAMPLE_PAY_NOTE}
       </p>
 
-      <p className="mt-3 text-[0.6rem] font-bold uppercase tracking-[0.1em] text-slate-400">
+      <p className="mt-3 text-[0.75rem] font-bold uppercase tracking-[0.1em] text-slate-500">
         People doing this job
       </p>
       {/* The warning travels with the quote. An invented person shown without
           it is fabricated social proof, whatever the intention was. */}
-      <p className="mt-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-[0.63rem] leading-snug text-slate-600">
+      <p className="mt-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-[0.75rem] leading-snug text-slate-600">
         <strong className="font-semibold">Illustrative:</strong> a composite
         written from the pay and progression data above, not a real individual.
       </p>
       <div className="mt-1.5 rounded-xl bg-slate-50 p-2.5">
-        <p className="text-[0.72rem] italic leading-relaxed text-slate-700">
+        <p className="text-[0.75rem] italic leading-relaxed text-slate-700">
           &ldquo;{SAMPLE_VOICE.quote}&rdquo;
         </p>
-        <p className="mt-1 text-[0.66rem] font-semibold text-slate-700">
+        <p className="mt-1 text-[0.75rem] font-semibold text-slate-700">
           {SAMPLE_VOICE.name}{" "}
           <span className="font-normal text-slate-500">
             · {SAMPLE_VOICE.title}
           </span>
         </p>
-        <p className="text-[0.62rem] text-slate-400">{SAMPLE_VOICE.journey}</p>
+        <p className="text-[0.75rem] text-slate-500">{SAMPLE_VOICE.journey}</p>
       </div>
     </div>
   );
@@ -287,7 +287,7 @@ export function DiscoveryChat() {
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-surface">
       <div className="border-b border-slate-200 bg-brand-mist px-3 py-1.5">
-        <span className="text-[0.58rem] font-bold uppercase tracking-[0.1em] text-slate-400">
+        <span className="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-slate-500">
           Stop 2 of 3
         </span>
         <p className="text-[0.78rem] font-bold leading-snug text-brand-ink">
@@ -304,13 +304,13 @@ export function DiscoveryChat() {
             {line.who === "assistant" && (
               <span
                 aria-hidden
-                className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-violet text-[0.55rem] font-bold text-white"
+                className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-violet text-[0.75rem] font-bold text-white"
               >
                 A
               </span>
             )}
             <p
-              className={`max-w-[85%] rounded-2xl px-2.5 py-1.5 text-[0.71rem] leading-relaxed ${
+              className={`max-w-[85%] rounded-2xl px-2.5 py-1.5 text-[0.75rem] leading-relaxed ${
                 line.who === "you"
                   ? "rounded-tr-sm bg-teal-50 text-slate-700"
                   : "rounded-tl-sm border border-slate-200 text-slate-800"
@@ -328,7 +328,7 @@ export function DiscoveryChat() {
             (q) => (
               <span
                 key={q}
-                className="rounded-full border border-slate-300 bg-surface px-2.5 py-1 text-[0.65rem] font-semibold text-slate-700"
+                className="rounded-full border border-slate-300 bg-surface px-2.5 py-1 text-[0.75rem] font-semibold text-slate-700"
               >
                 {q}
               </span>
@@ -336,10 +336,10 @@ export function DiscoveryChat() {
           )}
         </div>
         <div className="mt-1.5 flex gap-1.5">
-          <span className="min-h-7 flex-1 rounded-full border border-slate-300 bg-surface px-3 py-1 text-[0.7rem] text-slate-400">
+          <span className="min-h-7 flex-1 rounded-full border border-slate-300 bg-surface px-3 py-1 text-[0.75rem] text-slate-500">
             Ask anything…
           </span>
-          <span className="rounded-full border border-slate-300 bg-surface px-3 py-1 text-[0.7rem] font-bold text-slate-700">
+          <span className="rounded-full border border-slate-300 bg-surface px-3 py-1 text-[0.75rem] font-bold text-slate-700">
             Ask
           </span>
         </div>

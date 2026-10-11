@@ -5,6 +5,7 @@
 import { type RoleDetailDraft } from "@/lib/api";
 export type RoleDetail = {
   roleId: string;
+  experienceLevels?: Array<"student" | "early_career">;
   sector: string;
   pitch: string;
   description: string;
@@ -86,7 +87,7 @@ export function Field({
     "mt-1 w-full rounded-lg border border-slate-300 bg-surface px-3 py-2 text-[0.85rem] outline-none focus:border-brand-violet focus:ring-2 focus:ring-brand-violet/20";
   return (
     <label className="block">
-      <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+      <span className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-slate-500">
         {label}
       </span>
       {multiline ? (

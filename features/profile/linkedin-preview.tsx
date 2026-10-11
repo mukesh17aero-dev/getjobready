@@ -57,7 +57,7 @@ export function LinkedInPreview({
             fallbackClassName="grid place-items-center bg-brand-mist text-[1.2rem] font-bold text-brand-teal-deep sm:text-[1.4rem]"
           />
           {openToBadge && draft.openTo && (
-            <span className="mb-1 rounded-md bg-teal-50 px-2.5 py-1 text-[0.68rem] font-bold text-teal-800 ring-1 ring-inset ring-teal-600/25">
+            <span className="mb-1 rounded-md bg-teal-50 px-2.5 py-1 text-[0.75rem] font-bold text-teal-800 ring-1 ring-inset ring-teal-600/25">
               Open to work
             </span>
           )}
@@ -78,12 +78,12 @@ export function LinkedInPreview({
             <Empty what="headline" />
           </div>
         )}
-        <p className="mt-1 text-[0.76rem] text-slate-400">{location}</p>
+        <p className="mt-1 text-[0.76rem] text-slate-500">{location}</p>
 
         {draft.openTo && (
           <div className="mt-3 rounded-lg border border-teal-600/25 bg-teal-50/60 px-3 py-2.5">
             <div className="flex items-baseline justify-between gap-2">
-              <p className="text-[0.68rem] font-bold uppercase tracking-wide text-teal-800">
+              <p className="text-[0.75rem] font-bold uppercase tracking-wide text-teal-800">
                 Open to work
               </p>
               <CopyButton value={draft.openTo} label="open to work line" />

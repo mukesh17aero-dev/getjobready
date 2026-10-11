@@ -4,3 +4,7 @@
 
 export * from "./admin-studio-api";
 export * from "./admin-view-as";
+
+export { SimulationJourneyEditor } from './simulation-journey-editor';
+export {SimulationReviews} from './simulation-reviews';
+export { InstitutionsAdmin } from './institutions-admin';

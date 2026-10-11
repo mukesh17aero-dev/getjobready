@@ -54,7 +54,7 @@ export function ReadinessRing({ value }: { value: number }) {
         y="78"
         textAnchor="middle"
         dominantBaseline="middle"
-        className="fill-slate-400 text-[9px] font-bold uppercase"
+        className="fill-slate-400 text-[12px] font-bold uppercase"
       >
         of 100
       </text>
@@ -147,7 +147,7 @@ export function FitRadar({ axes }: { axes: FitAxis[] }) {
             y={cy + (R + 19) * Math.sin(angle)}
             textAnchor="middle"
             dominantBaseline="middle"
-            className="fill-slate-500 text-[9px] font-bold"
+            className="fill-slate-500 text-[12px] font-bold"
           >
             {a.label}
           </text>

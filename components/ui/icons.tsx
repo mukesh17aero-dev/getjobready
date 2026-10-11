@@ -179,3 +179,111 @@ export function Pencil(props: IconProps) {
     </Svg>
   );
 }
+
+/** Three lines: opens a menu. */
+export function Menu(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 6h16" />
+      <path d="M4 12h16" />
+      <path d="M4 18h16" />
+    </Svg>
+  );
+}
+
+export function Plus(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </Svg>
+  );
+}
+
+export function Close(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M6 6l12 12" />
+      <path d="M18 6 6 18" />
+    </Svg>
+  );
+}
+
+/** A stack of pages: a list of saved documents. */
+export function Files(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M8 3h7l4 4v11a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
+      <path d="M15 3v4h4" />
+      <path d="M4 7v13a1 1 0 0 0 1 1h10" />
+    </Svg>
+  );
+}
+
+export function Briefcase(props: IconProps) {
+  return <Svg {...props}><rect x="3" y="7" width="18" height="14" rx="2" /><path d="M8 7V3h8v4M3 12h18M10 12v3h4v-3" /></Svg>;
+}
+
+/** Information: a circle with a dot over a stem. Marks "more about this". */
+export function Info(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="9.5" />
+      <path d="M12 11v5.5" />
+      <path d="M12 7.6h.01" />
+    </Svg>
+  );
+}
+
+/** A circle with an exclamation mark. Something still needed. */
+export function Alert(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="9.5" />
+      <path d="M12 7.5v5.5" />
+      <path d="M12 16.4h.01" />
+    </Svg>
+  );
+}
+
+/** Three tiles and a plus. Choosing or adding a layout. */
+export function LayoutAdd(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1" />
+      <path d="M17 13.5v7M13.5 17h7" />
+    </Svg>
+  );
+}
+
+/** A hooked arrow back. Undo. */
+export function Undo(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9 14 4 9l5-5" />
+      <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+    </Svg>
+  );
+}
+
+/** A hooked arrow forward. Redo. */
+export function Redo(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="m15 14 5-5-5-5" />
+      <path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" />
+    </Svg>
+  );
+}
+
+/** Two four-point stars. Writing help from Ascend. */
+export function Sparkle(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M10 3.5 11.7 8.3 16.5 10 11.7 11.7 10 16.5 8.3 11.7 3.5 10 8.3 8.3Z" />
+      <path d="M18 14.5 18.8 16.7 21 17.5 18.8 18.3 18 20.5 17.2 18.3 15 17.5 17.2 16.7Z" />
+    </Svg>
+  );
+}

@@ -4,7 +4,7 @@
 // this person has one of their own. Every screen that renders these must
 // label them as an example — they are never presented as somebody's work.
 
-import type { AtsCheck, ResumeChecklist, ResumeData, ResumeReview } from "./resume-api";
+import type { AtsCheck, ResumeData, ResumeReview } from "./resume-api";
 
 export const EXAMPLE_RESUME: ResumeData = {
   header: {
@@ -67,26 +67,6 @@ export const EXAMPLE_RESUME: ResumeData = {
 // the point of showing this before an account is that somebody can decide
 // whether the feedback would be worth having.
 
-/** The screener-and-recruiter read of the example resume, as the backend counts it. */
-export const SAMPLE_CHECKLIST: ResumeChecklist = {
-  passed: 9,
-  counted: 11,
-  items: [
-    { id: "contact", label: "Contact line", status: "pass", detail: "Email and phone are both on the page, in the body where a parser reads them." },
-    { id: "keywords", label: "The role's own words", status: "fix", detail: "Only 5 of 8 words this role is screened on appear. Still missing: CRM, written customer communication, SLA.", fix: "Where my record truthfully supports them, use the role's exact words: CRM, written customer communication, SLA. Do not add any I have not done." },
-    { id: "dates", label: "Dates on every entry", status: "pass", detail: "Every experience entry carries a period, so nothing gets dropped from the ordering." },
-    { id: "numbers", label: "Measured lines", status: "pass", detail: "5 of 7 bullets carry a figure, which is what makes a line believable." },
-    { id: "verbs", label: "Bullets open with what you did", status: "pass", detail: "All 7 bullets start with an action - Handled, Built, Resolved - which is what a scanning eye catches first." },
-    { id: "summary", label: "Opening paragraph", status: "pass", detail: "52 words - long enough to say who you are and why this role, short enough to be read." },
-    { id: "depth", label: "Two to four bullets per entry", status: "fix", detail: "One entry carries only one line - starting with Placement cell volunteer. One line leaves the work vague.", ask: "What else did you do at the placement cell? One more line is enough." },
-    { id: "voice", label: "No 'I' or 'my'", status: "pass", detail: "Nothing on the page is written in the first person - the resume convention recruiters expect." },
-    { id: "filler", label: "No filler words", status: "pass", detail: "None of the words a screener has learned to skim past - results-driven, passionate, dynamic - are on the page." },
-    { id: "length", label: "Bullets fit two lines", status: "pass", detail: "No bullet runs past two lines, so each one reads as one achievement." },
-    { id: "skills", label: "Skills a screener can match", status: "pass", detail: "8 skills, grouped, which is the section screening software weighs most." },
-    { id: "pages", label: "Fits two pages", status: "pass", detail: "About 410 words - inside what two printed pages hold." },
-  ],
-};
-
 export const SAMPLE_ATS: AtsCheck = {
   readable: true,
   found: [
@@ -115,6 +95,10 @@ export const SAMPLE_ATS: AtsCheck = {
 };
 
 export const SAMPLE_REVIEW: ResumeReview = {
+  redFlags: [
+    "The placement-cell entry lists what was organised but not what came of it, so it reads as a duty rather than a result.",
+    "The summary says what you are looking for before it says what you offer.",
+  ],
   strengths: [
     "Every bullet has a number or a scale attached. 'Around 40 conversations a shift' is checkable; 'excellent communication skills' is not.",
     "The training line shows responsibility beyond the job description, which is the strongest signal on the page for an early-career applicant.",

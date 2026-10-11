@@ -166,10 +166,10 @@ export function StageDots({ current }: { current: InterviewStage }) {
                 }`}
               />
               <span
-                className={`text-[0.68rem] font-semibold ${
+                className={`text-[0.75rem] font-semibold ${
                   state === "now"
                     ? "text-teal-700"
-                    : "hidden text-slate-400 sm:inline"
+                    : "hidden text-slate-500 sm:inline"
                 }`}
               >
                 {stage.label}

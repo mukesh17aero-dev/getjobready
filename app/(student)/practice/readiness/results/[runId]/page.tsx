@@ -27,7 +27,7 @@ export default async function PastSittingPage({
   // the page reads the same for them if they land on it.
   if (runId === SAMPLE_READINESS.readout.runId || !session) {
     return (
-      <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
+      <main className="mx-auto w-full max-w-(--page-max-width) px-4 py-6 sm:px-6">
         <div className="mb-4">
           <BackLink fallbackHref="/practice/readiness/results" fallbackLabel="Back to results" />
         </div>
@@ -60,7 +60,7 @@ export default async function PastSittingPage({
 
   if (!readout) {
     return (
-      <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+      <main className="mx-auto w-full max-w-(--page-max-width) px-4 py-8 sm:px-6">
         <BackLink
           fallbackHref="/practice/readiness/results"
           fallbackLabel="Back to your results"
@@ -73,7 +73,7 @@ export default async function PastSittingPage({
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
+    <main className="mx-auto w-full max-w-(--page-max-width) px-4 py-6 sm:px-6">
       <div className="mb-4">
         <BackLink
           fallbackHref="/practice/readiness/results"

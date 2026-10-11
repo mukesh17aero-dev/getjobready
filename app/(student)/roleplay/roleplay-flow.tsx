@@ -65,7 +65,7 @@ export function RoleplayFlow({
   };
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
+    <main className="mx-auto max-w-(--page-max-width) px-4 py-8 sm:px-6">
       {view === "setup" && (
         <RoleplaySetup
           scenarios={initial.scenarios}

@@ -14,7 +14,7 @@ export const metadata = {
 
 export default function EmployersPage() {
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-6 sm:px-6">
+    <main className="mx-auto w-full max-w-(--page-max-width) px-4 pb-16 pt-6 sm:px-6">
       <FeatureGrid category={EMPLOYER} />
       {/* The way in. Everything above is not released yet, so the one
           thing this page can actually do for somebody is take their

@@ -52,7 +52,7 @@ export function PicturesPanel({ roles }: { roles: Role[] }) {
   const current = shown ?? (role ? roleIllustrationUrl(role.id) : null);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <main className="mx-auto max-w-(--page-max-width) px-4 py-8 sm:px-6">
       <h1 className="text-2xl font-semibold text-slate-900">Role pictures</h1>
       <p className="mt-1 text-[0.9rem] text-slate-600">
         One picture per role, shown at the top of its card in Discover. Drawn in the Ascend style: polished anime-inspired illustration, fine line art, teal and violet, no text. Framed wide so nobody&apos;s head is cut off on the card.

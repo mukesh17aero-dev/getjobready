@@ -15,3 +15,9 @@ export * from "./review-progress";
 export * from "./samples";
 export * from "./starter-resumes";
 export * from "./templates";
+
+export { ResumeStudio } from "./resume-studio";
+
+export { GuestResume } from "./guest-resume";
+
+export { SavedResumes, ResumeLoadError } from "./saved-resumes";

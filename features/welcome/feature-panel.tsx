@@ -180,7 +180,7 @@ export function FeaturePanel({ feature }: { feature: Feature }) {
             ["What to expect", feature.expect],
           ].map(([label, value]) => (
             <div key={label}>
-              <dt className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+              <dt className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">
                 {label}
               </dt>
               <dd className="mt-1 text-[0.85rem] leading-relaxed text-slate-600">
@@ -222,7 +222,7 @@ export function FeaturePanel({ feature }: { feature: Feature }) {
             />
           ))}
         </span>
-        <span className="ml-1 min-w-0 flex-1 truncate rounded-md bg-surface px-2 py-0.5 font-mono text-[0.62rem] text-slate-400">
+        <span className="ml-1 min-w-0 flex-1 truncate rounded-md bg-surface px-2 py-0.5 font-mono text-[0.75rem] text-slate-500">
           {address}
         </span>
         <button
@@ -247,10 +247,10 @@ export function FeaturePanel({ feature }: { feature: Feature }) {
             role="tab"
             aria-selected={i === at}
             onClick={() => go(i)}
-            className={`min-w-0 flex-1 cursor-pointer truncate rounded-md px-1 py-1 text-[0.58rem] font-bold uppercase tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal ${
+            className={`min-w-0 flex-1 cursor-pointer truncate rounded-md px-1 py-1 text-[0.75rem] font-bold uppercase tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal ${
               i === at
                 ? "bg-brand-teal-deep text-white"
-                : "text-slate-400 hover:bg-slate-200/70 hover:text-brand-ink"
+                : "text-slate-500 hover:bg-slate-200/70 hover:text-brand-ink"
             }`}
           >
             {b.tab}
@@ -328,7 +328,7 @@ export function FeaturePanel({ feature }: { feature: Feature }) {
             <Arrow />
           </button>
         </div>
-        <span className="text-[0.72rem] text-slate-400">
+        <span className="text-[0.75rem] text-slate-500">
           {at + 1} of {beats.length}
         </span>
       </div>

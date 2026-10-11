@@ -1,3 +1,4 @@
+import styles from "./passport-overview.module.css";
 import type {
   PassportFeedState,
   PassportJourneyStep,
@@ -76,7 +77,7 @@ function SectionCard({
           {heading}
         </h2>
         {pill && (
-          <span className="rounded-full bg-brand-mist px-2.5 py-0.5 text-[0.65rem] font-semibold text-brand-teal-deep">
+          <span className="rounded-full bg-brand-mist px-2.5 py-0.5 text-[0.75rem] font-semibold text-brand-teal-deep">
             {pill}
           </span>
         )}
@@ -102,8 +103,8 @@ function Stat({
       <strong className="block text-[1.4rem] font-bold text-brand-ink">
         {value}
       </strong>
-      <span className="block text-[0.72rem] text-slate-600">{label}</span>
-      <span className="block text-[0.62rem] text-slate-400">{caption}</span>
+      <span className="block text-[0.75rem] text-slate-600">{label}</span>
+      <span className="block text-[0.75rem] text-slate-500">{caption}</span>
     </div>
   );
 }
@@ -118,7 +119,7 @@ function Journey({ journey, state }: { journey: PassportJourneyStep[]; state: Pa
           )}
           <span
             aria-hidden
-            className={`grid h-7 w-7 place-items-center rounded-full border text-[0.68rem] font-bold ${
+            className={`grid h-7 w-7 place-items-center rounded-full border text-[0.75rem] font-bold ${
               step.status === "completed"
                 ? "border-brand-teal-deep bg-brand-teal-deep text-white"
                 : "border-slate-300 bg-surface text-slate-500"
@@ -129,9 +130,9 @@ function Journey({ journey, state }: { journey: PassportJourneyStep[]; state: Pa
           <div className="min-w-0">
             <h3 className="text-[0.85rem] font-semibold text-brand-ink">{step.title}</h3>
             <p className="mt-0.5 text-[0.78rem] leading-snug text-slate-600">{step.detail}</p>
-            <time className="mt-0.5 block text-[0.68rem] text-slate-400">{formatDate(step.at)}</time>
+            <time className="mt-0.5 block text-[0.75rem] text-slate-500">{formatDate(step.at)}</time>
           </div>
-          <span className="justify-self-end rounded-full bg-brand-mist px-2 py-0.5 text-[0.65rem] font-semibold text-slate-600">
+          <span className="justify-self-end rounded-full bg-brand-mist px-2 py-0.5 text-[0.75rem] font-semibold text-slate-600">
             {STATUS_LABEL[step.status]}
           </span>
         </li>
@@ -159,14 +160,14 @@ function Skills({ skills, state }: { skills: PassportSkillComparison[]; state: P
   }
   return (
     <>
-      <div className="mb-2 flex flex-wrap gap-4 text-[0.72rem] text-slate-600">
+      <div className="mb-2 flex flex-wrap gap-4 text-[0.75rem] text-slate-600">
         <span><i aria-hidden className="mr-1 inline-block h-1 w-4 rounded bg-slate-300 align-middle" />Starting assessment</span>
         <span><i aria-hidden className="mr-1 inline-block h-1 w-4 rounded bg-brand-teal-deep align-middle" />After-training assessment</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[420px] border-collapse text-left">
           <thead>
-            <tr className="text-[0.62rem] font-semibold uppercase tracking-wide text-slate-500">
+            <tr className="text-[0.75rem] font-semibold uppercase tracking-wide text-slate-500">
               <th scope="col" className="pb-2 pr-3">Skill</th>
               <th scope="col" className="pb-2 pr-3">Before</th>
               <th scope="col" className="pb-2 pr-3">After</th>
@@ -182,32 +183,32 @@ function Skills({ skills, state }: { skills: PassportSkillComparison[]; state: P
                     <div className="h-1 rounded bg-slate-200"><div className="h-1 rounded bg-slate-400" style={{ width: `${s.before?.score ?? 0}%` }} /></div>
                     <div className="h-1 rounded bg-slate-200"><div className="h-1 rounded bg-brand-teal-deep" style={{ width: `${s.after?.score ?? 0}%` }} /></div>
                   </div>
-                  <details className="mt-1.5 text-[0.7rem] text-slate-500">
+                  <details className="mt-1.5 text-[0.75rem] text-slate-500">
                     <summary className="cursor-pointer">Basis</summary>
                     <p className="mt-1 leading-relaxed">{s.explanation}</p>
                   </details>
                 </td>
                 <td className="py-3 pr-3 text-[0.85rem] font-semibold tabular-nums text-brand-ink">
                   {s.before ? s.before.score : "—"}
-                  <small className="mt-0.5 block text-[0.62rem] font-normal text-slate-400">
+                  <small className="mt-0.5 block text-[0.75rem] font-normal text-slate-500">
                     {s.before ? formatDate(s.before.at) : "Not yet available"}
                   </small>
                 </td>
                 <td className="py-3 pr-3 text-[0.85rem] font-semibold tabular-nums text-brand-ink">
                   {s.after ? s.after.score : "—"}
-                  <small className="mt-0.5 block text-[0.62rem] font-normal text-slate-400">
+                  <small className="mt-0.5 block text-[0.75rem] font-normal text-slate-500">
                     {s.after ? formatDate(s.after.at) : "Not yet available"}
                   </small>
                 </td>
                 <td className="py-3 text-[0.8rem] font-semibold text-brand-teal-deep">
-                  {s.change === null ? <span className="text-slate-400">Not comparable</span> : `${s.change > 0 ? "+" : ""}${s.change} pts`}
+                  {s.change === null ? <span className="text-slate-500">Not comparable</span> : `${s.change > 0 ? "+" : ""}${s.change} pts`}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <p className="mt-3 border-t border-slate-100 pt-3 text-[0.72rem] leading-relaxed text-slate-500">
+      <p className="mt-3 border-t border-slate-100 pt-3 text-[0.75rem] leading-relaxed text-slate-500">
         No overall employability score is inferred here. Scores describe recorded work, and a change is measured in
         percentage points — not percentage improvement.
       </p>
@@ -240,11 +241,11 @@ export function PassportOverview({
   const achieved = (overview.achievements ?? []).filter((a) => !a.hidden).length || "—";
 
   return (
-    <div>
-      <div className="rounded-2xl bg-brand-panel p-4 text-white">
+    <div className={styles.overview}>
+      <div className={`rounded-2xl bg-brand-panel p-4 text-white ${styles.cover}`}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[0.6rem] font-bold uppercase tracking-[0.16em] text-white/60">
+            <p className="text-[0.75rem] font-bold uppercase tracking-[0.16em] text-white/60">
               ASCEND Career Passport
             </p>
             <h2 className="mt-1 truncate text-[1.3rem] font-bold leading-tight">{name}</h2>
@@ -261,14 +262,17 @@ export function PassportOverview({
           <p className="mt-2 max-w-xl text-[0.8rem] leading-relaxed text-white/70">{candidate.summary}</p>
         )}
         {candidate?.location && (
-          <p className="mt-1 text-[0.72rem] text-white/60">{candidate.location}</p>
+          <p className="mt-1 text-[0.75rem] text-white/60">{candidate.location}</p>
         )}
-        <p className="mt-3 inline-block rounded-full border border-white/25 px-2.5 py-0.5 text-[0.62rem] font-semibold tracking-wide text-white/80">
-          {overview.sharing.active ? "Shared · Link is live" : "Private · Not shared with employers"}
+        <p className="mt-3 inline-block rounded-full border border-white/25 px-2.5 py-0.5 text-[0.75rem] font-semibold tracking-wide text-white/80">
+          {shareControls ? overview.sharing.active ? "Public share link active" : "No public link · Recipient links managed below" : "Frozen copy shared by the candidate"}
         </p>
       </div>
 
-      <PassportShowcase showcase={overview.showcase ?? []} editable={shareControls} roleTitle={overview.role?.title ?? null} />
+      <div className={shareControls ? styles.evidenceLayout : undefined}>
+        <div><PassportShowcase showcase={overview.showcase ?? []} editable={shareControls} roleTitle={overview.role?.title ?? null} /></div>
+        {shareControls && <aside className={styles.sharingGuide}><h2>You control what is shared.</h2><p>Choose evidence to include and review what a recipient will see.</p><p>Manage existing links or create a share when you are ready.</p><a href="#passport-sharing">Review sharing options →</a><strong>Sharing never happens automatically.</strong></aside>}
+      </div>
       {afterShowcase}
 
       <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
@@ -302,7 +306,7 @@ export function PassportOverview({
                   <div key={i} className="border-b border-slate-100 pb-1.5 text-[0.78rem] last:border-0">
                     <strong className="block font-semibold text-brand-ink">{item.title}</strong>
                     <span className="text-slate-600">{item.organisation}</span>
-                    <span className="block text-[0.68rem] text-slate-400">{item.period ?? "Date not supplied"}</span>
+                    <span className="block text-[0.75rem] text-slate-500">{item.period ?? "Date not supplied"}</span>
                   </div>
                 ))}
               </div>
@@ -318,7 +322,7 @@ export function PassportOverview({
                   <div key={i} className="border-b border-slate-100 pb-1.5 text-[0.78rem] last:border-0">
                     <strong className="block font-semibold text-brand-ink">{item.title}</strong>
                     <span className="text-slate-600">{item.organisation}</span>
-                    <span className="block text-[0.68rem] text-slate-400">{item.period ?? "Date not supplied"}</span>
+                    <span className="block text-[0.75rem] text-slate-500">{item.period ?? "Date not supplied"}</span>
                   </div>
                 ))}
               </div>
@@ -330,7 +334,7 @@ export function PassportOverview({
       </SectionCard>
 
       {shareControls ? (
-        <PassportShare sharing={overview.sharing} />
+        <div id="passport-sharing" className={styles.sharingControls}><PassportShare sharing={overview.sharing} /></div>
       ) : (
         <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-brand-mist p-4">
           <h3 className="text-[0.85rem] font-semibold text-brand-ink">A private snapshot, shared by the candidate</h3>
@@ -341,7 +345,7 @@ export function PassportOverview({
         </div>
       )}
 
-      <ul className="mt-3 grid gap-0.5 text-[0.68rem] text-slate-400">
+      <ul className="mt-3 grid gap-0.5 text-[0.75rem] text-slate-500">
         {overview.limitations.map((line) => <li key={line}>{line}</li>)}
       </ul>
     </div>

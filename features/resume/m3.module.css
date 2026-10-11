@@ -1,0 +1,59 @@
+/*
+ * Material 3 for the resume builder, on the existing stack.
+ *
+ * Scoped to the builder. No component library and no CSS-in-JS: Material's
+ * type and shapes - pill buttons, outlined fields, segmented controls, filter
+ * chips, a navigation drawer - are written onto the hand-built components in
+ * each builder stylesheet's "Material 3" section.
+ *
+ * Colour is Ascend's, not Material's. The roles below are named the Material
+ * way so those sections read naturally, but every one of them points at the
+ * app's own tokens: white cards and neutral greys like every other page, the
+ * same teal for actions and the same tint for a chosen option. Material's
+ * generated scheme tinted every surface green, which made the builder look
+ * like a different product. Because the roles read the app's tokens, the
+ * app's own dark mode applies here unchanged.
+ */
+
+.m3 {
+  --m3-primary: var(--color-brand-violet);
+  --m3-on-primary: #ffffff;
+  --m3-secondary-container: var(--color-slate-100);
+  --m3-on-secondary-container: var(--color-brand-ink);
+  --m3-error: var(--color-rose-600);
+  --m3-error-container: var(--color-rose-50);
+  --m3-on-error-container: var(--color-rose-800);
+  --m3-surface: var(--color-surface);
+  --m3-surface-container-lowest: var(--color-surface);
+  --m3-surface-container-low: var(--color-surface);
+  --m3-surface-container: var(--color-slate-50);
+  --m3-surface-container-high: var(--color-slate-100);
+  --m3-surface-container-highest: var(--color-slate-200);
+  --m3-on-surface: var(--color-brand-ink);
+  --m3-on-surface-variant: var(--color-slate-600);
+  --m3-outline: var(--color-slate-400);
+  --m3-outline-variant: var(--color-slate-200);
+  --m3-elev1: 0 1px 2px rgb(16 36 62 / 0.12), 0 1px 3px 1px rgb(16 36 62 / 0.06);
+  --m3-elev2: 0 1px 2px rgb(16 36 62 / 0.12), 0 2px 6px 2px rgb(16 36 62 / 0.08);
+
+  /* No green tints in the builder. The app's teal-50 and its legacy "violet"
+     aliases are mint and green shades, used here as backgrounds for boxes,
+     chosen options and highlights; inside the builder they become the app's
+     neutral greys and ink. Teal stays only where it means "act here": filled
+     buttons, links and text buttons (brand-violet, teal-700, violet-700). */
+  --color-teal-50: var(--color-slate-100);
+  --color-violet-50: var(--color-slate-100);
+  --color-violet-100: var(--color-slate-200);
+  --color-teal-900: var(--color-brand-ink);
+  --color-violet-900: var(--color-brand-ink);
+
+  /* Roboto throughout, headlines included. */
+  --font-geist-sans: var(--font-roboto), "Roboto", ui-sans-serif, system-ui, sans-serif;
+  --font-space-grotesk: var(--font-roboto), "Roboto", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-roboto), "Roboto", ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.1px;
+  color: var(--m3-on-surface);
+}
+
+/* Signature identity also applies to the builder's semantic surface aliases. */
+.m3{--m3-secondary-container:var(--color-brand-violet-soft);--m3-on-secondary-container:var(--color-brand-ink);--m3-surface-container-low:var(--color-surface);--m3-surface-container:var(--surface-sunken);--color-violet-50:var(--color-brand-violet-soft);--font-space-grotesk:var(--font-geist-sans),system-ui,sans-serif;font-family:var(--font-geist-sans),system-ui,sans-serif}

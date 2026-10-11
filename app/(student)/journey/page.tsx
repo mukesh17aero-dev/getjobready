@@ -38,7 +38,7 @@ export default async function JourneyLandingPage() {
 
   return (
     <FeatureLanding
-      category={JOURNEY}
+      category={{...JOURNEY,features:JOURNEY.features.map(feature=>feature.id==='simulation'&&(!state?.progress?.role||!state.practiceRoles?.includes(state.progress.role.id))?{...feature,status:'building' as const,href:null,blurb:state?.progress?.role?`Practice for ${state.progress.role.title} is not published yet.`:'Choose a role to check practice availability.',expect:'Published practice is role-specific. Other roles can be explored separately from the Practice hub.'}:feature)}}
       targetRole={state?.progress?.role?.title ?? null}
       stat={
         travelled != null

@@ -19,7 +19,7 @@ export default async function JobFitPage({ searchParams }: {
   const listingError = opportunityId && !opportunity ? listed?.status === "fetched"
     ? "This job is no longer listed. Choose another opening."
     : "Job listings are temporarily unavailable. Reload to try again." : null;
-  if (session && !state) return <main className="mx-auto max-w-3xl px-4 py-16 text-center"><h1 className="text-xl font-bold">Your saved comparisons could not load</h1><p>Give it a moment and reload. Your profile is safe.</p></main>;
+  if (session && !state) return <main className="mx-auto max-w-(--page-max-width) px-4 py-16 text-center"><h1 className="text-xl font-bold">Your saved comparisons could not load</h1><p>Give it a moment and reload. Your profile is safe.</p></main>;
   return <JobFitStudio key={`${opportunityId ?? ""}:${checkId ?? ""}`} checks={state?.checks ?? [SAMPLE_JOB_FIT]} signedOut={!session}
     opportunityId={opportunityId} opportunity={opportunity} listingError={listingError} initialCheckId={checkId} />;
 }

@@ -45,18 +45,17 @@ export function WorkplaceOrientation({ roleTitle, sector, introduction: intro, t
   }
 
   return <section className={s.experience} aria-label={`${roleTitle} workplace introduction`}>
-    <header className={s.hero}>
-      <div><span className={s.eyebrow}>{sector || "Explore the workplace"} · Role orientation</span>
-        <h2>Before your first task,<br />step into the role.</h2>
-        <p>See how the work fits together, watch an example, then take your first turn with support.</p>
-        <div className={s.roleBadge}><span aria-hidden="true">↳</span> {roleTitle}</div>
-      </div>
-      <div className={s.route} aria-label="Your path through the experience">
-        <span>Understand the workplace</span><i aria-hidden="true">↓</i>
-        <span>See the work in action</span><i aria-hidden="true">↓</i>
-        <span>Try it with guidance</span>
-      </div>
-    </header>
+    <div className={s.overview}>
+      <header className={s.hero}>
+        <span className={s.eyebrow}>{sector || "Workplace practice"}</span>
+        <h2>Practise the work of a {roleTitle}.</h2>
+        <p>{intro.objective}</p>
+        <div className={s.overviewFacts}><div><strong>Learn the approach</strong><span>Lessons and worked examples</span></div><div><strong>Try the work</strong><span>Guided and independent tasks</span></div><div><strong>Review your progress</strong><span>Feedback on your own work</span></div></div>
+        <button type="button" className={s.primary} disabled={busy} onClick={onSkip ?? onContinue}>{busy ? "Opening…" : "Open my practice plan →"}</button>
+      </header>
+      <aside className={s.before}><h3>Before you begin</h3><ol><li><strong>Get to know the role</strong><p>Explore the workplace guide below whenever you need it.</p></li><li><strong>Make a practice plan</strong><p>Choose a daily commitment that fits your time.</p></li><li><strong>Work through one task at a time</strong><p>Read the details, try your response and use the feedback.</p></li></ol><p className={s.note}>The workplace guide is optional. You can open your plan now.</p></aside>
+    </div>
+    <details className={s.optionalGuide}><summary>Explore the workplace guide · Optional</summary>
     <nav className={s.chapters} aria-label="Workplace introduction chapters">
       {chapters.map((label, index) => <button type="button" key={label} onClick={() => openChapter(index)}
         aria-current={chapter === index ? "step" : undefined}>
@@ -130,5 +129,6 @@ export function WorkplaceOrientation({ roleTitle, sector, introduction: intro, t
         ? <button type="button" className={s.primary} onClick={() => openChapter(chapter + 1)}>{chapters[chapter + 1]} →</button>
         : <button type="button" className={s.primary} onClick={onContinue} disabled={busy}>{busy ? "Saving…" : continueLabel} →</button>}
     </footer>
+    </details>
   </section>;
 }

@@ -32,6 +32,13 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/**" },
     ],
   },
+  // The nav labels this section "Identity" and the route is /resume, so
+  // typing what the bar says landed on a 404. Temporary, not permanent: a
+  // browser caches a 308 indefinitely, which would pin this mapping even if
+  // the route is later renamed to match the label.
+  async redirects() {
+    return [{ source: "/identity", destination: "/resume", permanent: false }];
+  },
   async rewrites() {
     if (process.env.NODE_ENV !== "development") return [];
     const target = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";

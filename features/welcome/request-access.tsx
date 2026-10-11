@@ -92,7 +92,7 @@ export function RequestAccess({ kind }: { kind: "college" | "employer" }) {
               className="mt-1 w-full rounded-lg border border-slate-300 bg-surface px-3 py-2 text-[0.85rem] text-brand-ink outline-none focus-visible:border-brand-teal focus-visible:ring-2 focus-visible:ring-brand-teal/25"
             />
             {f.hint && (
-              <span className="mt-0.5 block text-[0.7rem] text-slate-400">
+              <span className="mt-0.5 block text-[0.75rem] text-slate-500">
                 {f.hint}
               </span>
             )}
@@ -101,7 +101,7 @@ export function RequestAccess({ kind }: { kind: "college" | "employer" }) {
         <label className="block sm:col-span-2">
           <span className="block text-[0.76rem] font-semibold text-brand-ink">
             What are you hoping to do?{" "}
-            <span className="font-normal text-slate-400">Optional</span>
+            <span className="font-normal text-slate-500">Optional</span>
           </span>
           <textarea
             name="note"
@@ -118,7 +118,7 @@ export function RequestAccess({ kind }: { kind: "college" | "employer" }) {
         Send request
         <ArrowRight size={15} />
       </button>
-      <p className="mt-2 text-[0.72rem] text-slate-400">
+      <p className="mt-2 text-[0.75rem] text-slate-500">
         Opens your mail client with the answers filled in.
       </p>
     </form>

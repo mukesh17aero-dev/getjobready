@@ -267,3 +267,7 @@ export async function selectJourneyRoute(
     return null;
   }
 }
+
+/** Atomic preference update: never replaces resume or education fields. */
+export const saveExplorationPreference = (token: string, patch: {roleId?: string; saved?: boolean; track?: "student" | "early_career"}) =>
+  apiCall<CareerProfile>(token, "/v1/career-record/exploration", {method:"PATCH",body:patch});

@@ -156,7 +156,7 @@ export function PhotoPicker({
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-surface p-4">
-      <p className="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-slate-400">
+      <p className="text-[0.75rem] font-bold uppercase tracking-[0.14em] text-slate-500">
         Your photo
       </p>
 
@@ -262,7 +262,7 @@ export function PhotoPicker({
         </p>
       )}
 
-      <p className="mt-2.5 text-[0.75rem] leading-snug text-slate-400">
+      <p className="mt-2.5 text-[0.75rem] leading-snug text-slate-500">
         Cropped square and shrunk on your device before it is sent — nothing
         larger than a thumbnail leaves your phone.
       </p>

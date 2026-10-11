@@ -1,0 +1,115 @@
+/* 03 Signature: shared identity from the approved premium-directions preview. */
+body{
+ --color-brand-mist:#F5F6FB;
+ --page-background:#F5F6FB;
+ --color-surface:#FFFFFF;
+ --color-brand-ink:#232237;
+ --color-brand-muted:#57596F;
+ --color-brand-border:#E4E5EE;
+ --color-brand-violet:#6942DD;
+ --color-brand-violet-deep:#6037CD;
+ --color-brand-violet-soft:#EEE9FF;
+ --color-brand-panel:#211E35;
+ --color-violet-50:#F5F1FF;
+ --color-violet-100:#EEE9FF;
+ --color-violet-700:#6037CD;
+ --color-violet-900:#422582;
+ --color-slate-50:#F5F6FB;
+ --color-slate-100:#EEEDF5;
+ --color-slate-200:#E4E5EE;
+ --color-slate-300:#CBC9DA;
+ --color-slate-400:#858399;
+ --color-slate-500:#68687E;
+ --color-slate-600:#57596F;
+ --color-slate-700:#48485F;
+ --color-slate-800:#343348;
+ --color-slate-900:#232237;
+ --surface-default:#FFFFFF;
+ --surface-sunken:#EEEDF5;
+ --surface-raised:#FFFFFF;
+ --surface-overlay:#FFFFFF;
+ --surface-hovered:#F3EFFB;
+ --navigation-surface:#211E35;
+ --navigation-muted:#C0BBD3;
+ --navigation-active:#40305F;
+ --radius-card:20px;
+ --radius-control:10px;
+ --shadow-raised:0 4px 18px #2319400B;
+ --shadow-overlay:0 12px 32px #23194026;
+ --signature-feature:linear-gradient(115deg,#5140A6,#7153CD);
+ --signature-feature-text:#FFFFFF;
+ --signature-feature-muted:#ECE6FF;
+}
+:root[data-theme=dark] body{
+ --color-brand-mist:#171720;
+ --page-background:#171720;
+ --color-surface:#242430;
+ --color-brand-ink:#F3F1FC;
+ --color-brand-muted:#BCBACF;
+ --color-brand-border:#3B394B;
+ --color-brand-violet-deep:#BEAAFF;
+ --color-brand-violet-soft:#3D3159;
+ --color-violet-50:#302840;
+ --color-violet-100:#3D3159;
+ --color-violet-700:#BEAAFF;
+ --color-violet-900:#E5DBFF;
+ --color-slate-50:#171720;
+ --color-slate-100:#2D2B3B;
+ --color-slate-200:#3B394B;
+ --color-slate-300:#5E586E;
+ --color-slate-400:#9991AA;
+ --color-slate-500:#B0AAC2;
+ --color-slate-600:#BCBACF;
+ --color-slate-700:#D1CBDF;
+ --color-slate-800:#E3DDEC;
+ --color-slate-900:#F3F1FC;
+ --surface-default:#242430;
+ --surface-sunken:#1D1B28;
+ --surface-raised:#2B283A;
+ --surface-overlay:#322D42;
+ --surface-hovered:#383044;
+ --shadow-raised:0 4px 18px #00000022;
+ --shadow-overlay:0 12px 32px #00000066;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) body{
+ --color-brand-mist:#171720;
+ --page-background:#171720;
+ --color-surface:#242430;
+ --color-brand-ink:#F3F1FC;
+ --color-brand-muted:#BCBACF;
+ --color-brand-border:#3B394B;
+ --color-brand-violet-deep:#BEAAFF;
+ --color-brand-violet-soft:#3D3159;
+ --color-violet-50:#302840;
+ --color-violet-100:#3D3159;
+ --color-violet-700:#BEAAFF;
+ --color-violet-900:#E5DBFF;
+ --color-slate-50:#171720;
+ --color-slate-100:#2D2B3B;
+ --color-slate-200:#3B394B;
+ --color-slate-300:#5E586E;
+ --color-slate-400:#9991AA;
+ --color-slate-500:#B0AAC2;
+ --color-slate-600:#BCBACF;
+ --color-slate-700:#D1CBDF;
+ --color-slate-800:#E3DDEC;
+ --color-slate-900:#F3F1FC;
+ --surface-default:#242430;
+ --surface-sunken:#1D1B28;
+ --surface-raised:#2B283A;
+ --surface-overlay:#322D42;
+ --surface-hovered:#383044;
+ --shadow-raised:0 4px 18px #00000022;
+ --shadow-overlay:0 12px 32px #00000066;
+}
+}
+body{background:var(--page-background);color:var(--color-brand-ink)}
+body :is(input,textarea,select){accent-color:var(--color-brand-violet)}
+body main :is(button,input:not([type=radio]):not([type=checkbox]),textarea,select){border-radius:var(--radius-control)}
+body [data-focal-panel]{background:var(--signature-feature);border:1px solid #6852ba;border-radius:var(--radius-card);color:var(--signature-feature-text);box-shadow:0 8px 24px #48358616}
+body [data-focal-panel] :is(h1,h2,h3){color:var(--signature-feature-text)}
+body [data-focal-panel] p{color:var(--signature-feature-muted)}
+body main [data-focal-panel] a[href]{color:#f0eaff}
+body main [data-focal-panel] a[href]:first-child{background:#fff;color:#4d3495;border-radius:10px;box-shadow:0 3px 10px #21153518}
+@media print{body{background:#fff}body [data-focal-panel]{background:#fff;color:#232237;box-shadow:none}body [data-focal-panel] :is(h1,h2,h3,p,a){color:#232237}}
+body main [data-focal-panel]>span[class]{color:#eee6ff}

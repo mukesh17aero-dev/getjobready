@@ -1,0 +1,61 @@
+/* First rollout: welcome and career Home only. The marker arrives with the
+   page HTML; navigation to any other screen restores its existing palette. */
+body:has([data-palette="modern-neutral"]) {
+  --color-brand-mist: light-dark(#f8f9fb, #14161a);
+  --color-surface: light-dark(#ffffff, #1e2127);
+  --color-brand-ink: light-dark(#20242c, #f3f5f8);
+  --color-brand-muted: light-dark(#606773, #b8bec8);
+  --color-brand-border: light-dark(#e1e5eb, #363c46);
+  --color-brand-violet: #2457d6;
+  --color-brand-violet-deep: light-dark(#2457d6, #a2bdff);
+  --color-brand-violet-soft: light-dark(#dce6ff, #a2bdff);
+  --color-brand-accent: light-dark(#2457d6, #a2bdff);
+  --color-violet-50: light-dark(#f0f4ff, #252e41);
+  --color-violet-100: light-dark(#e4ecff, #2e3d5c);
+  --color-violet-700: light-dark(#2457d6, #a2bdff);
+  --color-violet-900: light-dark(#193d96, #d4e0ff);
+  --color-indigo-400: light-dark(#2457d6, #a2bdff);
+  --color-indigo-500: light-dark(#2457d6, #a2bdff);
+  --color-teal-50: light-dark(#ffffff, #1e2127);
+  --color-slate-50: light-dark(#f8f9fb, #14161a);
+  --color-slate-100: light-dark(#f0f2f5, #272c34);
+  --color-slate-200: light-dark(#e1e5eb, #363c46);
+  --color-slate-300: light-dark(#c5cbd4, #62656c);
+  --color-slate-400: light-dark(#77808d, #979aa1);
+  --color-slate-500: light-dark(#656d7a, #aeb6c3);
+  --color-slate-600: light-dark(#606773, #b8bec8);
+  --color-slate-700: light-dark(#464e5b, #d1d7e0);
+  --color-slate-800: light-dark(#323945, #e4e8ee);
+  --color-slate-900: light-dark(#20242c, #f3f5f8);
+  --ambience-violet: transparent;
+  --ambience-teal: transparent;
+  --page-accent-ink: light-dark(#2457d6, #a2bdff);
+  background: var(--color-brand-mist);
+  color: var(--color-brand-ink);
+}
+
+:root body:has([data-palette="modern-neutral"]) .text-brand-violet-deep {
+  color: var(--color-brand-violet-deep);
+}
+
+body:has([data-palette="modern-neutral"]) > header {
+  background: var(--color-surface);
+  border-color: var(--color-brand-border);
+}
+
+/* Keep the existing logo geometry, using the same blue as page actions. */
+body:has([data-palette="modern-neutral"]) :is(header, .network-welcome) svg stop {
+  stop-color: var(--page-accent-ink);
+}
+
+body:has([data-palette="modern-neutral"]) header button[aria-label^="Account menu"] {
+  background: var(--color-violet-100);
+  color: var(--page-accent-ink);
+  border-color: var(--color-brand-border);
+}
+
+/* Hovered solid actions keep white text, including in dark appearance. */
+body:has([data-palette="modern-neutral"]) .bg-brand-violet:hover {
+  background-color: #1c46b0;
+}
+

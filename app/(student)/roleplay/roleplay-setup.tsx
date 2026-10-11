@@ -42,7 +42,7 @@ export function RoleplaySetup({
         </p>
         <h1 className="mt-1 text-2xl font-bold text-brand-ink">Practise a real conversation</h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-600">
-          Pick a situation. You&apos;ll record your side of the conversation, hear the other
+          Pick a situation. Type your side of the conversation or choose to record, hear the other
           person reply, and get specific feedback afterwards — not a live phone call, but a
           back-and-forth you can repeat until it sticks.
         </p>
@@ -67,6 +67,7 @@ export function RoleplaySetup({
         onDifficulty={setDifficulty}
       />
 
+      <section className="rounded-xl border border-slate-200 bg-surface p-6"><h2 className="text-lg font-semibold">Before you start</h2><p className="mt-2">Allow about 5–10 minutes. Follow the selected scenario’s role and brief. Your submitted replies and feedback are saved to your account. Voice sends audio for transcription only when you choose to record; typing needs no microphone permission.</p><p className="mt-2">Use fictional customer details. Feedback follows the criteria above; it is conversation practice, separate from overall role readiness. Afterwards, use the feedback to practise again.</p></section>
       <button
         type="button"
         disabled={!selected || busy}
@@ -83,7 +84,7 @@ export function RoleplaySetup({
           </summary>
           <div className="mt-4">
             {exampleHistory && (
-              <p className="mb-3 inline-block rounded-full bg-slate-100 px-2.5 py-1 text-[0.68rem] font-bold uppercase tracking-wide text-slate-500">
+              <p className="mb-3 inline-block rounded-full bg-slate-100 px-2.5 py-1 text-[0.75rem] font-bold uppercase tracking-wide text-slate-500">
                 Example — not your own work
               </p>
             )}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+import { useDialogFocus } from "./use-dialog-focus";
 
 // A dismissible overlay: closes on Escape, on a click outside the panel and
 // on the close button, and returns focus to whatever opened it.
@@ -28,22 +29,7 @@ export function Dialog({
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null;
-    closeRef.current?.focus();
-    const { overflow } = document.body.style;
-    document.body.style.overflow = "hidden";
-
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = overflow;
-      opener?.focus?.();
-    };
-  }, [onClose]);
+  useDialogFocus(panelRef, onClose);
 
   return (
     <div
@@ -54,6 +40,7 @@ export function Dialog({
     >
       <div
         ref={panelRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -75,7 +62,7 @@ export function Dialog({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="-mr-1 -mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            className="-mr-1 -mt-1 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
           >
             ✕
           </button>

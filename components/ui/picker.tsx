@@ -98,7 +98,7 @@ export function Picker<T extends string>({
         </span>
         <span
           aria-hidden
-          className={`shrink-0 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`shrink-0 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`}
         >
           &#9662;
         </span>
@@ -108,7 +108,7 @@ export function Picker<T extends string>({
         <ul
           role="listbox"
           aria-label={label}
-          className="absolute left-0 top-full z-30 mt-1.5 w-full overflow-hidden rounded-xl border border-slate-300 bg-surface shadow-lg"
+          className="absolute left-0 top-full z-30 mt-1.5 max-h-72 w-full overflow-y-auto rounded-xl border border-slate-300 bg-surface shadow-lg"
         >
           {options.map((option) => (
             <li key={option.id}>

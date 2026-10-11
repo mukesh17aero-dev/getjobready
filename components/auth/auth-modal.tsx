@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useDialogFocus } from "../ui/use-dialog-focus";
 import { createPortal } from "react-dom";
 import { AuthForm, type AuthMode } from "./auth-form";
 
@@ -19,27 +20,19 @@ export function AuthModal({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
 
+  useDialogFocus(panelRef, onClose);
   useEffect(() => {
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     document.documentElement.dataset.modalOpen = "1";
-    panelRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      delete document.documentElement.dataset.modalOpen;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [onClose]);
+    return () => { delete document.documentElement.dataset.modalOpen; };
+  }, []);
 
   // Portal to <body>: an ancestor with backdrop-filter (like the site
   // header) would otherwise become the containing block for fixed
   // positioning and pin the dialog inside itself.
   return createPortal(
     <div
+      ref={panelRef}
+      tabIndex={-1}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
@@ -48,12 +41,12 @@ export function AuthModal({
       <button
         type="button"
         aria-label="Close dialog"
+        tabIndex={-1}
+        aria-hidden="true"
         onClick={onClose}
         className="absolute inset-0 cursor-default bg-black/65 backdrop-blur-sm"
       />
       <div
-        ref={panelRef}
-        tabIndex={-1}
         className="relative max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-3xl border border-white/12 bg-[#0b131c] p-7 shadow-[0_40px_90px_-20px_rgba(0,0,0,0.9)] outline-none sm:p-8"
       >
         <span
@@ -64,7 +57,7 @@ export function AuthModal({
           type="button"
           onClick={onClose}
           aria-label="Close dialog"
-          className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+          className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
         >
           ✕
         </button>

@@ -9,3 +9,5 @@ export * from "./remember-hub";
 export * from "./stages";
 export * from "./tool-hub";
 export * from "./tool-launch";
+
+export { ServiceEntry } from "./service-entry";

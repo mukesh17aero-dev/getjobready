@@ -52,7 +52,7 @@ function Steps({
 
 function Heading({ children }: { children: React.ReactNode }) {
   return (
-    <h4 className="text-[0.7rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+    <h4 className="text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">
       {children}
     </h4>
   );
@@ -84,7 +84,7 @@ export function RoleBrief({ brief }: { brief: Brief; title?: string }) {
         </section>
       )}
 
-      <p className="text-[0.72rem] leading-snug text-slate-400">
+      <p className="text-[0.75rem] leading-snug text-slate-500">
         Written from your own answers and the words on your profile — not from
         anything we assumed about you.
       </p>

@@ -24,7 +24,7 @@ export default async function ProfessionalProfilePage() {
   const state = await getProfessionalProfile(session.access_token);
   if (!state) {
     return (
-      <main className="mx-auto w-full max-w-3xl px-4 py-16 text-center sm:px-6">
+      <main className="mx-auto w-full max-w-(--page-max-width) px-4 py-16 text-center sm:px-6">
         <h1 className="font-display text-[1.5rem] font-bold text-brand-ink">
           Your profile could not load
         </h1>

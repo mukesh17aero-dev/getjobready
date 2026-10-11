@@ -32,7 +32,7 @@ export function Trend({
 
   return (
     <div>
-      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-slate-400">
+      <p className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-slate-500">
         Readiness across your attempts
       </p>
       <svg
@@ -63,7 +63,7 @@ export function Trend({
           );
         })}
       </svg>
-      <div className="mt-1 flex justify-between text-[0.7rem] text-slate-400">
+      <div className="mt-1 flex justify-between text-[0.75rem] text-slate-500">
         {points.map((p, i) => (
           <span key={i}>{p.label}</span>
         ))}

@@ -149,7 +149,7 @@ export function Ring({ score }: { score: number }) {
         <span className={`font-display text-[2.8rem] font-bold leading-none tracking-tight ${tone.text}`}>
           {score}
         </span>
-        <span className="mt-1 text-[0.66rem] font-semibold uppercase tracking-[0.12em] text-slate-500">
+        <span className="mt-1 text-[0.75rem] font-semibold uppercase tracking-[0.12em] text-slate-500">
           of 100
         </span>
       </div>

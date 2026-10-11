@@ -41,7 +41,7 @@ const STATUS_CHIP: Record<FeatureStatus, string> = {
 export function StatusChip({ status }: { status: FeatureStatus }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-wide ring-1 ring-inset ${STATUS_CHIP[status]}`}
+      className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[0.75rem] font-bold uppercase tracking-wide ring-1 ring-inset ${STATUS_CHIP[status]}`}
     >
       {STATUS_LABEL[status]}
     </span>
@@ -159,7 +159,7 @@ export function FeatureLandingBody({
             {stat.value}
           </span>
           <span className="min-w-0">
-            <span className="block text-[0.62rem] font-bold uppercase tracking-[0.12em] text-slate-400">
+            <span className="block text-[0.75rem] font-bold uppercase tracking-[0.12em] text-slate-500">
               {stat.label}
             </span>
             <span className="block text-[0.8rem] leading-snug text-slate-600">
@@ -257,7 +257,7 @@ export function FeatureLandingBody({
                 } ${open ? "" : "opacity-75"}`}
               >
                 {isNext && (
-                  <p className="mb-1 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-violet-700">
+                  <p className="mb-1 text-[0.75rem] font-bold uppercase tracking-[0.12em] text-violet-700">
                     Your next step
                   </p>
                 )}
@@ -302,7 +302,7 @@ export function FeatureLandingBody({
                     ))}
 
                   {feature.time && (
-                    <span className="inline-flex items-center gap-1 text-[0.72rem] text-slate-400">
+                    <span className="inline-flex items-center gap-1 text-[0.75rem] text-slate-500">
                       <Clock size={11} />
                       {feature.time}
                     </span>

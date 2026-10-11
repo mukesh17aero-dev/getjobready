@@ -1,0 +1,22 @@
+/* "Improve with AI" sits just after its field, right-aligned, in Ascend's
+   guiding colour: violet means "Ascend is helping here". Named in words -
+   a sparkle on its own did not say what it does. */
+.polish{display:grid;gap:6px;margin-top:4px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:4px 12px}
+.trigger{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border:1px solid var(--color-brand-violet);border-radius:999px;background:var(--color-surface);color:var(--color-brand-violet-deep);font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,color .15s}
+.trigger:hover:not(:disabled){background:var(--color-brand-violet);color:#fff}
+.trigger:disabled{cursor:not-allowed;border-color:var(--color-slate-300);color:var(--color-slate-500)}
+.trigger:focus-visible{outline:2px solid var(--color-brand-violet-deep);outline-offset:2px}
+.hint{font-size:13px;color:var(--color-slate-600)}
+.status{font-size:14px;color:var(--color-slate-600)}
+.card{display:grid;gap:8px;padding:14px 16px;border:1px solid var(--color-slate-200);border-left:3px solid var(--color-brand-violet);border-radius:10px;background:var(--color-surface);font-weight:400}
+.card[data-tone=failed]{border-left-color:var(--color-rose-600)}
+.card p{font-size:14px;line-height:1.55;color:var(--color-slate-700)}
+.heading{font-size:13px!important;font-weight:600;letter-spacing:.02em;color:var(--color-slate-600)!important}
+.text{white-space:pre-line;font-size:15px!important;color:var(--color-brand-ink)!important}
+.note{font-size:13px!important;color:var(--color-slate-600)!important}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.actions button{min-height:44px;padding:0 18px;border-radius:999px;font-size:14px;font-weight:600}
+.use{background:var(--color-brand-violet);color:#fff;border:0}
+.quiet{background:transparent;border:1px solid var(--color-slate-300);color:var(--color-slate-700)}
+@media (prefers-reduced-motion:reduce){.trigger{transition:none}}

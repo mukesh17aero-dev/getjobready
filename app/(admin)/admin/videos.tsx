@@ -51,7 +51,7 @@ function Film({
       }`}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-slate-400">
+        <p className="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-slate-500">
           {live ? "Published - what people see" : "Draft - not live yet"}
         </p>
         {onRemove && (
@@ -85,7 +85,7 @@ function Film({
       {upload.note && (
         <p className="mt-2 text-[0.82rem] leading-relaxed text-slate-700">{upload.note}</p>
       )}
-      <p className="mt-1 text-[0.72rem] text-slate-400">
+      <p className="mt-1 text-[0.75rem] text-slate-500">
         {upload.filename}
         {upload.bytes ? ` · ${Math.round((upload.bytes / 1024 / 1024) * 10) / 10}MB` : ""}
         {upload.uploadedAt
@@ -281,7 +281,7 @@ export function VideoUploadsEditor({
           >
             {busy ? "Uploading…" : `Upload a ${chosen.label.toLowerCase()} video`}
           </button>
-          <span className="text-[0.75rem] text-slate-400">
+          <span className="text-[0.75rem] text-slate-500">
             mp4, webm or mov, up to 50MB
           </span>
         </div>
@@ -294,7 +294,7 @@ export function VideoUploadsEditor({
             <span className="text-[0.78rem] font-semibold text-slate-800">
               Or paste a link to a film hosted elsewhere
             </span>
-            <span className="mt-0.5 block text-[0.72rem] text-slate-500">
+            <span className="mt-0.5 block text-[0.75rem] text-slate-500">
               YouTube, Vimeo or anywhere with a direct https link. Use this for
               anything over 50MB.
             </span>
@@ -325,7 +325,7 @@ export function VideoUploadsEditor({
       </div>
 
       {drafts.length + lives.length === 0 ? (
-        <p className="mt-4 rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-center text-[0.85rem] text-slate-400">
+        <p className="mt-4 rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-center text-[0.85rem] text-slate-500">
           No {chosen.label.toLowerCase()} videos yet. Upload one and it appears
           here to watch before you publish it.
         </p>

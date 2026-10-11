@@ -179,7 +179,7 @@ export function MultiChoice({
         {label}
       </span>
       {hint && (
-        <span className="block text-[0.72rem] text-slate-400">{hint}</span>
+        <span className="block text-[0.75rem] text-slate-500">{hint}</span>
       )}
       <div className={styles.chips}>
         {options.map((option) => (
@@ -223,7 +223,7 @@ export function TextArea({
         {label}
       </span>
       {hint && (
-        <span className="block text-[0.72rem] text-slate-400">{hint}</span>
+        <span className="block text-[0.75rem] text-slate-500">{hint}</span>
       )}
       <textarea
         value={value}
@@ -238,7 +238,7 @@ export function TextArea({
         }`}
       />
       {error && (
-        <span role="alert" className="mt-1 block text-[0.72rem] text-rose-600">
+        <span role="alert" className="mt-1 block text-[0.75rem] text-rose-600">
           {error}
         </span>
       )}
@@ -255,7 +255,7 @@ export function Choice({ label, hint, value, options, onChange, placeholder = "C
   label: string; hint?: string; value: string; options: string[]; onChange: (v: string) => void; placeholder?: string;
 }) {
   return <label className="block"><span className="text-[0.8rem] font-semibold text-slate-800">{label}</span>
-    {hint && <span className="block text-[0.72rem] text-slate-500">{hint}</span>}
+    {hint && <span className="block text-[0.75rem] text-slate-500">{hint}</span>}
     <select value={value} onChange={event => onChange(event.target.value)} className={styles.select}>
       <option value="">{placeholder}</option>{options.map(option => <option key={option} value={option}>{option}</option>)}
     </select>

@@ -102,7 +102,7 @@ export function RoleTransit({
       />
 
       <div className="relative px-6 text-center">
-        <p className="text-[0.72rem] font-bold uppercase tracking-[0.14em] text-white/55">
+        <p className="text-[0.75rem] font-bold uppercase tracking-[0.14em] text-white/70">
           Stop {stop} of {total}
         </p>
         <p className="mt-2 text-[0.8rem] font-semibold uppercase tracking-[0.1em] text-white/60">

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
+import { useDialogFocus } from "./use-dialog-focus";
 
 // A help panel that slides in beside the page rather than covering it, so a
 // setting can be read about while it stays visible. Escape, backdrop click and
@@ -18,19 +19,7 @@ export function HelpSheet({
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null;
-    closeRef.current?.focus();
-
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      opener?.focus?.();
-    };
-  }, [onClose]);
+  useDialogFocus(panelRef, onClose);
 
   return (
     <div
@@ -41,6 +30,7 @@ export function HelpSheet({
     >
       <div
         ref={panelRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -55,7 +45,7 @@ export function HelpSheet({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
           >
             <span aria-hidden className="text-lg leading-none">
               ×
@@ -90,7 +80,7 @@ export function HelpButton({
         aria-label={label}
         aria-expanded={open}
         aria-controls={id}
-        className="grid h-5 w-5 shrink-0 place-items-center rounded-full border border-slate-300 text-[0.68rem] font-bold text-slate-500 transition-colors hover:border-brand-violet hover:text-brand-violet-deep"
+        className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-slate-300 text-[0.75rem] font-bold text-slate-500 transition-colors hover:border-brand-violet hover:text-brand-violet-deep"
       >
         <span aria-hidden>i</span>
       </button>

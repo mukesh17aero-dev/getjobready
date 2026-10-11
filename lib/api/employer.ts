@@ -24,9 +24,11 @@ export type Opportunity = {
   requirements: string;
   skills: string;
   experience: string;
+  experienceBands?: Array<"0-1" | "1-3">;
   shift: string;
   languages: string;
   publishedAt: string | null;
+  lastCheckedAt?: string;
   applyUrl: string;
 };
 

@@ -50,6 +50,7 @@ export type RoleKnowledge = {
 
 export type RoleDetail = {
   roleId: string;
+  experienceLevels?: Array<"student" | "early_career">;
   sector: string;
   pitch: string;
   description: string;

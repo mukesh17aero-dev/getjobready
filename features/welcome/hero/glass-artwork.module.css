@@ -1,0 +1,76 @@
+.artwork{position:absolute;inset:0;pointer-events:none;isolation:isolate;perspective:1000px}
+.scene{position:absolute;inset:0;visibility:hidden;pointer-events:none}
+.scene[data-active=true]{visibility:visible}
+.scene:not([data-active=true]) *{animation-play-state:paused!important}
+.floor{position:absolute;left:17%;right:13%;height:17%;bottom:5%;border-radius:50%;background:radial-gradient(ellipse at 25% 50%,#18cebe24,transparent 55%),radial-gradient(ellipse at 80% 50%,#ecab552b,transparent 50%);filter:blur(17px)}
+.student{position:absolute;left:16%;right:15%;top:13%;bottom:16%;perspective:1000px}
+.layerEntry{position:absolute;left:0;width:100%;height:58%;top:calc(var(--layer)*18%);animation:assemble 1.1s cubic-bezier(.16,.75,.18,1) both;animation-delay:calc((3 - var(--layer))*.13s)}
+.layerBody{position:absolute;inset:0;animation:layerBreath 7.5s ease-in-out infinite;animation-delay:calc(var(--layer)*-.9s)}
+.plateImage{object-fit:fill}
+.layerBody[data-layer="1"] .plateImage{filter:hue-rotate(-15deg) saturate(1.8)}
+.layerBody[data-layer="2"] .plateImage{filter:hue-rotate(55deg) saturate(1.5)}
+.layerBody[data-layer="3"] .plateImage{filter:hue-rotate(200deg) saturate(1.5)}
+.plateMark{position:absolute;width:14%;height:29%;left:43%;top:30%;color:#d7f4ff;filter:drop-shadow(0 0 4px #35aaff) drop-shadow(0 0 10px #24bbff);transform:rotateX(48deg) rotateZ(-1deg)}
+.layerSignal{position:absolute;inset:8% 7% 12%;clip-path:polygon(50% 0,100% 44%,50% 100%,0 44%);background:linear-gradient(115deg,transparent 30%,#92fff74d 48%,transparent 65%);background-size:300% 100%;mix-blend-mode:screen;opacity:0;animation:layerPulse 9s linear infinite;animation-delay:calc(var(--layer)*-1.1s)}
+.ribbonFloat{position:absolute;left:16%;right:12%;top:8%;bottom:10%;animation:ribbonTurn 14s ease-in-out infinite;transform-origin:50% 53%}
+.ribbonImage{object-fit:contain;filter:drop-shadow(0 18px 20px #02191160)}
+.ribbonSignals{position:absolute;inset:0;width:100%;height:100%;opacity:.45;mix-blend-mode:screen}
+.ribbonSignals path{stroke:#baffeb;stroke-width:2;stroke-linecap:round;stroke-dasharray:3 97;animation:demand 9s linear infinite}
+.ribbonSignals path+path{stroke:#ffd6a2;stroke-width:1.2;stroke-dasharray:2 98;animation-duration:17s;animation-direction:reverse;opacity:.6}
+.employer{position:absolute;left:10%;right:6%;top:6%;bottom:7%;container-type:inline-size}
+.core{position:absolute;width:62%;height:68%;left:19%;top:16%;animation:coreFloat 8s ease-in-out infinite;z-index:2}
+.core img{object-fit:contain;filter:drop-shadow(0 0 17px #85bfff16)}
+.orbitLines{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:1}
+.orbitLines ellipse{stroke:#a0bfd972;stroke-width:.8}.orbitLines ellipse+ellipse{stroke:#d9ad785e;stroke-width:.6}
+.matchSignal{stroke:#5eead4;stroke-width:1.3;stroke-dasharray:25 450;animation:matchPulse 12s linear infinite;opacity:0}
+.satellite{filter:hue-rotate(var(--hue));position:absolute;width:12%;aspect-ratio:1;offset-path:ellipse(43% 32% at 50% 50%);offset-rotate:0deg;offset-distance:calc(var(--node)*20%);animation:orbit 32s linear infinite;animation-delay:var(--delay);z-index:3}
+.satellite:nth-last-child(2){width:10%}.satellite:last-child{width:14%}
+.nodeBody{position:absolute;inset:0;border-radius:50%;overflow:hidden;animation:nodeMatch 32s ease-in-out infinite;animation-delay:var(--delay)}
+/* The source is a transparent composition with the node toward the lower right.
+   Crop it in layout, retaining the original generated PNG and its alpha. */
+.nodeBody img{width:218%!important;height:218%!important;max-width:none!important;left:-111%!important;top:-71%!important}
+@keyframes assemble{from{transform:translate(var(--arrive-x),calc((var(--layer) - 1.5)*22px)) rotate(-3deg)}to{transform:none}}
+@keyframes layerBreath{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(calc((var(--layer) - 1.5)*5px)) rotate(.7deg)}}
+@keyframes layerPulse{0%,58%,100%{opacity:0;background-position:120% 0}65%{opacity:.45}82%{opacity:.3;background-position:-30% 0}90%{opacity:0}}
+@keyframes ribbonTurn{0%,100%{transform:translateY(3px) rotate(-8deg) rotateY(-8deg)}50%{transform:translateY(-10px) rotate(8deg) rotateY(10deg)}}
+@keyframes demand{to{stroke-dashoffset:-100}}
+@keyframes coreFloat{0%,100%{transform:translateY(3px)}50%{transform:translateY(-7px)}}
+@keyframes orbit{from{offset-distance:0%}to{offset-distance:100%}}
+@keyframes nodeMatch{0%,72%,100%{transform:scale(1);filter:brightness(1)}78%,86%{transform:scale(1.13);filter:brightness(1.3) drop-shadow(0 0 5px #5eead4)}}
+@keyframes matchPulse{0%,64%,100%{opacity:0;stroke-dashoffset:0}68%{opacity:.65}86%{opacity:0;stroke-dashoffset:-430}}
+.artwork[data-running=false] *{animation-play-state:paused!important}
+@media(max-width:1100px) and (min-width:761px){.student{left:10%;right:7%;top:22%;bottom:19%}.ribbonFloat{left:7%;right:3%;top:13%;bottom:13%}.employer{left:2%;right:0;top:9%;bottom:9%}}
+@media(max-width:760px){.student{left:4%;right:3%;top:18%;bottom:14%}.ribbonFloat{left:3%;right:1%;top:14%;bottom:14%}.employer{left:0;right:0;top:11%;bottom:9%}.core{width:68%;left:16%;height:71%;top:15%}.satellite{width:13%}.floor{bottom:7%}}
+@media(prefers-reduced-motion:reduce){.artwork *{animation:none!important}.layerEntry,.layerBody,.ribbonFloat,.core{transform:none}}
+
+/* The same four colours travel through a compact twist between compositions.
+   Outgoing and incoming artwork meet at the bridge; they never cross-fade. */
+.scene{transform-origin:50% 52%}
+.scene[data-phase=exiting]{visibility:visible;animation:sceneGather .9s cubic-bezier(.65,0,.35,1) both}
+.scene[data-phase=entering]{animation:sceneRelease .9s cubic-bezier(.2,.75,.2,1) both}
+.bridge{position:absolute;inset:4% 7%;z-index:4;pointer-events:none;animation:bridgeTravel .9s ease-in-out both}
+.bridge svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 7px #61d9d34d)}
+.bridgeStrand{stroke:var(--strand-color);stroke-width:3;transform-origin:200px 200px;animation:strandTwist .9s ease-in-out both;animation-delay:calc(var(--strand)*-.025s)}
+@keyframes sceneGather{0%{transform:none;visibility:visible}43%{transform:scale(.2) rotate(32deg);visibility:visible}44%,100%{transform:scale(.2) rotate(32deg);visibility:hidden}}
+@keyframes sceneRelease{0%,43%{transform:scale(.2) rotate(-32deg);visibility:hidden}44%{transform:scale(.2) rotate(-32deg);visibility:visible}100%{transform:none;visibility:visible}}
+@keyframes bridgeTravel{0%,12%{opacity:0;transform:scale(.35) rotate(-20deg)}28%{opacity:1}50%{opacity:1;transform:scale(.65) rotate(25deg)}78%,100%{opacity:0;transform:scale(.85) rotate(60deg)}}
+@keyframes strandTwist{0%{rx:18;transform:translateY(calc(var(--strand)*13px - 20px)) rotate(45deg) scaleY(.45)}50%{rx:110;transform:rotate(calc(var(--strand)*42deg)) scaleY(.55)}100%{rx:114;transform:rotate(calc(var(--strand)*60deg + 90deg)) scaleY(.8)}}
+/* Larger objects occupy the space next to the headline. Labels remain DOM text. */
+.student{left:0;right:0;top:8%;bottom:12%;animation:stackSway 10s ease-in-out infinite}
+.layerEntry{height:52%;top:calc(var(--layer)*19%)}
+.layerBody{animation:layerBuild 10s ease-in-out infinite;animation-delay:calc((3 - var(--layer))*.2s)}
+.plateMark{width:10%;height:22%;left:45%;top:21%}
+.plateLabel{position:absolute;left:20%;right:20%;top:59%;text-align:center;pointer-events:auto;user-select:text;cursor:text;color:#f5fcff;text-shadow:0 1px 4px #001d2b,0 0 10px #001923;line-height:1.25}
+.plateLabel strong{display:block;font-size:16px;font-weight:650;letter-spacing:.3px}
+.plateLabel span{display:block;margin-top:3px;font-size:12px;font-weight:500}
+.ribbonFloat{left:2%;right:0;top:2%;bottom:3%}
+.employer{left:0;right:0;top:2%;bottom:3%}
+@keyframes stackSway{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-7px) rotate(1deg)}}
+@keyframes layerBuild{0%,12%,88%,100%{transform:translateY(0) rotate(0)}35%,58%{transform:translate(calc((var(--layer) - 1.5)*-8px),calc((var(--layer) - 1.5)*13px)) rotate(calc((var(--layer) - 1.5)*1.4deg))}72%{transform:translateY(0) rotate(0)}}
+/* Pausing or reducing motion must never leave a tab halfway through a switch. */
+.artwork[data-running=false] .scene{animation:none!important;transform:none;visibility:hidden}
+.artwork[data-running=false] .scene[data-active=true]{visibility:visible}
+.artwork[data-running=false] .bridge{display:none}
+@media(max-width:1100px) and (min-width:761px){.student{left:-7%;right:-7%;top:12%;bottom:14%}.plateLabel strong{font-size:14px}.plateLabel span{font-size:12px}}
+@media(max-width:760px){.student{left:-8%;right:-8%;top:9%;bottom:13%}.plateLabel strong{font-size:14px}.plateLabel span{font-size:12px}.plateLabel{left:17%;right:17%;top:59%}.ribbonFloat{left:-3%;right:-3%;top:8%;bottom:7%}.employer{left:0;right:0;top:9%;bottom:8%}}
+@media(prefers-reduced-motion:reduce){.artwork *{animation:none!important}.scene{visibility:hidden;transform:none}.scene[data-active=true]{visibility:visible}.scene[data-phase=exiting]{visibility:hidden}.bridge{display:none}}

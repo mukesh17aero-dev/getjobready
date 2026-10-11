@@ -97,13 +97,13 @@ export function RoleWriter({
   return (
     <div className="rounded-xl border border-brand-violet/30 bg-brand-violet/[0.03] p-3.5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <span className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-brand-violet-deep">
+        <span className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-brand-violet-deep">
           Write this role with AI
         </span>
         <button
           type="button"
           onClick={() => setShowPrompt((v) => !v)}
-          className="text-[0.72rem] font-semibold text-brand-violet-deep hover:underline"
+          className="text-[0.75rem] font-semibold text-brand-violet-deep hover:underline"
         >
           {showPrompt ? "Hide" : "Read"} the built-in instruction
         </button>
@@ -115,7 +115,7 @@ export function RoleWriter({
       </p>
 
       {showPrompt && (
-        <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-surface p-3 text-[0.7rem] leading-relaxed text-slate-600">
+        <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-surface p-3 text-[0.75rem] leading-relaxed text-slate-600">
           {builtIn ?? "Loading…"}
         </pre>
       )}
@@ -138,7 +138,7 @@ export function RoleWriter({
           {busy ? "Writing…" : "Write it"}
         </button>
         {!aiConfigured && (
-          <span className="text-[0.75rem] text-slate-400">
+          <span className="text-[0.75rem] text-slate-500">
             No AI key configured — write the fields by hand.
           </span>
         )}
