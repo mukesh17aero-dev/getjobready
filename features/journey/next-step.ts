@@ -47,11 +47,9 @@ export function nextStep(state: JourneyState): NextStep {
 
   if (told === 0) {
     return {
-      stake:
-        "Most people pick a job title before they know what the work feels like. Start the other way round — by looking at the work itself.",
+      stake: "Pick the work before you pick a job title.",
       title: name ? `${name}, find the work that fits you` : "Find the work that fits you",
-      because:
-        "We know nothing about you yet, so there is nothing to tailor this to. Exploring real roles is the one step that needs nothing from you first.",
+      because: "We don't know anything about you yet — exploring roles is the place to start.",
       action: "Explore roles",
       href: "/discover",
       minutes: 4,
@@ -60,61 +58,104 @@ export function nextStep(state: JourneyState): NextStep {
 
   if (!discoveryDone) {
     return {
-      stake:
-        "Most people choose a job title before they know what the work feels like. This does it the other way round.",
+      stake: "See what the work feels like before you commit to a title.",
       title: name ? `${name}, find the work that fits you` : "Find the work that fits you",
-      because: `You have told us ${told} ${plural(told, "thing", "things")} about yourself. Discovery turns that into named roles, with real pay and the honest parts.`,
+      because: `You've told us ${told} ${plural(told, "thing", "things")} so far. Discovery turns that into real roles.`,
       action: "Find what fits me",
       href: "/discover",
       minutes: 4,
     };
   }
 
-  if (!selectedRole) {
+  // "Has a role been chosen?" is the role object, not selectedRole alone:
+  // selectedRole can be the sentinel "none" (they went through Discovery and
+  // picked none) or an id whose role no longer resolves to an object. In both
+  // cases there is nothing to run a skills check against, so send them back to
+  // pick one. The role object is the signal the rest of the UI trusts for this
+  // (see start-router's "Your direction").
+  const role = state.progress?.role;
+  if (!role || !selectedRole || selectedRole === "none") {
     return {
-      stake:
-        "A direction you have picked is what turns the rest of this from browsing into building.",
+      stake: "Choosing a direction turns browsing into building.",
       title: "Pick the one you want to aim at",
-      because:
-        "Your answers already point somewhere. Choosing it is what lets everything after this be about that role instead of about roles in general.",
+      because: "Your answers already point somewhere — choose one to aim at.",
       action: "See my matches",
       href: "/discover",
       minutes: 2,
     };
   }
 
-  // A role is chosen. The next worthwhile thing is not polishing a resume — it
-  // is finding out where you actually stand against that role. Only once a
-  // skills check exists does closing the gap on your resume become the step
-  // that earns the ask.
-  const role = state.progress?.role;
+  // A role is chosen. From here the ladder follows the journey: find out where
+  // you stand, do the real work, rehearse the interview, then prepare to apply.
+  // Each step is the first one not yet finished; "done" comes from the backend's
+  // per-module status (and, for the skills check, from a finished sitting too).
+  const mods = state.modules ?? {};
   const skillsCheckDone =
-    state.modules?.readiness === "done" ||
-    (state.evidence?.readiness ?? []).some((sitting) => sitting.roleId === role?.id);
+    mods.readiness === "done" ||
+    (state.evidence?.readiness ?? []).some((sitting) => sitting.roleId === role.id);
 
   if (!skillsCheckDone) {
     return {
-      stake:
-        "An employer spends seconds deciding whether you can do the job. Knowing where you actually stand — before you polish anything — is what makes the rest worth doing.",
-      title: role ? `See where you stand as a ${role.title}` : "See where you stand",
-      because: role
-        ? `You chose ${role.title}. A skills check shows which of its skills you can already prove, and which to work on — the part a resume cannot show.`
-        : "You have chosen a direction. A skills check shows which of its skills you can already prove, and which to work on.",
+      stake: "An employer decides in seconds whether you can do the job.",
+      title: "See where you stand",
+      because: `You chose ${role.title}. A skills check shows what you can already prove, and what to work on.`,
       action: "Start a skills check",
-      href: role ? `/practice/readiness?role=${encodeURIComponent(role.id)}` : "/practice/readiness",
+      href: `/practice/readiness?role=${encodeURIComponent(role.id)}`,
       minutes: 15,
     };
   }
 
+  if (mods.simulation !== "done") {
+    return {
+      stake: "Knowing the skills isn't the same as doing the work.",
+      title: "Try the real work",
+      because: `Practise ${role.title} tasks, marked the way the job would mark them.`,
+      action: "Start a simulation",
+      href: `/practice/missions?role=${encodeURIComponent(role.id)}`,
+      minutes: 20,
+    };
+  }
+
+  if (mods.interview !== "done") {
+    return {
+      stake: "The interview is where it all has to come together, out loud.",
+      title: "Practise the interview",
+      because: `Answer ${role.title} questions and get feedback on each one.`,
+      action: "Start an AI interview",
+      href: "/interview/practice",
+      minutes: 15,
+    };
+  }
+
+  if (mods.resume !== "done") {
+    return {
+      stake: "An employer decides in seconds whether your resume reads like the role.",
+      title: "Make your resume read like the role",
+      because: `You've done the work — now make your resume show it for ${role.title}.`,
+      action: "Open your resume",
+      href: "/resume/build",
+      minutes: 10,
+    };
+  }
+
+  if (mods.jobFit !== "done") {
+    return {
+      stake: "Before you apply, see how you line up against the real posting.",
+      title: "Check your job fit",
+      because: `Compare a ${role.title} opening with what your profile now proves.`,
+      action: "Check a job",
+      href: "/job-fit",
+      minutes: 5,
+    };
+  }
+
   return {
-    stake:
-      "An employer decides in seconds whether your record reads like the role. Right now yours is written for nobody in particular.",
-    title: role ? `Make your resume read like a ${role.title}` : "Make your resume read like the role",
-    because:
-      "You know where you stand. The next thing worth your time is closing the distance between what you have written down and what the work asks for.",
-    action: "Open your resume",
-    href: "/resume/build",
-    minutes: 10,
+    stake: "You've built the proof — now put it in front of people.",
+    title: "Share what you've proven",
+    because: "Your Skills Passport now has real, scored evidence behind it.",
+    action: "Open your Passport",
+    href: "/passport",
+    minutes: 3,
   };
 }
 

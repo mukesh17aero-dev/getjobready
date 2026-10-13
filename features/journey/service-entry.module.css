@@ -10,9 +10,7 @@
 .card:hover{border-color:var(--color-brand-violet)}
 .card h3{font-size:18px;line-height:1.4;display:flex;justify-content:space-between;gap:12px}
 .card small{font-size:14px;color:var(--color-slate-600)}
-.more{display:flex;flex-wrap:wrap;gap:12px 24px}
-.more a{display:inline-flex;align-items:center;min-height:44px;color:var(--color-brand-violet-deep);font-weight:600;text-underline-offset:4px}
-.root :is(a,input):focus-visible{outline:3px solid var(--color-brand-ink);outline-offset:4px}
+.root :is(a,input,button):focus-visible{outline:3px solid var(--color-brand-ink);outline-offset:4px}
 @media(max-width:760px){.cards{grid-template-columns:minmax(0,1fr)}}
 .root>h2{font-size:24px;line-height:1.3;letter-spacing:-.5px}.card{border-top:1px solid var(--color-brand-border);border-radius:var(--radius-card);background:linear-gradient(140deg,var(--color-teal-50),var(--color-surface))}.card:nth-child(2){background:linear-gradient(140deg,var(--color-violet-50),var(--color-surface))}.card h3{font-size:20px}.card p{font-size:14px;line-height:1.6}.switch{margin-top:4px}
 
@@ -27,7 +25,6 @@
 .card h3{font-size:18px;font-weight:500;line-height:1.4}
 .card p{font-size:13px}.card p b{font-weight:500}
 .card small{font-size:12px}
-.more{gap:8px 22px}.more a{font-size:13px;font-weight:500}
 .cards{gap:20px}
 .card,.card:nth-child(2){padding:24px;border-radius:16px;background:var(--color-surface)}
 .card:first-child{background:var(--color-brand-success)}
@@ -35,7 +32,6 @@
 .card h3{font-size:18px;font-weight:650}
 .card p,.card small{font-size:14px;line-height:1.55}
 .switch legend,.switch label{font-size:14px}
-.more a{font-size:14px}
 .root>p{font-size:16px;line-height:1.6}
 .root>h2{font-weight:650;font-size:24px}
 .card h3{display:flex;justify-content:space-between;gap:12px;line-height:1.4}
@@ -54,3 +50,11 @@
 .card h3{font-size:20px;font-weight:600}
 .card p,.card small{font-size:14px}
 @media(max-width:480px){.switch label{width:100%}}
+.more{display:flex;align-items:center;flex-wrap:wrap;gap:8px 36px;border-top:1px solid var(--color-brand-border);padding-top:18px}
+.moreLabel{font-size:20px;font-weight:650;color:var(--color-brand-muted);white-space:nowrap}
+.more a{display:inline-flex;align-items:center;gap:4px;min-height:44px;color:var(--color-brand-violet-deep);font-size:20px;font-weight:650;white-space:nowrap;text-decoration:none}
+.more a:hover{text-decoration:underline;text-underline-offset:4px}
+.pathToggle button{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0;border:0;background:transparent;color:var(--color-brand-violet-deep);font:inherit;font-size:14px;font-weight:600;cursor:pointer;text-align:left}
+.pathToggle button:hover{text-decoration:underline;text-underline-offset:4px}
+.pathToggle button span{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--color-brand-violet-soft);font-size:18px;line-height:1}
+@media(max-width:760px){.more{column-gap:20px}.moreLabel{width:100%;font-size:17px}.more a{font-size:16px}}

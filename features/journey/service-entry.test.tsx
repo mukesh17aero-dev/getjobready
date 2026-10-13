@@ -19,4 +19,24 @@ describe("direct service entry",()=>{
    expect(html).toMatch(/<b>Leave with:<\/b> [^<]*<\/p><\/a>/);
   }
  });
+ it("shows an explicit disclosure action for the preparation path",()=>{
+  const closed=renderToStaticMarkup(createElement(ServiceEntry,{}));
+  const open=renderToStaticMarkup(createElement(ServiceEntry,{pathOpen:true}));
+  expect(closed).toContain("Show your preparation path");
+  expect(closed).toContain('aria-controls="full-path"');
+  expect(closed).toContain('aria-expanded="false"');
+  expect(open).toContain("Hide your preparation path");
+  expect(open).toContain('aria-expanded="true"');
+  expect(open).not.toContain("↓");
+ });
+ it("shows the five more tools in the requested order",()=>{
+  const html=renderToStaticMarkup(createElement(ServiceEntry,{}));
+  const labels=["Check job fit","Browse jobs","Skills Passport","Interview stories","Roleplay"];
+  const positions=labels.map(label=>html.indexOf(`${label} <span aria-hidden="true">↗</span>`));
+  expect(positions.every(position=>position>=0)).toBe(true);
+  expect(positions).toEqual([...positions].sort((a,b)=>a-b));
+  for(const path of ["/job-fit","/opportunities","/passport","/stories","/roleplay"]){
+   expect(html).toContain(`href="${path}?profileType=student"`);
+  }
+ });
 });

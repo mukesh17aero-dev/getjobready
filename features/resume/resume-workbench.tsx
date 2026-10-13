@@ -81,7 +81,10 @@ export function ResumeWorkbench({ resume, template, role, jobDescription, track,
   }
   // Show the live document beside the content. Layout selection is optional.
   const [chosen, setChosen] = useState(templateChosen);
-  const [choosing, setChoosing] = useState(false);
+  // First time into Edit resume with no template chosen: open the layout gallery
+  // straight away so they pick a look, rather than landing on a default nobody
+  // chose. A saved/opened resume (templateChosen) goes to its preview instead.
+  const [choosing, setChoosing] = useState(!templateChosen);
   const [rolls, setRolls] = useState(0);
   function pick(next: ResumeTemplate) {
     onTemplate(next);
@@ -249,7 +252,7 @@ export function ResumeWorkbench({ resume, template, role, jobDescription, track,
         {picked && !choosing && !demo.running && <PickBox key={`${picked.quote}-${picked.top}`} pick={picked} onClose={clearPick} onAdd={ask => { addRequest(ask, picked.quote, picked.where, { section: picked.section, entry: picked.entry, range: picked.range }); clearPick(); window.getSelection()?.removeAllRanges(); }} />}
         {!choosing && <CommentMarkers marks={marks} active={activeRequest} onActive={setActiveRequest} />}
         {choosing && <div className={s.gallery} id="resume-layouts">
-          <div className={s.controlHeader}><span className={s.eyebrow}>CHOOSE A LAYOUT</span><h2>Same story. Your style.</h2><p>For online applications, start with Basic: a simple single-column layout. Switch layouts without losing your words. PDF keeps the exact look; Word uses the nearest supported structure.{!started && " Shown with sample content until you add yours."}</p></div>
+          <div className={s.controlHeader}><span className={s.eyebrow}>CHOOSE A LAYOUT</span><h2>Same story. Your style.</h2></div>
           <div className={s.templates} role="radiogroup" aria-label="Resume layout" onKeyDown={radioNavigation}>{TEMPLATES.map((item, index) => { const current = chosen && item.id === template; return <button type="button" key={item.id} disabled={disabled} role="radio" aria-checked={current} tabIndex={current || (!chosen && index === 0) ? 0 : -1} onClick={() => pick(item.id)}><MiniPreview id={item.id} resume={started ? resume : track === "early_career" ? SAMPLE_RESUME : STUDENT_SAMPLE} roleLine={started ? role : ""} track={track} /><strong>{item.name}{current ? " ✓" : ""}</strong><small>{item.blurb}</small></button>; })}</div>
         </div>}
         {/* Always in the page, hidden while choosing, so printing prints the resume. Re-keyed on each pick so it unrolls again. */}

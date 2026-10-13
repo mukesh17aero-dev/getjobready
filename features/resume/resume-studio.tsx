@@ -10,6 +10,7 @@ import { RequiredMark } from "@/components/ui/required-mark";
 import { track as trackEvent } from "@/lib/footprints";
 import { SAMPLE_ATS, EXAMPLE_RESUME, SAMPLE_REVIEW } from "./samples";
 import { EssentialsModal } from "./essentials-modal";
+import { RoleAimModal } from "./role-aim-modal";
 import { ResumeSetup, firstStepFor, hasNothingSaved, setupGaps, type SetupStep } from "./resume-setup";
 import { ReviewProgress } from "./review-progress";
 import { uploadRead } from "./starter-resumes";
@@ -110,6 +111,9 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   // Nothing chosen until they choose: what follows depends on the choice.
   const [purpose, setPurpose] = useState<Purpose | null>(initialPurpose ?? null);
   const [roleInput, setRoleInput] = useState(lockedRole?.title ?? "");
+  // A new resume with a role chosen in Discovery asks, before building, whether
+  // to aim at that role or stay general. Reopened resumes keep their own target.
+  const [roleAimOpen, setRoleAimOpen] = useState(Boolean(lockedRole && !opened));
   const [jdInput, setJdInput] = useState("");
   // Where they are, read from their profile the way the profile page reads it:
   // a course in progress means studying, a job on record means working, and
@@ -497,6 +501,7 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
 
   return <div ref={shellRef} className={`${s.shell} ${M3_ROOT}`} data-stage={stage}>
     {gate && <SignUpPrompt action={gate} onClose={() => setGate(null)} />}
+    {roleAimOpen && lockedRole && <RoleAimModal roleTitle={lockedRole.title} onChoose={useRole => { setRoleInput(useRole ? lockedRole.title : ""); setRoleAimOpen(false); }} />}
     {essentialsOpen && <EssentialsModal firstName={text("fullName").split(/\s+/)[0] ?? ""} busy={busy !== null} onClose={() => { if (busy === null) setEssentialsOpen(false); }} onSubmit={values => void saveEssentials(values)} />}
     <input ref={fileRef} type="file" accept=".pdf,.docx,.doc,.txt,.md" className={s.srOnly} aria-label="Choose the resume to improve" onChange={e => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void readExisting(file); }} />
     <div className={s.canvas}><main className={s.main}>

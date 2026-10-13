@@ -113,12 +113,12 @@ describe("content before layout selection", () => {
     expect(html).toMatch(/<button[^>]*aria-pressed="false"[^>]*aria-controls="resume-layouts"[^>]*><svg[\s\S]*?<\/svg>Select template<\/button>/);
   });
 
-  it("shows the content immediately and leaves layout selection optional", () => {
+  it("opens the layout gallery for a new resume, keeping the sheet in the page", () => {
     const html = bench(false);
-    expect(html).toContain('data-choosing="false"');
-    expect(html).not.toContain('aria-label="Resume layout"');
+    expect(html).toContain('data-choosing="true"');
+    expect(html).toContain('aria-label="Resume layout"');
     expect(html).toContain('id="resume-sheet"');
-    expect(html).toMatch(/aria-pressed="false"[^>]*aria-controls="resume-layouts"[^>]*><svg[\s\S]*?<\/svg>Select template</);
+    expect(html).toMatch(/aria-pressed="true"[^>]*aria-controls="resume-layouts"[^>]*><svg[\s\S]*?<\/svg>Select template</);
   });
 
   it("shows the resume, not the layouts, once a layout is picked", () => {
@@ -419,7 +419,6 @@ it("gives the signed-out builder one clear account card, styled choices and a qu
 it("shows the layouts with sample content, not blank, before anything is typed", () => {
   const code = readFileSync("features/resume/resume-workbench.tsx", "utf8");
   expect(code).toContain('resume={started ? resume : track === "early_career" ? SAMPLE_RESUME : STUDENT_SAMPLE}');
-  expect(code).toContain('{!started && " Shown with sample content until you add yours."}');
 });
 
 it("shows a signed-out visitor every way to start, marking the ones an account opens", () => {

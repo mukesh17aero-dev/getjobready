@@ -82,7 +82,7 @@ export type JourneyState = {
   /** What their own marked work shows. Null when unavailable. */
   evidence?: HomeEvidence | null;
   /** Where they are with each module. Absent means not started or not known. */
-  modules?: Partial<Record<"readiness" | "resume" | "linkedin" | "jobFit" | "interview", "done" | "in_progress">>;
+  modules?: Partial<Record<"readiness" | "simulation" | "resume" | "linkedin" | "jobFit" | "interview", "done" | "in_progress">>;
 };
 
 /**

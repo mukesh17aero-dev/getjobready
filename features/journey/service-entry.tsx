@@ -9,7 +9,7 @@ import type { JourneyState } from "@/lib/api";
 import styles from "./service-entry.module.css";
 
 type Context = "student" | "early_career";
-export function ServiceEntry({ initialTrack, role, onContextChange, heading }: { heading?: string; initialTrack?: string | null; role?: NonNullable<JourneyState["progress"]>["role"]; onContextChange?: (track: Context) => void }) {
+export function ServiceEntry({ initialTrack, role, onContextChange, onFollowPath, pathOpen = false, heading }: { heading?: string; initialTrack?: string | null; role?: NonNullable<JourneyState["progress"]>["role"]; onContextChange?: (track: Context) => void; onFollowPath?: () => void; pathOpen?: boolean }) {
   const [context, setContext] = useState<Context>(initialTrack === "early_career" ? "early_career" : "student");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -43,6 +43,16 @@ export function ServiceEntry({ initialTrack, role, onContextChange, heading }: {
     {message && <p role="status">{message}</p>}
     {saveFailed && <button type="button" disabled={saving} className="min-h-11 underline" onClick={() => void chooseContext(context)}>Retry saving guidance</button>}
     <div className={styles.cards}>{cards.map(([title, path, input, output, time]) => <Link key={path} onClick={() => track({family:"decision",event:"task_started",module:"journey",target:path})} href={href(path)} className={styles.card}><h3>{title} <span aria-hidden>→</span></h3><small>Estimated {time}</small><p><b>Start with:</b> {input}</p><p><b>Leave with:</b> {output}</p></Link>)}</div>
-    <div className={styles.more}><Link href={href("/opportunities")}>Browse jobs →</Link><Link href={href("/interview")}>Practise an interview →</Link>{!experienced && <><Link href={href("/job-fit")}>Check my fit →</Link><Link href={href("/profile/professional")}>Strengthen LinkedIn →</Link></>}<a href="#full-path">Prepare for {role?.title ?? "a role"} · Follow the full path ↓</a></div>
+    <nav className={styles.more} aria-label="More tools">
+      <span className={styles.moreLabel}>More tools</span>
+      {([
+        ["Check job fit", "/job-fit"],
+        ["Browse jobs", "/opportunities"],
+        ["Skills Passport", "/passport"],
+        ["Interview stories", "/stories"],
+        ["Roleplay", "/roleplay"],
+      ] as const).map(([title, path]) => <Link key={path} href={href(path)}>{title} <span aria-hidden="true">↗</span></Link>)}
+    </nav>
+    <div className={styles.pathToggle}><button type="button" aria-controls="full-path" aria-expanded={pathOpen} onClick={onFollowPath}><span aria-hidden="true">{pathOpen ? "−" : "+"}</span>{pathOpen ? "Hide your preparation path" : "Show your preparation path"}</button></div>
   </section>;
 }

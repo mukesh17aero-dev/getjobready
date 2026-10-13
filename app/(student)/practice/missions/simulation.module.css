@@ -87,4 +87,4 @@
 .root :is(textarea,input:not([type=checkbox]):not([type=radio]),select){border-radius:var(--radius-control);border-color:var(--color-slate-400);color:var(--ink);background:var(--panel)}.root :is(textarea,input)::placeholder{color:var(--muted);opacity:1}.root :is(input,progress){accent-color:var(--accent)}
 :global(html[data-theme=dark]) .root{--muted:var(--color-brand-muted)}
 
-.root{--action-bg:var(--color-brand-violet);--action-hover:#5835bf;--action-ink:#fff}.header{background:var(--signature-feature);color:#fff;border:1px solid #6852ba;border-radius:20px;padding:28px 30px}.header :is(p,a,.eyebrow){color:#ece6ff}.header label{color:#fff}.workspace,.planForm{border-left-width:1px;border-radius:20px}
+.root{--action-bg:var(--color-brand-violet);--action-hover:#5835bf;--action-ink:#fff}.header{background:var(--signature-feature);color:#fff;border:1px solid #6852ba;border-radius:20px;padding:28px 30px}.header :is(p,a,.eyebrow){color:#ece6ff}.header label{color:#fff}.header select{color:var(--ink);background:#fff;color-scheme:light}.header select option{color:var(--ink);background:#fff}.workspace,.planForm{border-left-width:1px;border-radius:20px}

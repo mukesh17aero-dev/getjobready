@@ -29,7 +29,7 @@ export type ProfileCheckItem = {
   label: string;
   status: "pass" | "fix" | "info";
   detail: string;
-  /** An instruction Scribe can follow on its own. */
+  /** A suggested change the person can make in the editor. */
   fix?: string;
   /** A question only the person can answer - their fact, their claim. */
   ask?: string;
@@ -81,39 +81,6 @@ export const writeProfessionalProfile = (token: string, voice: ProfileVoice = "f
   apiCall<ProfileWriteResult>(token, "/v1/professional-profile/write", {
     method: "POST",
     body: { voice },
-  });
-
-/** One turn of Scribe: what changed, what it refused, what it took on trust. */
-export type ProfileRevision = {
-  draft: ProfileDraft;
-  changed: string[];
-  /** Facts that arrived through your instruction. Reported, never absorbed. */
-  added: string[];
-  declined: string | null;
-  reply: string;
-  followUp: string | null;
-  didChange: boolean;
-};
-
-export type ProfileReviseResult =
-  | ({ ok: true; revision: ProfileRevision } & ProfileState)
-  | { ok: false; reason: string };
-
-export const reviseProfessionalProfile = (
-  token: string,
-  ask: string,
-  /**
-   * The turns so far, oldest first. Without it a reply to Scribe's own
-   * question arrives as a fresh instruction, and it asks the same thing
-   * again - which is a loop, not caution.
-   */
-  history: Array<{ ask: string; reply: string; followUp: string | null }> = [],
-  /** Switch the voice with this revision; otherwise the draft's own stands. */
-  voice?: ProfileVoice,
-) =>
-  apiCall<ProfileReviseResult>(token, "/v1/professional-profile/revise", {
-    method: "POST",
-    body: { ask, history: history.slice(-4), ...(voice ? { voice } : {}) },
   });
 
 export const acceptProfileSection = (
