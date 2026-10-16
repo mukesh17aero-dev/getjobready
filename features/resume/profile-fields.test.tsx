@@ -105,7 +105,7 @@ describe("the setup forms start filled in from the profile", () => {
     expect(edu).toContain('value="BBA"');
     expect(edu).toContain('value="St Joseph&#x27;s"');
     expect(edu).toContain('value="8.1"');
-    expect(edu).toContain(">Save changes<");
+    expect(edu).toContain(">Save and continue<");
     expect(edu).toContain("+ Add another");
     expect(edu).toContain("Editing below");
     expect(edu).not.toContain("Filled in from your profile.");
@@ -113,7 +113,7 @@ describe("the setup forms start filled in from the profile", () => {
     expect(work).toContain('value="Cashier"');
     expect(work).toContain('value="Lumen Retail"');
     expect(work).toContain("Billed 200 customers a day</textarea>");
-    expect(work).toContain(">Save changes<");
+    expect(work).toContain(">Save and continue<");
   });
 });
 

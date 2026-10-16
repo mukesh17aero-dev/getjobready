@@ -210,7 +210,8 @@ describe("the walk-through of every way to change a draft", () => {
     const bench = readFileSync("features/resume/resume-workbench.tsx", "utf8");
     expect(bench).toContain("requestsInstruction(requests.filter(item => !item.demo))");
     expect(bench).toContain("onEnd: () => setRequests(list => list.filter(item => !item.demo))");
-    expect(bench).toContain("if (!demoSeen()) { markDemoSeen(); startDemo(); }");
+    expect(bench).toContain("onShowMe={demo.start}");
+    expect(bench).not.toContain("demoSeen()");
   });
 });
 

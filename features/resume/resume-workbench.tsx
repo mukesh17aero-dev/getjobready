@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { exportTemplate, type ResumeData, type ResumeTemplate } from "./resume-api";
 import { CommentMarkers, DraftRequests, PickBox, requestsInstruction, useCommentMarks, useTextPick, type DraftRequest, type WriterReply } from "./draft-requests";
 import { ResumeSuggestions } from "./resume-suggestions";
-import { DemoLayer, demoSeen, markDemoSeen, useDraftDemo } from "./draft-demo";
+import { DemoLayer, useDraftDemo } from "./draft-demo";
 import { A4Frame, MiniPreview, ResumeSheet, type SheetFocus } from "./resume-sheet";
 import { TEMPLATES } from "./templates";
 import { resumeSections, ResumeSectionEditor, type ResumeSection } from "./resume-section-editor";
@@ -172,21 +172,13 @@ export function ResumeWorkbench({ resume, template, role, jobDescription, track,
   // regenerated, Quip-style; hovering a request or its marker brings it forward.
   const [activeRequest, setActiveRequest] = useState<number | null>(null);
   const marks = useCommentMarks(desk, requests, picked, activeRequest, tool === "draft" && !choosing, resume);
-  // The walk-through of every way to change a draft: on the first visit in
-  // this browser, and whenever "Show me how" is pressed. Its requests are
-  // examples - shown in the list, never sent, gone when it ends.
+  // The walk-through starts only when "Show me how to edit" is pressed. Its
+  // requests are examples - shown in the list, never sent, gone when it ends.
   const demo = useDraftDemo({
     bench, desk,
     onAdd: (ask, at) => addRequest(ask, at?.quote ?? "", at?.where ?? "Whole resume", at ? { section: at.section, entry: at.entry, range: at.range } : {}, true),
     onEnd: () => setRequests(list => list.filter(item => !item.demo)),
   });
-  const startDemo = demo.start;
-  useEffect(() => {
-    if (!picking || choosing) return;
-    const timer = setTimeout(() => { if (!demoSeen()) { markDemoSeen(); startDemo(); } }, 600);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [picking, choosing]);
   // Leaving Draft stops it, and takes its examples with it.
   const stopDemo = demo.stop;
   const demoRunning = demo.running;

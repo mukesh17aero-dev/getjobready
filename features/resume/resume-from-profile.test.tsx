@@ -59,7 +59,7 @@ describe("writing it yourself starts from the profile, copied as saved", () => {
 
 describe("the write-it-myself start", () => {
   const src = readFileSync("features/resume/resume-studio.tsx", "utf8");
-  const body = src.slice(src.indexOf("function startWriting()"), src.indexOf("function continueFromStart()"));
+  const body = src.slice(src.indexOf("function startWriting("), src.indexOf("function continueFromStart("));
 
   it("asks for the same details as building from them before opening the editor", () => {
     expect(body).toMatch(/if \(gaps\.length > 0\) \{[\s\S]*?setSetupStep\(firstStepFor\(gaps\)\);[\s\S]*?return;/);

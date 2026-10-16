@@ -213,7 +213,7 @@ export function EssentialsModal({
             onClick={attempt}
             className="rounded-full bg-brand-teal-deep px-5 py-2.5 text-sm font-medium text-[var(--m3-on-primary)] transition-colors hover:bg-brand-teal disabled:opacity-50"
           >
-            {busy ? "Saving…" : "Save and keep going"}
+            {busy ? "Saving…" : "Save details and continue"}
           </button>
         </div>
       </div>

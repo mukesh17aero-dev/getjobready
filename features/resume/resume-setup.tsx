@@ -187,7 +187,7 @@ export function ResumeSetup({
   }
   async function addSkills(extra: string[]) {
     const merged = [...skills, ...extra].filter((item, i, all) => item && all.findIndex((other) => other.toLowerCase() === item.toLowerCase()) === i);
-    if (await save({ preferences: { skills: merged.join(", ") } }, nextStep("skills"), true)) { setSkillText(""); setSelectedSkills([]); }
+    if (await save({ preferences: { skills: merged.join(", ") } }, nextStep("skills"))) { setSkillText(""); setSelectedSkills([]); }
   }
   async function removeRow(list: "education" | "experience", index: number) {
     const remaining = ((profile?.[list] ?? []) as Row[]).filter((_, i) => i !== index);
@@ -222,7 +222,7 @@ export function ResumeSetup({
     <section aria-label="Your details for the resume" className="rounded-xl bg-surface p-5">
       <h2 className="mt-1 text-lg font-semibold text-slate-900">Your details</h2>
       <p className="mt-1 text-[0.85rem] text-slate-600">
-        {gaps.length === 0 ? "Your details are ready." : `${4 - new Set(gaps.map((g) => STEP_OF[g.item])).size} of 4 done. Saved to your profile.`}
+        {gaps.length === 0 ? "Your details are ready. Build your resume below." : `${4 - new Set(gaps.map((g) => STEP_OF[g.item])).size} of 4 done. Update each missing section, then select Save and continue. Each saved section is added to your profile.`}
       </p>
       <FormAlert className="mt-3" message={error} />
       {error && <CopyButton label="unsaved details" value={JSON.stringify({about,study,work,skills:skillText,selectedSkills}, null, 2)} />}
@@ -262,7 +262,7 @@ export function ResumeSetup({
                         <Labelled text="Marks or CGPA (optional)" guide="education.marks"><input className={input} value={study.marks} placeholder="78% or 8.1" onChange={(e) => setStudy((s) => ({ ...s, marks: e.target.value }))} /></Labelled>
                       </div>
                       <div className="mt-4 flex flex-wrap gap-3">
-                        <button type="button" disabled={busy} onClick={addStudy} className="min-h-11 rounded-full bg-brand-violet px-5 text-[0.9rem] font-medium text-[var(--m3-on-primary)]">{busy ? "Saving…" : eduAt !== null ? "Save changes" : "Add and continue"}</button>
+                        <button type="button" disabled={busy} onClick={addStudy} className="min-h-11 rounded-full bg-brand-violet px-5 text-[0.9rem] font-medium text-[var(--m3-on-primary)]">{busy ? "Saving…" : "Save and continue"}</button>
                         {eduAt !== null && <button type="button" disabled={busy} onClick={() => startAdding("education")} className="min-h-11 rounded-full px-4 text-[0.9rem] font-medium text-brand-violet">+ Add another</button>}
                         {done && <button type="button" onClick={() => onStep(nextStep("education"))} className="min-h-11 rounded-full border border-slate-400 px-5 text-[0.9rem] font-medium text-brand-violet">Next step</button>}
                       </div>
@@ -286,7 +286,7 @@ export function ResumeSetup({
                         {experienced && ([["scope", "Scope and responsibilities"], ["tools", "Tools used"], ["outcome", "Achievements and outcomes"], ["evidenceSource", "Evidence source (for example, a report or project)"]] as const).map(([key, title]) => <Labelled key={key} text={`${title} (optional)`} guide={EXTRA_GUIDE[key]}><textarea rows={2} className={`${input} py-2`} value={work[key]} onChange={event => setWork(previous => ({ ...previous, [key]: event.target.value }))} /></Labelled>)}
                       </div>
                       <div className="mt-4 flex flex-wrap gap-3">
-                        <button type="button" disabled={busy} onClick={addWork} className="min-h-11 rounded-full bg-brand-violet px-5 text-[0.9rem] font-medium text-[var(--m3-on-primary)]">{busy ? "Saving…" : workAt !== null ? "Save changes" : "Add and continue"}</button>
+                        <button type="button" disabled={busy} onClick={addWork} className="min-h-11 rounded-full bg-brand-violet px-5 text-[0.9rem] font-medium text-[var(--m3-on-primary)]">{busy ? "Saving…" : "Save and continue"}</button>
                         {workAt !== null && <button type="button" disabled={busy} onClick={() => startAdding("experience")} className="min-h-11 rounded-full px-4 text-[0.9rem] font-medium text-brand-violet">+ Add another</button>}
                         {done && <button type="button" onClick={() => onStep(nextStep("experience"))} className="min-h-11 rounded-full border border-slate-400 px-5 text-[0.9rem] font-medium text-brand-violet">Next step</button>}
                       </div>
@@ -303,8 +303,8 @@ export function ResumeSetup({
                           <div className="mt-2 flex flex-wrap gap-2">{suggestions.filter((s) => !skills.some((k) => k.toLowerCase() === s.toLowerCase())).slice(0, 10).map((s) => <button key={s} type="button" disabled={busy} aria-pressed={selectedSkills.includes(s)} onClick={() => setSelectedSkills(current => current.includes(s) ? current.filter(skill => skill !== s) : [...current, s])} className="min-h-11 rounded-full border border-violet-300 px-3 text-[0.85rem] text-violet-700">{selectedSkills.includes(s) ? "✓" : "+"} {s}</button>)}</div>
                         </div>
                       )}
-                      <button type="button" disabled={busy || (!skillText.trim() && !selectedSkills.length)} onClick={() => void addSkills([...selectedSkills, ...splitList(skillText)])} className="mt-4 min-h-11 rounded-full bg-brand-violet px-5 text-[0.9rem] font-medium text-[var(--m3-on-primary)] disabled:opacity-40">{busy ? "Saving…" : "Save selected skills"}</button>
-                      <p role="status" className="mt-2 text-sm text-slate-600">{selectedSkills.length ? `${selectedSkills.length} selected — save when you are ready.` : "Select as many suggestions as you need, then save them together."}</p>
+                      <button type="button" disabled={busy || (!skillText.trim() && !selectedSkills.length)} onClick={() => void addSkills([...selectedSkills, ...splitList(skillText)])} className="mt-4 min-h-11 rounded-full bg-brand-violet px-5 text-[0.9rem] font-medium text-[var(--m3-on-primary)] disabled:opacity-40">{busy ? "Saving…" : "Save and continue"}</button>
+                      <p role="status" className="mt-2 text-sm text-slate-600">{selectedSkills.length ? `${selectedSkills.length} selected — select Save and continue when you are ready.` : "Select as many suggestions as you need, then save them together."}</p>
                       <p className="mt-2 text-[0.78rem] text-slate-500">{skills.length >= MIN_SKILLS ? `${skills.length} skills on your record.` : `${skills.length} of ${MIN_SKILLS} added.`}</p>
                     </>
                   )}

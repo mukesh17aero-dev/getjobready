@@ -15,17 +15,7 @@ import s from "./draft-demo.module.css";
 // The pointer drives the real panel: the comment box opens, requests join
 // the real list and their words are highlighted on the page. Those requests
 // are marked as examples, are never sent, and are removed when it ends. It
-// plays the first time Draft opens in this browser, and on "Show me how".
-
-const SEEN = "ascend.resume.draftGlimpseSeen";
-
-/** Whether this browser has been shown the walk-through. Storage can be missing or refuse. */
-export function demoSeen(): boolean {
-  try { return window.localStorage.getItem(SEEN) === "1"; } catch { return true; }
-}
-export function markDemoSeen() {
-  try { window.localStorage.setItem(SEEN, "1"); } catch { /* a private window keeps no memory; it simply plays again */ }
-}
+// plays only when they press "Show me how to edit".
 
 const STEPS = [
   "Select words on your resume and say what should change",

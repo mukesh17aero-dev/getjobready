@@ -122,6 +122,7 @@ export function ProfessionalStudio({ initial, signedOut = false }: { initial: Pr
   const [error, setError] = useState("");
   const [gate, setGate] = useState<GatedAction | null>(null);
   const [copied, setCopied] = useState<Partial<Record<Section, boolean>>>({});
+  const [expandedCopy, setExpandedCopy] = useState<Partial<Record<Section, boolean>>>({ headline: true });
   const photoInput = useRef<HTMLInputElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
@@ -132,9 +133,10 @@ export function ProfessionalStudio({ initial, signedOut = false }: { initial: Pr
   const photo = state.accepted.photo || "";
   const info = sections.find(item => item.id === section)!;
   const value = textFor(draft, section);
-  const canKeep = section === "experience"
+  const canKeepSection = (id: Section) => id === "experience"
     ? Boolean(draft.experience?.length) && (draft.experience ?? []).every(entry => entry.title.trim() && entry.organisation.trim())
-    : value.trim().length > 0;
+    : hasValue(draft, id);
+  const canKeep = canKeepSection(section);
   const isKept = hasValue(kept, section) && same(draft[section], kept[section]);
   const name = state.name || (signedOut ? "Anjali Kumar" : "Your name");
   // The written order, never the chosen one. Putting the selection first
@@ -219,19 +221,19 @@ export function ProfessionalStudio({ initial, signedOut = false }: { initial: Pr
     });
   }
 
-  async function keepSection() {
-    if (!canKeep) { setError("Complete the required fields in this section before keeping it."); return; }
+  async function keepSection(id: Section) {
+    if (!canKeepSection(id)) { setError("Complete the required fields in this section before keeping it."); return; }
     if (signedOut) { needsAccount("your professional profile", "Keeping a section means it is still there next week, and on the next version. That needs an account for it to live in."); return; }
-    const current = draft[section] as string | string[] | ProfileEntry[] | undefined;
+    const current = draft[id] as string | string[] | ProfileEntry[] | undefined;
     if (current === undefined) return;
     setBusy("keep"); setError("");
     await withToken(async t => {
-      const updated = await acceptProfileSection(t, section, current);
+      const updated = await acceptProfileSection(t, id, current);
       setBusy(null);
       if (!updated) { setError("Could not keep that section. Try again in a moment."); return; }
       setState(prev => ({ ...prev, accepted: updated.accepted }));
-      setCopied({ ...copied, [section]: false });
-      setStatus(`${info.title} kept.`);
+      setCopied(previous => ({ ...previous, [id]: false }));
+      setStatus(`${sections.find(item => item.id === id)?.title} kept. You can now copy it to LinkedIn.`);
     });
   }
 
@@ -332,12 +334,17 @@ export function ProfessionalStudio({ initial, signedOut = false }: { initial: Pr
               </div>}
             </div>
           </div>
-          <div className={s.keepRow}><span>{isKept ? "This draft matches the version you kept." : "Keep this section when it is accurate and complete."}</span><button type="button" disabled={isKept || !canKeep || busy !== null} onClick={() => void keepSection()}>{busy === "keep" ? "Keeping…" : isKept ? "Kept" : `Keep ${info.title.toLowerCase()}`} <Check size={15} /></button></div>
+          <div className={s.keepRow}><span>{isKept ? "This draft matches the version you kept." : "Keep this section when it is accurate and complete."}</span><button type="button" disabled={isKept || !canKeep || busy !== null} onClick={() => void keepSection(section)}>{busy === "keep" ? "Keeping…" : isKept ? "Kept" : `Keep ${info.title.toLowerCase()}`} <Check size={15} /></button></div>
         </section>
       </div><aside className={s.previewAside}>{profileCard}{checkPanel}<div className={s.tip}><span><Spark size={14} /> ONE SECTION AT A TIME</span><p>Keeping a section saves it to your record. Nothing is published to LinkedIn until you copy it across yourself.</p></div></aside></div></>}
 
-    {stage === 2 && <div className={s.transferGrid}><section className={s.card}><span className={s.smallLabel}>YOUR COPY CHECKLIST</span><h2 className={s.transferTitle}>Take the parts you are happy with.</h2><p className={s.quiet}>Copying is available for sections you have kept. Review any remaining drafts when you are ready.</p><div className={s.copyList}>{sections.map(item => <details key={item.id}><summary><span className={hasValue(kept, item.id) ? s.readyDot : s.emptyDot}>{hasValue(kept, item.id) ? <Check size={13} /> : "·"}</span><span><strong>{item.title}</strong><small>{copied[item.id] ? "Copied to clipboard" : hasValue(kept, item.id) ? same(draft[item.id], kept[item.id]) ? "Kept · ready to copy" : "Kept version available · newer draft not kept" : "No kept version yet"}</small></span><span>+</span></summary><p className={s.copyText}>{textFor(kept, item.id) || "Return to this section and keep the version you want to use."}</p><div>{hasValue(kept, item.id) && <button type="button" onClick={() => void copySection(item.id)}>{copied[item.id] ? "Copy again" : `Copy ${item.title.toLowerCase()}`}</button>}<button type="button" onClick={() => { choose(item.id); go(1); }}>Review section <ArrowRight size={14} /></button></div></details>)}</div></section><aside className={s.transferAside}><span className={s.linkedInMark}>in</span><h2>Your profile, on your terms.</h2><p>Nothing is published automatically. Copy your kept sections and paste them into your LinkedIn profile when you are ready.</p><ol><li>Copy a section from your checklist.</li><li>Open your profile editor on LinkedIn.</li><li>Paste, check the formatting, and save there.</li></ol><p className={s.quiet}>For experience, keep titles and organisations in their matching fields. Skills are added individually.</p><Link className={s.secondary} href="https://www.linkedin.com/in/me/" target="_blank" rel="noreferrer">Open LinkedIn <ArrowRight size={15} /></Link></aside></div>}
+    {stage === 2 && <div className={s.transferGrid}><section className={s.card}><span className={s.smallLabel}>YOUR PROFILE SECTIONS</span><h2 className={s.transferTitle}>Review what you will take to LinkedIn.</h2><p className={s.quiet}>Each section shows the version you kept, or its draft if you have not kept one yet. Keep a draft when it reads right, then copy it. Nothing is published automatically.</p><div className={s.copyList}>{sections.map(item => {
+      const saved = textFor(kept, item.id);
+      const current = textFor(draft, item.id);
+      const changed = Boolean(saved) && !same(draft[item.id], kept[item.id]);
+      return <details key={item.id} open={Boolean(expandedCopy[item.id])}><summary onClick={event => { event.preventDefault(); setExpandedCopy(previous => ({ ...previous, [item.id]: !previous[item.id] })); }}><span className={saved ? s.readyDot : s.emptyDot}>{saved ? <Check size={13} /> : "·"}</span><span><strong>{item.title}</strong><small>{copied[item.id] ? "Copied to clipboard" : saved ? changed ? "Kept version ready · draft has changes" : "Kept · ready to copy" : current ? "Draft ready to review" : "Add this section when ready"}</small></span><span>{expandedCopy[item.id] ? "−" : "+"}</span></summary><p className={s.copyText}>{saved || current || "Nothing written here yet."}</p>{changed && <p className={s.quiet}>Your newer draft is not kept yet. Review it before replacing the version above.</p>}<div>{saved && <button type="button" onClick={() => void copySection(item.id)}>{copied[item.id] ? "Copy again" : `Copy ${item.title.toLowerCase()}`}</button>}{!saved && current && <button type="button" disabled={busy !== null || !canKeepSection(item.id)} onClick={() => void keepSection(item.id)}>{busy === "keep" ? "Keeping…" : `Keep ${item.title.toLowerCase()} to copy`}</button>}<button type="button" onClick={() => { choose(item.id); go(1); }}>{changed ? "Review newer draft" : current ? "Edit section" : "Add section"} <ArrowRight size={14} /></button></div></details>;
+    })}</div></section><aside className={s.transferAside}><span className={s.linkedInMark}>in</span><h2>Your profile, on your terms.</h2><p>Nothing is published automatically. Copy your kept sections and paste them into your LinkedIn profile when you are ready.</p><ol><li>Copy a section from your checklist.</li><li>Open your profile editor on LinkedIn.</li><li>Paste, check the formatting, and save there.</li></ol><p className={s.quiet}>For experience, keep titles and organisations in their matching fields. Skills are added individually.</p><Link className={s.secondary} href="https://www.linkedin.com/in/me/" target="_blank" rel="noreferrer">Open LinkedIn <ArrowRight size={15} /></Link></aside></div>}
     <div className={status ? s.status : s.srOnly} role="status" aria-live="polite">{status}</div>
-    <footer className={s.actionBar}><div>{stage > 0 && <><strong>{stage === 1 ? "Keep a section when it reads true to you." : "You decide when the world sees it."}</strong><small>{stage === 1 ? "No need to finish every section in one sitting." : "Copy controls use your clipboard; nothing is published."}</small></>}</div><div>{stage > 0 && <button type="button" className={s.backButton} onClick={() => go(stage - 1)}>Back</button>}<button type="button" className={s.primary} disabled={busy !== null} onClick={() => stage === 0 ? void begin() : go(stage === 2 ? 1 : stage + 1)}>{stage === 0 ? busy === "write" ? "Working on it…" : start === "record" ? "Write my profile" : "Read my file" : stage === 1 ? "Review kept sections" : "Back to my profile"}<ArrowRight size={17} /></button></div></footer>
+    <footer className={s.actionBar}><div>{stage > 0 && <><strong>{stage === 1 ? "Keep a section when it reads true to you." : "You decide when the world sees it."}</strong><small>{stage === 1 ? "You can also review every draft on the next page." : "Copy controls use your clipboard; nothing is published."}</small></>}</div><div>{stage > 0 && <button type="button" className={s.backButton} onClick={() => go(stage - 1)}>Back</button>}<button type="button" className={s.primary} disabled={busy !== null} onClick={() => stage === 0 ? void begin() : go(stage === 2 ? 1 : stage + 1)}>{stage === 0 ? busy === "write" ? "Working on it…" : start === "record" ? "Write my profile" : "Read my file" : stage === 1 ? "Review and copy profile" : "Back to my profile"}<ArrowRight size={17} /></button></div></footer>
   </main></div></div>;
 }

@@ -114,6 +114,8 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   // A new resume with a role chosen in Discovery asks, before building, whether
   // to aim at that role or stay general. Reopened resumes keep their own target.
   const [roleAimOpen, setRoleAimOpen] = useState(Boolean(lockedRole && !opened));
+  const [generalConfirmed, setGeneralConfirmed] = useState(false);
+  const [continueAfterRoleChoice, setContinueAfterRoleChoice] = useState(false);
   const [jdInput, setJdInput] = useState("");
   // Where they are, read from their profile the way the profile page reads it:
   // a course in progress means studying, a job on record means working, and
@@ -190,7 +192,6 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   // A role is optional on both doors: named, the draft is shaped for it.
   // A role, or a job posting, aims the resume; with neither it is general.
   const targeted = Boolean(roleInput.trim() || jdInput.trim());
-  const general = !targeted;
   const chosenRole = () => (targeted ? roleInput.trim() : "");
   // Building from nothing needs the record filled first; improving needs the file.
   const detailsReady = purpose === "improve" ? upload !== null : gaps.length === 0;
@@ -242,12 +243,12 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
   // Writing it yourself asks for the same details as building from them, then
   // opens the editor with those details already in place - copied as saved,
   // not rewritten. An empty editor after a form made people type it twice.
-  function startWriting() {
+  function startWriting(roleChoice?: { role: string; general: boolean }) {
     if (signedOut) { void withToken(); return; }
     if (purpose !== "write") setPurpose("write");
     if (gaps.length > 0) {
       setSetupStep(firstStepFor(gaps));
-      setError("Add the details below, then start writing. They go straight into your resume.");
+      setError("Add the missing details below. After updating each section, select Save and continue, then start writing.");
       setTimeout(() => { const field = document.getElementById("resume-setup"); field?.focus(); field?.scrollIntoView({ block: "start" }); }, 0);
       return;
     }
@@ -258,37 +259,45 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
     }
     setError(null);
     setWorkbenchSession(value => value + 1);
-    setResult({ targetRole: chosenRole(), ...postingNow(), resume: resumeFromProfile(profile, trackChoice === "early_career") });
+    setResult({ targetRole: roleChoice?.role ?? chosenRole(), ...(roleChoice?.general ? {} : postingNow()), resume: resumeFromProfile(profile, trackChoice === "early_career") });
     setReview(null); setAts(null); setExported(false); go("draft");
   }
-  function continueFromStart() {
+  function continueFromStart(roleChoice?: { role: string; general: boolean }) {
     if (signedOut) { void withToken(); return; }
     if (!purpose) {
       setError("Choose how you would like to start.");
       setTimeout(() => { const first = document.querySelector<HTMLElement>('[aria-label="How would you like to start?"] [role="radio"]'); first?.focus(); first?.scrollIntoView({ block: "center" }); }, 0);
       return;
     }
-    if (purpose === "write") { startWriting(); return; }
+    if (purpose === "write") {
+      if (gaps.length > 0 || !trackChoice) { startWriting(); return; }
+      if (!roleChoice && !roleInput.trim() && !generalConfirmed) { setContinueAfterRoleChoice(true); setRoleAimOpen(true); return; }
+      startWriting(roleChoice);
+      return;
+    }
     if (!readyToBuild) {
-      if (purpose === "general" && gaps.length > 0) { setSetupStep(firstStepFor(gaps)); setError("A few details are still needed before your resume can be written."); return; }
+      if (purpose === "general" && gaps.length > 0) { setSetupStep(firstStepFor(gaps)); setError("Add the missing details below. After updating each section, select Save and continue, then build your resume."); return; }
       setError(!trackChoice ? "Tell us where you are right now first." : "Choose the resume to improve first.");
       setTimeout(() => { const field = document.getElementById(!trackChoice ? "resume-track" : "resume-upload"); field?.focus(); field?.scrollIntoView({block:"center"}); }, 0);
       return;
     }
+    if (!roleChoice && !roleInput.trim() && !generalConfirmed) { setContinueAfterRoleChoice(true); setRoleAimOpen(true); return; }
     setError(null);
-    void beginBuild();
+    void beginBuild(roleChoice);
   }
 
   // ---- Build: the record has to hold enough, then what it still misses ----
-  function buildBody() {
-    return { targetRole: chosenRole(), ...(general ? { general: true } : {}), ...(upload ? { existingResume: upload.text } : {}), ...(upload?.parsed ? { existingParsed: upload.parsed } : {}), ...(targeted && jdInput.trim() ? { jobDescription: jdInput.trim() } : {}) };
+  function buildBody(roleChoice?: { role: string; general: boolean }) {
+    const role = roleChoice?.role ?? chosenRole();
+    const posting = roleChoice?.general ? "" : jdInput.trim();
+    return { targetRole: role, ...(!role && !posting ? { general: true } : {}), ...(upload ? { existingResume: upload.text } : {}), ...(upload?.parsed ? { existingParsed: upload.parsed } : {}), ...(posting ? { jobDescription: posting } : {}) };
   }
-  async function beginBuild() {
+  async function beginBuild(roleChoice?: { role: string; general: boolean }) {
     if (!readyToBuild) { go("start"); return; }
     setError(null);
     const t = await withToken(); if (!t) return;
     if (needsEssentials) { setEssentialsOpen(true); return; }
-    await runBuild(t);
+    await runBuild(t, roleChoice);
   }
   async function saveEssentials(values: Record<string, string>) {
     setBusy("checking"); setError(null);
@@ -304,14 +313,14 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
     setProfile(saved); setEssentialsOpen(false);
     await runBuild(t);
   }
-  async function runBuild(t: string) {
+  async function runBuild(t: string, roleChoice?: { role: string; general: boolean }) {
     setError(null); setBusy("checking");
     if (trackChoice && trackChoice !== savedTrack) {
       const saved = await saveResumeProfile(t, { education: profile?.education ?? [], experience: profile?.experience ?? [], projects: profile?.projects ?? [], achievements: profile?.achievements ?? [], preferences: { ...prefs, track: trackChoice } });
       if (saved) setProfile(saved);
     }
-    const body = buildBody();
-    trackEvent({ family: "decision", event: "resume_target_confirmed", module: "resume", target: body.targetRole || "no particular role", meta: { locked: targeted && roleInput.trim() === lockedRole?.title, general, fromUpload: Boolean(upload) } });
+    const body = buildBody(roleChoice);
+    trackEvent({ family: "decision", event: "resume_target_confirmed", module: "resume", target: body.targetRole || "no particular role", meta: { locked: body.targetRole === lockedRole?.title, general: "general" in body, fromUpload: Boolean(upload) } });
     await build(t, body);
   }
   async function build(t: string, body: ReturnType<typeof buildBody>) {
@@ -463,7 +472,7 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
       : purpose === "write"
         ? ["Write it your way.", "The editor opens with your saved details already in place.", "Start writing"]
       : gaps.length > 0 && !signedOut
-        ? [`${gaps.length} ${gaps.length === 1 ? "detail" : "details"} to go.`, gaps.map(gap => gap.label).join(" · "), "Build my resume"]
+        ? [`${gaps.length} ${gaps.length === 1 ? "detail" : "details"} to go.`, "Update each section, then select Save and continue.", "Review missing details"]
         : ["Everything is in.", "You can change the look and add more detail later.", "Build my resume"],
     draft: tool === "content"
       ? ["Done editing?", "Read it through and ask for any changes.", "Request changes"]
@@ -501,7 +510,13 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
 
   return <div ref={shellRef} className={`${s.shell} ${M3_ROOT}`} data-stage={stage}>
     {gate && <SignUpPrompt action={gate} onClose={() => setGate(null)} />}
-    {roleAimOpen && lockedRole && <RoleAimModal roleTitle={lockedRole.title} onChoose={useRole => { setRoleInput(useRole ? lockedRole.title : ""); setRoleAimOpen(false); }} />}
+    {roleAimOpen && <RoleAimModal roleTitle={lockedRole && !continueAfterRoleChoice ? lockedRole.title : undefined} onChoose={role => {
+      const choice = { role: role ?? "", general: role === null };
+      setRoleInput(choice.role); setGeneralConfirmed(choice.general);
+      if (choice.general) setJdInput("");
+      setRoleAimOpen(false);
+      if (continueAfterRoleChoice) { setContinueAfterRoleChoice(false); continueFromStart(choice); }
+    }} />}
     {essentialsOpen && <EssentialsModal firstName={text("fullName").split(/\s+/)[0] ?? ""} busy={busy !== null} onClose={() => { if (busy === null) setEssentialsOpen(false); }} onSubmit={values => void saveEssentials(values)} />}
     <input ref={fileRef} type="file" accept=".pdf,.docx,.doc,.txt,.md" className={s.srOnly} aria-label="Choose the resume to improve" onChange={e => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void readExisting(file); }} />
     <div className={s.canvas}><main className={s.main}>
@@ -533,7 +548,7 @@ export function ResumeStudio({ profile: initialProfile, target, recordAt, signed
             <button type="button" id="resume-upload" className={s.primary} disabled={uploading} onClick={() => fileRef.current?.click()}>{uploading ? "Reading…" : "Choose a file"}</button>
             <small className={s.dropOr}>or drag it here</small>
           </div>)}
-        <label className={s.field} htmlFor="resume-role">Target role (optional)<input id="resume-role" value={roleInput} onChange={e => setRoleInput(e.target.value)} placeholder="e.g. Operations Executive" /></label>{lockedRole && roleInput.trim() !== lockedRole.title && <button type="button" className={s.undo} onClick={() => setRoleInput(lockedRole.title)}>Use {lockedRole.title}, from your Discovery</button>}{targeted && <details className={s.details}><summary>Add a job posting <span>Optional</span></summary><label className={s.field}>Job description<textarea rows={3} value={jdInput} onChange={e => setJdInput(e.target.value)} /></label></details>}
+        <label className={s.field} htmlFor="resume-role">Target role (optional)<input id="resume-role" value={roleInput} onChange={e => { setRoleInput(e.target.value); setGeneralConfirmed(false); }} placeholder="e.g. Operations Executive" /></label>{lockedRole && roleInput.trim() !== lockedRole.title && <button type="button" className={s.undo} onClick={() => { setRoleInput(lockedRole.title); setGeneralConfirmed(false); }}>Use {lockedRole.title}, from your Discovery</button>}{targeted && <details className={s.details}><summary>Add a job posting <span>Optional</span></summary><label className={s.field}>Job description<textarea rows={3} value={jdInput} onChange={e => setJdInput(e.target.value)} /></label></details>}
         <fieldset className={s.track} id="resume-track" tabIndex={-1} aria-invalid={wrongTrack || undefined} data-invalid={wrongTrack || undefined}><legend>Your experience<RequiredMark /></legend><div className={s.starterTrack}>{([{ id: "student", label: "Student / first job" }, { id: "early_career", label: "I have work experience" }] as Array<{ id: Track; label: string }>).map(option => <label key={option.id}><input type="radio" name="resume-track" value={option.id} checked={trackChoice === option.id} onChange={() => { setTrackChoice(option.id); setError(null); }} />{option.label}</label>)}</div></fieldset>
         </>}
       </section>
